@@ -1,0 +1,25 @@
+{
+  "name": "qmr-backend",
+  "version": "0.0.1",
+  "description": "This app fro Qomar CRM backend API",
+  "homepage": "https://github.com/rasuloff789/qmr-backend#readme",
+  "bugs": {
+    "url": "https://github.com/rasuloff789/qmr-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/rasuloff789/qmr-backend.git"
+  },
+  "license": "ISC",
+  "author": "Russell Ismail",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "graphql-http": "^1.22.4"
+  }
+}

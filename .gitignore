@@ -1,0 +1,62 @@
+# macOS
+.DS_Store
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/dist
+/build
+/lib
+/.next
+/.parcel-cache
+/.turbo
+
+# Environment files
+.env
+.env.*.local
+.env.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Python (if present)
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Docker overrides
+docker-compose.override.yml
+
+# Databases, keys, and misc
+*.sqlite3
+*.db
+*.pem
+keys/
