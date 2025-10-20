@@ -1,0 +1,13 @@
+type Root {
+    id: ID!
+    username: String!
+    fullname: String!
+}
+
+type Query {
+    loginRoot(username: String!, password: String!): String!
+}
+
+type Mutation {
+    createUser(name: String!, email: String!): Root!
+}

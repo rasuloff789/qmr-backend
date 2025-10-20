@@ -1,0 +1,39 @@
+{
+  "dependencies": {
+    "@graphql-tools/schema": "^10.0.25",
+    "@prisma/client": "^6.17.1",
+    "express": "^5.1.0",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.10.1",
+    "graphql-express": "^3.0.0",
+    "graphql-middleware": "^6.1.35",
+    "graphql-shield": "^7.6.5",
+    "graphql-tag": "^2.12.6",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "type": "module",
+  "name": "qmr-backend",
+  "postinstall": "patch-package",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rasuloff789/qmr-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rasuloff789/qmr-backend/issues"
+  },
+  "homepage": "https://github.com/rasuloff789/qmr-backend#readme",
+  "devDependencies": {
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
+    "prisma": "^6.17.1"
+  }
+}

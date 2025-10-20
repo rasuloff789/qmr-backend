@@ -60,3 +60,4 @@ docker-compose.override.yml
 *.db
 *.pem
 keys/
+/src/generated/prisma
