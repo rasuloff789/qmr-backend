@@ -14,3 +14,15 @@ model Root {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Admin {
+  id         Int      @id @default(autoincrement())
+  fullname   String   
+  username   String   @unique
+  password   String
+  birthDate  DateTime 
+  phone      String   
+  tgUsername String   
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
