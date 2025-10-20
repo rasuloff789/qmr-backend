@@ -1,0 +1,9 @@
+type LoginResponse {
+  success: Boolean!
+  message: String
+  token: String
+}
+type Query {
+    loginRoot(username: String!, password: String!): LoginResponse!
+    loginAdmin(username: String!, password: String!): LoginResponse!
+}

@@ -4,10 +4,13 @@ type Root {
     fullname: String!
 }
 
-type Query {
-    loginRoot(username: String!, password: String!): String!
-}
-
 type Mutation {
-    createUser(name: String!, email: String!): Root!
+    addAdmin(
+        username: String!
+        password: String!
+        fullname: String!
+        tgUsername: String!
+        birthDate: Date!
+        phone: Phone!
+    ): Admin!
 }

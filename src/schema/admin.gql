@@ -1,0 +1,10 @@
+type Admin {
+    id: ID!
+    username: String!
+    fullname: String!
+    birthDate: Date!
+    phone: String!
+    tgUsername: String!
+    isActive: Boolean!
+    createdAt: Date!
+}
