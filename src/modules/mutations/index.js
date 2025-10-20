@@ -1,4 +1,2 @@
-import { addAdmin } from "./addAdmin.js"
-export {
-    addAdmin
-}
+import { addAdmin } from "./addAdmin.js";
+export { addAdmin };
