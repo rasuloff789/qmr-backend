@@ -1,4 +1,3 @@
-import { loginRoot } from "./login.root.js";
-import { loginAdmin } from "./login.admin.js";
+import { login } from "./login.js";
 
-export { loginRoot, loginAdmin };
+export { login };

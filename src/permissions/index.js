@@ -8,8 +8,7 @@ const isAuth = rule()((_parent, _args, ctx) => !!ctx.user);
 export const permissions = shield(
 	{
 		Query: {
-			loginRoot: allow,
-			loginAdmin: allow,
+			login: allow,
 			"*": isAuth,
 			// users: isAuth,
 		},

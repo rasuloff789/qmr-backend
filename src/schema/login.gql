@@ -4,6 +4,5 @@ type LoginResponse {
   token: String
 }
 type Query {
-    loginRoot(username: String!, password: String!): LoginResponse!
-    loginAdmin(username: String!, password: String!): LoginResponse!
+    login(username: String!, password: String!, userType:String!): LoginResponse!
 }
