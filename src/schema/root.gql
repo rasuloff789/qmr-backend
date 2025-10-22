@@ -4,6 +4,10 @@ type Root {
     fullname: String!
 }
 
+type Query {
+    getAdmins:[Admin!]
+}
+
 type Mutation {
     addAdmin(
         username: String!

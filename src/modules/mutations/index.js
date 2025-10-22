@@ -1,2 +1,3 @@
 import { addAdmin } from "./addAdmin.js";
-export { addAdmin };
+import { login } from "./login.js";
+export { addAdmin, login };

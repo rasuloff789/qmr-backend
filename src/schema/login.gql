@@ -3,6 +3,9 @@ type LoginResponse {
   message: String
   token: String
 }
+type Mutation {
+  login(username: String!, password: String!, userType:String!): LoginResponse!
+}
 type Query {
-    login(username: String!, password: String!, userType:String!): LoginResponse!
+  me: Boolean!
 }

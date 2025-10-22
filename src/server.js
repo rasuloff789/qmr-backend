@@ -1,5 +1,5 @@
-// app.ts
 import express from "express";
+import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { applyMiddleware } from "graphql-middleware";
@@ -14,6 +14,15 @@ const executableSchema = makeExecutableSchema({ typeDefs: schema, resolvers });
 const schemaWithMiddleware = applyMiddleware(executableSchema, permissions);
 
 app.use(
+	cors({
+		origin: "http://localhost:5173", // Frontend porti
+		credentials: true, // Agar token yoki cookie ishlatsang
+	})
+);
+
+app.use(express.json());
+
+app.use(
 	"/graphql",
 	graphqlHTTP(async (req) => {
 		// JWTdan user olish
@@ -23,9 +32,7 @@ app.use(
 		if (token) {
 			try {
 				user = verifyToken(token);
-			} catch (err) {
-				console.error("Invalid token", err);
-			}
+			} catch (err) {}
 		}
 
 		return {
