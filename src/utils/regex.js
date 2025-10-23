@@ -86,7 +86,7 @@ function isValidBirthdate(dateStr) {
 }
 
 function isValidPassword(password) {
-	const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{5,10}$/;
+	const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{5,20}$/;
 	return regex.test(password);
 }
 
