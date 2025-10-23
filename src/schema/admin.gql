@@ -8,3 +8,7 @@ type Admin {
     isActive: Boolean!
     createdAt: Date!
 }
+
+type Query {
+    getAdmins:[Admin!]!
+}
