@@ -1,3 +1,13 @@
+/**
+ * QMR Backend - Express Server Configuration
+ * 
+ * This file configures the Express server with all middleware, routes, and GraphQL setup.
+ * It handles CORS, authentication, GraphQL endpoint, and error handling.
+ * 
+ * @author QMR Development Team
+ * @version 1.0.0
+ */
+
 import express from "express";
 import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
@@ -9,30 +19,51 @@ import { verifyToken } from "./utils/jwt.js";
 import { permissions } from "./permissions/index.js";
 import config from "./config/env.js";
 
+// Initialize Express application
 const app = express();
 
-// Create executable schema with middleware
+/**
+ * GraphQL Schema Setup
+ * 
+ * Creates an executable GraphQL schema by combining type definitions and resolvers,
+ * then applies permission middleware for role-based access control.
+ */
 const executableSchema = makeExecutableSchema({
 	typeDefs: schema,
 	resolvers,
 });
 const schemaWithMiddleware = applyMiddleware(executableSchema, permissions);
 
-// CORS configuration
+/**
+ * CORS Configuration
+ * 
+ * Configures Cross-Origin Resource Sharing to allow frontend applications
+ * to communicate with this backend API.
+ */
 app.use(
 	cors({
-		origin: config.CORS_ORIGIN,
-		credentials: true,
-		methods: ["GET", "POST", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
+		origin: config.CORS_ORIGIN, // Allowed frontend origin
+		credentials: true, // Allow cookies and authentication headers
+		methods: ["GET", "POST", "OPTIONS"], // Allowed HTTP methods
+		allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 	})
 );
 
-// Body parsing middleware
+/**
+ * Body Parsing Middleware
+ * 
+ * Parses incoming request bodies as JSON and URL-encoded data.
+ * Set with reasonable limits to prevent abuse.
+ */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Health check endpoint
+/**
+ * Health Check Endpoint
+ * 
+ * Provides a simple health check endpoint for monitoring and load balancers.
+ * Returns server status, timestamp, and environment information.
+ */
 app.get("/health", (req, res) => {
 	res.status(200).json({
 		status: "OK",
@@ -41,7 +72,12 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// Debug endpoint for testing requests
+/**
+ * Debug Endpoint (Development Only)
+ * 
+ * Provides debugging information for development purposes.
+ * Logs request details to help troubleshoot API issues.
+ */
 app.post("/debug", (req, res) => {
 	console.log("Debug request received:");
 	console.log("Headers:", req.headers);
@@ -58,7 +94,12 @@ app.post("/debug", (req, res) => {
 	});
 });
 
-// GraphQL endpoint
+/**
+ * GraphQL Endpoint
+ * 
+ * Main GraphQL endpoint that handles all GraphQL queries and mutations.
+ * Includes JWT authentication, context injection, and GraphiQL interface.
+ */
 app.use(
 	"/graphql",
 	graphqlHTTP(async (req) => {
@@ -66,6 +107,7 @@ app.use(
 		const authHeader = req.headers.authorization;
 		let user = null;
 
+		// Parse Bearer token for authentication
 		if (authHeader && authHeader.startsWith("Bearer ")) {
 			const token = authHeader.split(" ")[1];
 			try {
@@ -76,8 +118,8 @@ app.use(
 		}
 
 		return {
-			schema: schemaWithMiddleware,
-			context: { user },
+			schema: schemaWithMiddleware, // Schema with permission middleware
+			context: { user }, // Inject user context into resolvers
 			graphiql:
 				config.NODE_ENV === "development"
 					? {
@@ -106,12 +148,17 @@ query Me {
   }
 }`,
 					  }
-					: false,
+					: false, // Disable GraphiQL in production
 		};
 	})
 );
 
-// Error handling middleware
+/**
+ * Global Error Handling Middleware
+ * 
+ * Catches and handles all unhandled errors in the application.
+ * Provides appropriate error responses based on environment.
+ */
 app.use((error, req, res, next) => {
 	console.error("Server error:", error);
 	res.status(500).json({
@@ -123,7 +170,12 @@ app.use((error, req, res, next) => {
 	});
 });
 
-// 404 handler
+/**
+ * 404 Not Found Handler
+ * 
+ * Handles all requests that don't match any defined routes.
+ * Returns a standardized 404 response.
+ */
 app.use((req, res) => {
 	res.status(404).json({
 		error: "Not found",
@@ -131,4 +183,5 @@ app.use((req, res) => {
 	});
 });
 
+// Export the configured Express app
 export default app;
