@@ -15,6 +15,10 @@ const adminTypeDefs = fs.readFileSync(
 	path.join(__dirname, "admin.gql"),
 	"utf8"
 );
+const teacherTypeDefs = fs.readFileSync(
+	path.join(__dirname, "teacher.gql"),
+	"utf8"
+);
 const scalarTypeDefs = fs.readFileSync(
 	path.join(__dirname, "scalar.gql"),
 	"utf8"
@@ -24,5 +28,6 @@ export const schema = gql`
 	${rootTypeDefs}
 	${loginTypeDefs}
 	${adminTypeDefs}
+	${teacherTypeDefs}
 	${scalarTypeDefs}
 `;

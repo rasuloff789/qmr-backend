@@ -1,21 +1,32 @@
-type Root {
+type Teacher {
     id: ID!
     username: String!
     fullname: String!
+    birthDate: Date!
+    phone: String!
+    tgUsername: String!
+    department: String!
+    isActive: Boolean!
     createdAt: Date!
 }
 
+type Query {
+    getTeachers: [Teacher!]!
+    getTeacher(id: ID!): Teacher
+}
+
 type Mutation {
-    addAdmin(
+    addTeacher(
         username: String!
         password: String!
         fullname: String!
         tgUsername: String!
         birthDate: Date!
         phone: Phone!
-    ): Admin!
+        department: String!
+    ): Teacher!
     
-    changeAdmin(
+    changeTeacher(
         id: ID!
         username: String
         fullname: String
@@ -24,5 +35,5 @@ type Mutation {
         tgUsername: String
         password: String
         isActive: Boolean
-    ): Admin!
+    ): Teacher!
 }

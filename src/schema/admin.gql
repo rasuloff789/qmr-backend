@@ -13,3 +13,13 @@ type Query {
     getAdmins: [Admin!]!
     getAdmin(id: ID!): Admin
 }
+
+type Mutation {
+    changeAdminActive(
+        adminId: ID!
+        isActive: Boolean!
+    ): Admin!
+    deleteAdmin(
+        adminId: ID!
+    ): Admin!
+}

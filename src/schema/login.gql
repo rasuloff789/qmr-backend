@@ -2,15 +2,28 @@ type LoginResponse {
   success: Boolean!
   message: String
   token: String
-  user: User
+  user: UserData
 }
 
-union User = Root | Admin
+type UserData {
+  id: ID!
+  username: String!
+  fullname: String!
+  role: String!
+  createdAt: Date!
+  # Admin/Teacher specific fields
+  birthDate: Date
+  phone: String
+  tgUsername: String
+  isActive: Boolean
+  # Teacher specific fields
+  department: String
+}
 
 type Mutation {
   login(username: String!, password: String!, userType: String!): LoginResponse!
 }
 
 type Query {
-  me: User
+  me: UserData
 }
