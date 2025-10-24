@@ -24,7 +24,7 @@ export default async function (_, par, { user }) {
 		let userData = null;
 
 		if (role === "root") {
-			userData = await prisma.root.findUnique({
+			const rootUser = await prisma.root.findUnique({
 				where: { id: parseInt(id) },
 				select: {
 					id: true,
@@ -33,8 +33,15 @@ export default async function (_, par, { user }) {
 					createdAt: true,
 				},
 			});
+
+			if (rootUser) {
+				userData = {
+					...rootUser,
+					role: "root",
+				};
+			}
 		} else if (role === "admin") {
-			userData = await prisma.admin.findUnique({
+			const adminUser = await prisma.admin.findUnique({
 				where: { id: parseInt(id) },
 				select: {
 					id: true,
@@ -47,6 +54,35 @@ export default async function (_, par, { user }) {
 					createdAt: true,
 				},
 			});
+
+			if (adminUser) {
+				userData = {
+					...adminUser,
+					role: "admin",
+				};
+			}
+		} else if (role === "teacher") {
+			const teacherUser = await prisma.teacher.findUnique({
+				where: { id: parseInt(id) },
+				select: {
+					id: true,
+					username: true,
+					fullname: true,
+					birthDate: true,
+					phone: true,
+					tgUsername: true,
+					department: true,
+					isActive: true,
+					createdAt: true,
+				},
+			});
+
+			if (teacherUser) {
+				userData = {
+					...teacherUser,
+					role: "teacher",
+				};
+			}
 		}
 
 		return userData;

@@ -26,6 +26,12 @@ export default async function checkUser(user) {
 				select: { id: true, username: true, fullname: true, isActive: true },
 			});
 			userExists = !!adminUser && adminUser.isActive;
+		} else if (role === "teacher") {
+			const teacherUser = await prisma.teacher.findUnique({
+				where: { id: parseInt(id) },
+				select: { id: true, username: true, fullname: true, isActive: true },
+			});
+			userExists = !!teacherUser && teacherUser.isActive;
 		}
 	} catch (error) {
 		console.error("Error checking user:", error);

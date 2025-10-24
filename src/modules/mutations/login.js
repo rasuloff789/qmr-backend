@@ -21,7 +21,7 @@ const login = async (_parent, { username, password, userType }) => {
 	};
 
 	// Validate user type
-	if (!["root", "admin"].includes(userType)) {
+	if (!["root", "admin", "teacher"].includes(userType)) {
 		loginResponse.message = `Invalid user type: ${userType}`;
 		return loginResponse;
 	}
@@ -59,6 +59,28 @@ const login = async (_parent, { username, password, userType }) => {
 				loginResponse.message = "Account is deactivated";
 				return loginResponse;
 			}
+		} else if (userType === "teacher") {
+			user = await prisma.teacher.findUnique({
+				where: { username },
+				select: {
+					id: true,
+					username: true,
+					fullname: true,
+					password: true,
+					birthDate: true,
+					phone: true,
+					tgUsername: true,
+					department: true,
+					isActive: true,
+					createdAt: true,
+				},
+			});
+
+			// Check if teacher is active
+			if (user && !user.isActive) {
+				loginResponse.message = "Account is deactivated";
+				return loginResponse;
+			}
 		}
 
 		if (!user) {
@@ -78,13 +100,32 @@ const login = async (_parent, { username, password, userType }) => {
 			username: user.username,
 		});
 
-		// Remove password from user object
-		const { password: _, ...userWithoutPassword } = user;
+		// Create user data object with role
+		const userData = {
+			id: user.id,
+			username: user.username,
+			fullname: user.fullname,
+			role: userType,
+			createdAt: user.createdAt,
+			...(userType === "admin" && {
+				birthDate: user.birthDate,
+				phone: user.phone,
+				tgUsername: user.tgUsername,
+				isActive: user.isActive,
+			}),
+			...(userType === "teacher" && {
+				birthDate: user.birthDate,
+				phone: user.phone,
+				tgUsername: user.tgUsername,
+				department: user.department,
+				isActive: user.isActive,
+			}),
+		};
 
 		loginResponse.success = true;
 		loginResponse.message = `Successfully logged in as ${userType}`;
 		loginResponse.token = token;
-		loginResponse.user = userWithoutPassword;
+		loginResponse.user = userData;
 
 		return loginResponse;
 	} catch (error) {
