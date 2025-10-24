@@ -24,5 +24,19 @@ model Admin {
   phone      String   
   tgUsername String   
   isActive   Boolean  @default(true)
+  isDeleted  Boolean? @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Teacher {
+  id         Int      @id @default(autoincrement())
+  fullname   String   
+  username   String   @unique
+  password   String
+  birthDate  DateTime 
+  phone      String   
+  tgUsername String   
+  department String   // New field specific to Teacher
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
 }
