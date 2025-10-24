@@ -59,7 +59,7 @@ function checkTelegramUsername(username) {
 	const raw = username.trim();
 
 	// Regex: @ optional, 5-32 characters, letters/numbers/_ only
-	const regex = /^(?!.*\s)@?[a-zA-Z0-9_]{5,32}$/;
+	const regex = /^(?!.*\s)[a-zA-Z0-9_]{5,32}$/;
 
 	if (!regex.test(raw)) {
 		return {
