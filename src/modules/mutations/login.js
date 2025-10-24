@@ -1,6 +1,6 @@
 import prisma from "../../config/db.js";
-import { signToken } from "../../utils/jwt.js";
-import { verifyPassword } from "../../utils/hashpswrd.js";
+import { signToken } from "../../utils/auth/jwt.js";
+import { verifyPassword } from "../../utils/auth/password.js";
 
 /**
  * User login mutation
