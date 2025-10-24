@@ -1,11 +1,10 @@
 /**
  * QMR Backend - Middleware Aggregator
  * 
- * This file exports all middleware functions for easy access.
- * Centralized middleware management for better maintainability.
+ * Clean export of all middleware functions.
  * 
  * @author QMR Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 export * from "./auth.js";

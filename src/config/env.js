@@ -1,65 +1,47 @@
 /**
  * QMR Backend - Environment Configuration
  * 
- * This file handles all environment variable configuration and validation.
- * It loads variables from .env file and provides default values for development.
- * 
- * Required Environment Variables:
- * - DATABASE_URL: PostgreSQL database connection string
- * - JWT_SECRET: Secret key for JWT token signing
- * 
- * Optional Environment Variables:
- * - PORT: Server port (default: 4000)
- * - NODE_ENV: Environment mode (development/production)
- * - JWT_EXPIRES_IN: JWT token expiration (default: 10d)
- * - CORS_ORIGIN: Allowed frontend origin (default: http://localhost:5173)
- * - BCRYPT_ROUNDS: Password hashing rounds (default: 10)
+ * Clean environment variable management with validation and defaults.
  * 
  * @author QMR Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import dotenv from "dotenv";
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 /**
- * Environment Configuration Object
- * 
- * Centralized configuration for the entire application.
- * All environment variables are loaded and validated here.
+ * Environment Configuration
  */
 const config = {
-	// Server configuration
+	// Server
 	PORT: process.env.PORT || 4000,
 	NODE_ENV: process.env.NODE_ENV || "development",
-
-	// Database configuration
+	
+	// Database
 	DATABASE_URL: process.env.DATABASE_URL,
-
-	// JWT configuration
+	
+	// JWT
 	JWT_SECRET: process.env.JWT_SECRET,
-	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "10d",
-
-	// CORS configuration
-	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
-
-	// Security configuration
-	BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS) || 10,
+	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
+	
+	// CORS
+	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:3000",
+	
+	// Security
+	BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS) || 12,
 };
 
 /**
- * Environment Variable Validation
- * 
- * Validates that all required environment variables are present.
- * Throws errors if critical variables are missing.
+ * Validate Required Environment Variables
  */
-const requiredEnvVars = ["DATABASE_URL", "JWT_SECRET"];
+const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
 
-for (const envVar of requiredEnvVars) {
-	if (!config[envVar]) {
-		throw new Error(`Missing required environment variable: ${envVar}`);
+for (const varName of requiredVars) {
+	if (!config[varName]) {
+		throw new Error(`❌ Missing required environment variable: ${varName}`);
 	}
 }
 

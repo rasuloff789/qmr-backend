@@ -1,11 +1,10 @@
 /**
  * QMR Backend - GraphQL Schema Aggregator
  * 
- * This file aggregates all GraphQL schema definitions into a single schema.
- * Organized by domain for better maintainability and scalability.
+ * Clean aggregation of all GraphQL schema definitions.
  * 
  * @author QMR Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import fs from "fs";
@@ -17,33 +16,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Load GraphQL schema files
- * 
- * Reads all .gql files from the schema directory and combines them
- * into a single GraphQL schema definition.
+ * Load GraphQL Schema Files
  */
+const loadSchemaFile = (filePath) => {
+	return fs.readFileSync(path.join(__dirname, filePath), "utf8");
+};
 
-// Load common types
-const commonTypes = fs.readFileSync(path.join(__dirname, "types/common.gql"), "utf8");
-const userTypes = fs.readFileSync(path.join(__dirname, "types/user.gql"), "utf8");
-const adminTypes = fs.readFileSync(path.join(__dirname, "types/admin.gql"), "utf8");
-const teacherTypes = fs.readFileSync(path.join(__dirname, "types/teacher.gql"), "utf8");
+// Load all schema files
+const commonTypes = loadSchemaFile("types/common.gql");
+const userTypes = loadSchemaFile("types/user.gql");
+const adminTypes = loadSchemaFile("types/admin.gql");
+const teacherTypes = loadSchemaFile("types/teacher.gql");
 
-// Load queries
-const userQueries = fs.readFileSync(path.join(__dirname, "queries/user.gql"), "utf8");
-const adminQueries = fs.readFileSync(path.join(__dirname, "queries/admin.gql"), "utf8");
-const teacherQueries = fs.readFileSync(path.join(__dirname, "queries/teacher.gql"), "utf8");
+const userQueries = loadSchemaFile("queries/user.gql");
+const adminQueries = loadSchemaFile("queries/admin.gql");
+const teacherQueries = loadSchemaFile("queries/teacher.gql");
 
-// Load mutations
-const authMutations = fs.readFileSync(path.join(__dirname, "mutations/auth.gql"), "utf8");
-const adminMutations = fs.readFileSync(path.join(__dirname, "mutations/admin.gql"), "utf8");
-const teacherMutations = fs.readFileSync(path.join(__dirname, "mutations/teacher.gql"), "utf8");
+const authMutations = loadSchemaFile("mutations/auth.gql");
+const adminMutations = loadSchemaFile("mutations/admin.gql");
+const teacherMutations = loadSchemaFile("mutations/teacher.gql");
 
 /**
  * Combined GraphQL Schema
- * 
- * All schema definitions combined into a single schema.
- * Organized by domain for better maintainability.
  */
 export const schema = gql`
 	${commonTypes}

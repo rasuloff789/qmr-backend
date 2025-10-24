@@ -1,55 +1,59 @@
 /**
  * QMR Backend - Error Handling Middleware
  * 
- * This file provides centralized error handling for the application.
- * Handles different types of errors and provides appropriate responses.
+ * Clean, centralized error handling with proper logging and responses.
  * 
  * @author QMR Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { ERROR_MESSAGES } from "../constants/messages.js";
 
 /**
  * Global Error Handler
- * 
- * Catches and handles all unhandled errors in the application.
- * Provides appropriate error responses based on error type.
- * 
- * @param {Error} error - The error object
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Next middleware function
  */
 export const errorHandler = (error, req, res, next) => {
-	console.error("Error:", error);
+	console.error("❌ Server Error:", {
+		message: error.message,
+		stack: error.stack,
+		url: req.url,
+		method: req.method,
+		timestamp: new Date().toISOString()
+	});
 
-	// Default error response
 	let statusCode = 500;
 	let message = ERROR_MESSAGES.INTERNAL_ERROR;
 
 	// Handle specific error types
-	if (error.name === "ValidationError") {
-		statusCode = 400;
-		message = ERROR_MESSAGES.VALIDATION_ERROR;
-	} else if (error.name === "UnauthorizedError") {
-		statusCode = 401;
-		message = ERROR_MESSAGES.UNAUTHORIZED;
-	} else if (error.name === "ForbiddenError") {
-		statusCode = 403;
-		message = ERROR_MESSAGES.FORBIDDEN;
-	} else if (error.name === "NotFoundError") {
-		statusCode = 404;
-		message = ERROR_MESSAGES.USER_NOT_FOUND;
-	} else if (error.name === "ConflictError") {
-		statusCode = 409;
-		message = ERROR_MESSAGES.USER_ALREADY_EXISTS;
+	switch (error.name) {
+		case "ValidationError":
+			statusCode = 400;
+			message = ERROR_MESSAGES.VALIDATION_ERROR;
+			break;
+		case "UnauthorizedError":
+			statusCode = 401;
+			message = ERROR_MESSAGES.UNAUTHORIZED;
+			break;
+		case "ForbiddenError":
+			statusCode = 403;
+			message = ERROR_MESSAGES.FORBIDDEN;
+			break;
+		case "NotFoundError":
+			statusCode = 404;
+			message = ERROR_MESSAGES.USER_NOT_FOUND;
+			break;
+		case "ConflictError":
+			statusCode = 409;
+			message = ERROR_MESSAGES.USER_ALREADY_EXISTS;
+			break;
+		default:
+			statusCode = 500;
+			message = ERROR_MESSAGES.INTERNAL_ERROR;
 	}
 
-	// Send error response
 	res.status(statusCode).json({
 		success: false,
-		message: message,
+		message,
 		...(process.env.NODE_ENV === "development" && {
 			error: error.message,
 			stack: error.stack
@@ -59,14 +63,8 @@ export const errorHandler = (error, req, res, next) => {
 
 /**
  * 404 Not Found Handler
- * 
- * Handles requests to non-existent routes.
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Next middleware function
  */
-export const notFoundHandler = (req, res, next) => {
+export const notFoundHandler = (req, res) => {
 	res.status(404).json({
 		success: false,
 		message: `Route ${req.method} ${req.originalUrl} not found`

@@ -1,11 +1,10 @@
 /**
  * QMR Backend - Application Messages
  * 
- * This file contains all application messages for consistency and internationalization.
- * Centralized message management for better maintainability.
+ * Clean, centralized message management for consistency.
  * 
  * @author QMR Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 /**
@@ -14,7 +13,7 @@
 export const SUCCESS_MESSAGES = {
 	LOGIN_SUCCESS: "Successfully logged in",
 	USER_CREATED: "User created successfully",
-	USER_UPDATED: "User updated successfully", 
+	USER_UPDATED: "User updated successfully",
 	USER_DELETED: "User deleted successfully",
 	PASSWORD_CHANGED: "Password changed successfully",
 	PROFILE_UPDATED: "Profile updated successfully"
@@ -24,26 +23,26 @@ export const SUCCESS_MESSAGES = {
  * Error Messages
  */
 export const ERROR_MESSAGES = {
-	// Authentication errors
+	// Authentication
 	INVALID_CREDENTIALS: "Invalid username or password",
 	INVALID_TOKEN: "Invalid or expired token",
 	UNAUTHORIZED: "Not authorized to perform this action",
 	FORBIDDEN: "Access forbidden",
 	
-	// User errors
+	// User Management
 	USER_NOT_FOUND: "User not found",
 	USER_ALREADY_EXISTS: "User already exists",
 	USER_INACTIVE: "User account is inactive",
 	USER_DELETED: "User account has been deleted",
 	
-	// Validation errors
+	// Validation
 	INVALID_INPUT: "Invalid input provided",
 	MISSING_REQUIRED_FIELD: "Required field is missing",
 	INVALID_EMAIL: "Invalid email format",
 	INVALID_PHONE: "Invalid phone number format",
 	WEAK_PASSWORD: "Password does not meet security requirements",
 	
-	// System errors
+	// System
 	INTERNAL_ERROR: "Internal server error",
 	DATABASE_ERROR: "Database operation failed",
 	NETWORK_ERROR: "Network connection failed",
@@ -68,11 +67,7 @@ export const VALIDATION_MESSAGES = {
 };
 
 /**
- * Get message by key
- * 
- * @param {string} category - Message category (SUCCESS, ERROR, VALIDATION)
- * @param {string} key - Message key
- * @returns {string} - Message text
+ * Get message by category and key
  */
 export const getMessage = (category, key) => {
 	const messages = {
