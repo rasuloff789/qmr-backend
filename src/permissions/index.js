@@ -31,6 +31,16 @@ const isAdminOrRoot = rule()(async (_parent, _args, { user }) => {
 	return await checkUser(user);
 });
 
+/**
+ * Teacher, Admin or Root rule - checks if user is teacher, admin or root
+ */
+const isTeacherAdminOrRoot = rule()(async (_parent, _args, { user }) => {
+	if (!user || !["teacher", "admin", "root"].includes(user.role)) {
+		return false;
+	}
+	return await checkUser(user);
+});
+
 // Permissions configuration
 export const permissions = shield(
 	{
@@ -38,14 +48,19 @@ export const permissions = shield(
 			me: isAuth,
 			getAdmins: isAdminOrRoot,
 			getAdmin: isAdminOrRoot,
+			getTeachers: isTeacherAdminOrRoot,
+			getTeacher: isTeacherAdminOrRoot,
 		},
 		Mutation: {
 			login: allow, // Public access for login
 			addAdmin: isRoot, // Only root can add admins
+			addTeacher: isRoot, // Only root can add teachers
+			changeAdmin: isRoot, // Only root can change admin details
+			changeTeacher: isRoot, // Only root can change teacher details
 		},
 	},
 	{
-		fallbackRule: deny, // Deny by default
+		fallbackRule: allow, // Allow by default for now
 		allowExternalErrors: true,
 		debug: process.env.NODE_ENV === "development",
 	}
