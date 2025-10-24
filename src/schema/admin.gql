@@ -10,5 +10,6 @@ type Admin {
 }
 
 type Query {
-    getAdmins:[Admin!]!
+    getAdmins: [Admin!]!
+    getAdmin(id: ID!): Admin
 }

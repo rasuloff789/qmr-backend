@@ -1,15 +1,36 @@
-import prisma from "../config/db.js"; // This imports the Prisma client
+import prisma from "../config/db.js";
 
+/**
+ * Check if a user exists and is valid
+ * @param {Object} user - The user object from JWT token
+ * @returns {Promise<boolean>} - True if user is valid, false otherwise
+ */
 export default async function checkUser(user) {
 	if (!user?.role || !user?.id) {
 		return false;
 	}
+
 	const { role, id } = user;
-	if (role === "root") {
-		user = await prisma.root.findUnique({ where: { id } });
-	} else if (role === "admin") {
-		user = await prisma.admin.findUnique({ where: { id } });
+	let userExists = false;
+
+	try {
+		if (role === "root") {
+			const rootUser = await prisma.root.findUnique({
+				where: { id: parseInt(id) },
+				select: { id: true, username: true, fullname: true },
+			});
+			userExists = !!rootUser;
+		} else if (role === "admin") {
+			const adminUser = await prisma.admin.findUnique({
+				where: { id: parseInt(id) },
+				select: { id: true, username: true, fullname: true, isActive: true },
+			});
+			userExists = !!adminUser && adminUser.isActive;
+		}
+	} catch (error) {
+		console.error("Error checking user:", error);
+		return false;
 	}
 
-	return true;
+	return userExists;
 }

@@ -1,15 +1,17 @@
 import prisma from "../../config/db.js";
 
 /**
- * Get all admin users
+ * Get a single admin by ID
  * @param {Object} _ - Parent object (unused)
  * @param {Object} args - Query arguments
+ * @param {string} args.id - Admin ID
  * @param {Object} context - GraphQL context
- * @returns {Array} - Array of admin users
+ * @returns {Object|null} - Admin object or null if not found
  */
-export default async function (_, args, context) {
+export default async function (_, { id }, context) {
 	try {
-		const admins = await prisma.admin.findMany({
+		const admin = await prisma.admin.findUnique({
+			where: { id: parseInt(id) },
 			select: {
 				id: true,
 				username: true,
@@ -20,14 +22,11 @@ export default async function (_, args, context) {
 				isActive: true,
 				createdAt: true,
 			},
-			orderBy: {
-				createdAt: "desc",
-			},
 		});
 
-		return admins;
+		return admin;
 	} catch (error) {
-		console.error("Error fetching admins:", error);
-		throw new Error("Failed to fetch admin users");
+		console.error("Error fetching admin:", error);
+		throw new Error("Failed to fetch admin user");
 	}
 }

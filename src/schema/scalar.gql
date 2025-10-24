@@ -1,2 +1,5 @@
 scalar Date
 scalar Phone
+
+# Custom scalar for phone numbers with validation
+# Phone format: International format (e.g., 998XXXXXXXXX, 90XXXXXXXXXX)

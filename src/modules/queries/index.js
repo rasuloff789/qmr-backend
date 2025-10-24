@@ -1,3 +1,5 @@
 import getAdmins from "./getAdmins.js";
+import getAdmin from "./getAdmin.js";
 import me from "./me.js";
-export { getAdmins, me };
+
+export { getAdmins, getAdmin, me };

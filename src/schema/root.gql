@@ -2,6 +2,7 @@ type Root {
     id: ID!
     username: String!
     fullname: String!
+    createdAt: Date!
 }
 
 type Mutation {
