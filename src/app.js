@@ -40,10 +40,13 @@ const schemaWithMiddleware = applyMiddleware(executableSchema, permissions);
  */
 app.use(
 	cors({
-		origin: config.CORS_ORIGIN,
+		origin: config.NODE_ENV === "development" 
+			? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+			: config.CORS_ORIGIN,
 		credentials: true,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
+		optionsSuccessStatus: 200, // For legacy browser support
 	})
 );
 

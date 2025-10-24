@@ -28,7 +28,7 @@ const config = {
 	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 	
 	// CORS
-	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:3000",
+	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
 	
 	// Security
 	BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS) || 12,
