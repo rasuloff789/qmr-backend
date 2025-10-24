@@ -1,9 +1,9 @@
 /**
  * QMR Backend - Express Server Configuration
- * 
+ *
  * This file configures the Express server with all middleware, routes, and GraphQL setup.
  * It handles CORS, authentication, GraphQL endpoint, and error handling.
- * 
+ *
  * @author QMR Development Team
  * @version 1.0.0
  */
@@ -24,7 +24,7 @@ const app = express();
 
 /**
  * GraphQL Schema Setup
- * 
+ *
  * Creates an executable GraphQL schema by combining type definitions and resolvers,
  * then applies permission middleware for role-based access control.
  */
@@ -36,7 +36,7 @@ const schemaWithMiddleware = applyMiddleware(executableSchema, permissions);
 
 /**
  * CORS Configuration
- * 
+ *
  * Configures Cross-Origin Resource Sharing to allow frontend applications
  * to communicate with this backend API.
  */
@@ -51,7 +51,7 @@ app.use(
 
 /**
  * Body Parsing Middleware
- * 
+ *
  * Parses incoming request bodies as JSON and URL-encoded data.
  * Set with reasonable limits to prevent abuse.
  */
@@ -60,7 +60,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 /**
  * Health Check Endpoint
- * 
+ *
  * Provides a simple health check endpoint for monitoring and load balancers.
  * Returns server status, timestamp, and environment information.
  */
@@ -74,7 +74,7 @@ app.get("/health", (req, res) => {
 
 /**
  * Debug Endpoint (Development Only)
- * 
+ *
  * Provides debugging information for development purposes.
  * Logs request details to help troubleshoot API issues.
  */
@@ -96,7 +96,7 @@ app.post("/debug", (req, res) => {
 
 /**
  * GraphQL Endpoint
- * 
+ *
  * Main GraphQL endpoint that handles all GraphQL queries and mutations.
  * Includes JWT authentication, context injection, and GraphiQL interface.
  */
@@ -155,7 +155,7 @@ query Me {
 
 /**
  * Global Error Handling Middleware
- * 
+ *
  * Catches and handles all unhandled errors in the application.
  * Provides appropriate error responses based on environment.
  */
@@ -172,7 +172,7 @@ app.use((error, req, res, next) => {
 
 /**
  * 404 Not Found Handler
- * 
+ *
  * Handles all requests that don't match any defined routes.
  * Returns a standardized 404 response.
  */

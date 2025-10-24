@@ -1,9 +1,9 @@
 /**
  * QMR Backend - Main Entry Point
- * 
+ *
  * This is the main entry point for the QMR (Quality Management System) backend API.
  * It starts the Express server with GraphQL endpoint and handles graceful shutdown.
- * 
+ *
  * Features:
  * - GraphQL API with authentication
  * - Support for Root, Admin, and Teacher user types
@@ -11,7 +11,7 @@
  * - Database integration with Prisma
  * - Health check endpoint
  * - Graceful shutdown handling
- * 
+ *
  * @author QMR Development Team
  * @version 1.0.0
  */
@@ -24,7 +24,7 @@ const PORT = config.PORT;
 
 /**
  * Start the Express server
- * 
+ *
  * The server provides:
  * - GraphQL endpoint at /graphql
  * - Health check at /health
@@ -38,7 +38,7 @@ const server = app.listen(PORT, () => {
 
 /**
  * Graceful shutdown handlers
- * 
+ *
  * These handlers ensure the server shuts down cleanly when receiving
  * termination signals, closing database connections and stopping the server properly.
  */
