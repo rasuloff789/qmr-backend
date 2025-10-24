@@ -41,6 +41,23 @@ app.get("/health", (req, res) => {
 	});
 });
 
+// Debug endpoint for testing requests
+app.post("/debug", (req, res) => {
+	console.log("Debug request received:");
+	console.log("Headers:", req.headers);
+	console.log("Body:", req.body);
+	console.log("Query:", req.query);
+
+	res.status(200).json({
+		message: "Debug endpoint working",
+		received: {
+			headers: req.headers,
+			body: req.body,
+			query: req.query,
+		},
+	});
+});
+
 // GraphQL endpoint
 app.use(
 	"/graphql",

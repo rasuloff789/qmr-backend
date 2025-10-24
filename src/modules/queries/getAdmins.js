@@ -10,14 +10,19 @@ import prisma from "../../config/db.js";
 export default async function (_, args, context) {
 	try {
 		const admins = await prisma.admin.findMany({
+			where: {
+				isDeleted: false,
+			},
 			select: {
 				id: true,
 				username: true,
 				fullname: true,
+				// We'll select birthDate, but format it after fetching from DB
 				birthDate: true,
 				phone: true,
 				tgUsername: true,
 				isActive: true,
+				isDeleted: true,
 				createdAt: true,
 			},
 			orderBy: {
