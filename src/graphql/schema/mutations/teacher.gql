@@ -1,0 +1,25 @@
+# Teacher Mutations
+# Teacher-related mutations
+
+extend type Mutation {
+    addTeacher(
+        username: String!
+        password: String!
+        fullname: String!
+        tgUsername: String!
+        birthDate: Date!
+        phone: Phone!
+        department: String!
+    ): Teacher!
+    
+    changeTeacher(
+        id: ID!
+        username: String
+        fullname: String
+        birthDate: Date
+        phone: Phone
+        tgUsername: String
+        password: String
+        isActive: Boolean
+    ): Teacher!
+}

@@ -1,0 +1,14 @@
+# Teacher Types
+# Teacher-specific types and operations
+
+type Teacher {
+    id: ID!
+    username: String!
+    fullname: String!
+    birthDate: Date!
+    phone: String!
+    tgUsername: String!
+    department: String!
+    isActive: Boolean!
+    createdAt: Date!
+}

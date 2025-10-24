@@ -1,0 +1,10 @@
+# Authentication Mutations
+# Login and authentication operations
+
+type Mutation {
+    login(
+        username: String!
+        password: String!
+        userType: String!
+    ): LoginResponse!
+}

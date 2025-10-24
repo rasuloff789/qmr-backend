@@ -1,0 +1,33 @@
+# Admin Mutations
+# Admin-related mutations
+
+extend type Mutation {
+    addAdmin(
+        username: String!
+        password: String!
+        fullname: String!
+        tgUsername: String!
+        birthDate: Date!
+        phone: Phone!
+    ): Admin!
+    
+    changeAdmin(
+        id: ID!
+        username: String
+        fullname: String
+        birthDate: Date
+        phone: Phone
+        tgUsername: String
+        password: String
+        isActive: Boolean
+    ): Admin!
+    
+    changeAdminActive(
+        adminId: ID!
+        isActive: Boolean!
+    ): Admin!
+    
+    deleteAdmin(
+        adminId: ID!
+    ): Admin!
+}

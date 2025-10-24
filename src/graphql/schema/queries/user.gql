@@ -1,0 +1,6 @@
+# User Queries
+# User-related queries
+
+type Query {
+    me: UserData
+}

@@ -16,7 +16,7 @@
  * @version 1.0.0
  */
 
-import app from "./server.js";
+import app from "./app.js";
 import config from "./config/env.js";
 
 // Get port from environment configuration

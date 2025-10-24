@@ -1,0 +1,31 @@
+# User Types
+# Base user types and authentication
+
+type Root {
+    id: ID!
+    username: String!
+    fullname: String!
+    createdAt: Date!
+}
+
+type UserData {
+    id: ID!
+    username: String!
+    fullname: String!
+    role: String!
+    createdAt: Date!
+    # Admin/Teacher specific fields
+    birthDate: Date
+    phone: String
+    tgUsername: String
+    isActive: Boolean
+    # Teacher specific fields
+    department: String
+}
+
+type LoginResponse {
+    success: Boolean!
+    message: String!
+    token: String
+    user: UserData
+}

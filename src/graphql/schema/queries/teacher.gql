@@ -1,0 +1,7 @@
+# Teacher Queries
+# Teacher-related queries
+
+extend type Query {
+    getTeachers: [Teacher!]!
+    getTeacher(id: ID!): Teacher
+}

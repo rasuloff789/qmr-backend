@@ -1,0 +1,17 @@
+# Common Types
+# Shared types used across the application
+
+scalar Date
+scalar Phone
+
+# Common response types
+type SuccessResponse {
+    success: Boolean!
+    message: String!
+}
+
+type ErrorResponse {
+    success: Boolean!
+    message: String!
+    errors: [String!]
+}

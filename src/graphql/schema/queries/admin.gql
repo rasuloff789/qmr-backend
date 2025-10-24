@@ -1,0 +1,7 @@
+# Admin Queries
+# Admin-related queries
+
+extend type Query {
+    getAdmins: [Admin!]!]
+    getAdmin(id: ID!): Admin
+}
