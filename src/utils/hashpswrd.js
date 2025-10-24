@@ -1,10 +1,36 @@
+/**
+ * QMR Backend - Password Hashing Utilities
+ * 
+ * This file provides secure password hashing and verification functions using bcrypt.
+ * It includes password strength validation and secure hashing with configurable rounds.
+ * 
+ * Features:
+ * - Secure password hashing with bcrypt
+ * - Password verification against hashes
+ * - Password strength validation
+ * - Configurable hashing rounds
+ * - Error handling and logging
+ * 
+ * @author QMR Development Team
+ * @version 1.0.0
+ */
+
 import bcrypt from "bcrypt";
 import config from "../config/env.js";
 
 /**
  * Hash a plain text password
+ * 
+ * Securely hashes a plain text password using bcrypt with configurable salt rounds.
+ * Uses the BCRYPT_ROUNDS environment variable for salt rounds.
+ * 
  * @param {string} plainPassword - The plain text password to hash
  * @returns {Promise<string>} - The hashed password
+ * @throws {Error} - If hashing fails
+ * 
+ * @example
+ * const hashedPassword = await hashPassword('myPassword123');
+ * console.log(hashedPassword); // '$2b$10$...'
  */
 const hashPassword = async (plainPassword) => {
 	try {
@@ -17,9 +43,20 @@ const hashPassword = async (plainPassword) => {
 
 /**
  * Verify a plain text password against a hashed password
+ * 
+ * Compares a plain text password against a hashed password to verify authentication.
+ * Uses bcrypt's secure comparison function to prevent timing attacks.
+ * 
  * @param {string} plainPassword - The plain text password to verify
  * @param {string} hashedPassword - The hashed password to compare against
  * @returns {Promise<boolean>} - True if password matches, false otherwise
+ * @throws {Error} - If verification fails
+ * 
+ * @example
+ * const isValid = await verifyPassword('myPassword123', hashedPassword);
+ * if (isValid) {
+ *   console.log('Password is correct');
+ * }
  */
 const verifyPassword = async (plainPassword, hashedPassword) => {
 	try {
@@ -32,8 +69,23 @@ const verifyPassword = async (plainPassword, hashedPassword) => {
 
 /**
  * Check if a password meets security requirements
+ * 
+ * Validates password strength based on common security requirements:
+ * - Minimum 8 characters
+ * - At least one uppercase letter
+ * - At least one lowercase letter
+ * - At least one number
+ * - Optional special characters
+ * 
  * @param {string} password - The password to check
  * @returns {boolean} - True if password meets requirements
+ * 
+ * @example
+ * if (isPasswordSecure('MyPassword123')) {
+ *   console.log('Password is secure');
+ * } else {
+ *   console.log('Password is too weak');
+ * }
  */
 const isPasswordSecure = (password) => {
 	// Minimum 8 characters, at least one uppercase, one lowercase, one number
