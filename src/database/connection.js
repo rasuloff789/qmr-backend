@@ -1,5 +1,5 @@
 /**
- * QMR Backend - Database Configuration
+ * QMR Backend - Database Connection
  * 
  * Clean Prisma client setup with connection pooling and error handling.
  * 
@@ -8,7 +8,7 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import config from "./env.js";
+import config from "../config/env.js";
 
 /**
  * Prisma Client Configuration

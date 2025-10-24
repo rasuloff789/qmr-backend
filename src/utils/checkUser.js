@@ -14,7 +14,7 @@
  * @version 1.0.0
  */
 
-import prisma from "../config/db.js";
+import { prisma } from "../database/index.js";
 
 /**
  * Check if a user exists and is valid

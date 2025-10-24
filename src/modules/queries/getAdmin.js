@@ -1,4 +1,4 @@
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 
 /**
  * Get a single admin by ID

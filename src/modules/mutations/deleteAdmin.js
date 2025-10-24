@@ -1,4 +1,4 @@
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 
 /**
  * "Delete" an admin user by setting isDeleted property to true.

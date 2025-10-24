@@ -1,4 +1,4 @@
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 
 /**
  * Change the 'isActive' status of an admin user.

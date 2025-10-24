@@ -1,4 +1,4 @@
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 import { signToken } from "../../utils/auth/jwt.js";
 import { verifyPassword } from "../../utils/auth/password.js";
 

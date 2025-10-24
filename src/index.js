@@ -1,9 +1,9 @@
 /**
  * QMR Backend - Application Entry Point
- * 
+ *
  * Clean entry point with proper server startup, graceful shutdown,
  * and comprehensive error handling.
- * 
+ *
  * @author QMR Development Team
  * @version 2.0.0
  */
@@ -29,12 +29,12 @@ const server = app.listen(PORT, () => {
  */
 const gracefulShutdown = (signal) => {
 	console.log(`\n${signal} received. Shutting down gracefully...`);
-	
+
 	server.close(() => {
 		console.log("✅ Server closed successfully");
 		process.exit(0);
 	});
-	
+
 	// Force close after 10 seconds
 	setTimeout(() => {
 		console.error("❌ Forced shutdown");

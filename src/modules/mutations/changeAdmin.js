@@ -1,4 +1,4 @@
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 import { hashPassword, isPasswordSecure } from "../../utils/auth/password.js";
 import {
 	checkUzPhoneInt,

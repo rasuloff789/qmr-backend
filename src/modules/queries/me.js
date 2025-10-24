@@ -1,5 +1,5 @@
 import checkUser from "../../utils/checkUser.js";
-import prisma from "../../config/db.js";
+import { prisma } from "../../database/index.js";
 
 /**
  * Get current user information
