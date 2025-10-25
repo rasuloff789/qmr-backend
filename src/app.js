@@ -78,7 +78,7 @@ app.use(
 					console.log("✅ Token verified successfully:", {
 						id: user.id,
 						role: user.role,
-						username: user.username
+						username: user.username,
 					});
 				} catch (error) {
 					console.warn("❌ Invalid token:", error.message);
@@ -95,11 +95,11 @@ app.use(
 			});
 
 			// Additional logging for root users
-			if (user && user.role === 'root') {
+			if (user && user.role === "root") {
 				console.log("🔍 Root user request detected:", {
 					id: user.id,
 					role: user.role,
-					username: user.username
+					username: user.username,
 				});
 			}
 
