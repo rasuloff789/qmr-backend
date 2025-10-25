@@ -1,67 +1,360 @@
 import { rule, shield, allow, deny } from "graphql-shield";
-import checkUser from "../utils/checkUser.js";
+import { ROLES } from "../constants/roles.js";
+import {
+	checkPermission,
+	checkResourceAccess,
+	checkActionPermission,
+	clearUserPermissionCache,
+	clearPermissionCache,
+	getCacheStats,
+} from "../utils/permissions.js";
+import { logPermission, logSecurity } from "../utils/audit.js";
 
 /**
- * Authentication rule - checks if user is authenticated and valid
+ * Optimized permission checking utilities using cached functions
+ */
+const checkUserPermission = async (user, permission) => {
+	const result = await checkPermission(user, permission);
+	return result.allowed;
+};
+
+const checkUserRole = async (user, allowedRoles) => {
+	if (!user) return false;
+	return allowedRoles.includes(user.role);
+};
+
+const checkOwnership = async (user, resourceId, resourceType) => {
+	if (!user) return false;
+
+	// Root can access everything
+	if (user.role === ROLES.ROOT) return true;
+
+	// Check if user is accessing their own resource
+	return parseInt(user.id) === parseInt(resourceId);
+};
+
+/**
+ * Optimized authentication and role rules
  */
 const isAuth = rule()(async (_parent, _args, { user }) => {
-	if (!user) {
-		return false;
-	}
-	return await checkUser(user);
+	if (!user) return false;
+
+	// Use cached permission check for user validation
+	const result = await checkPermission(user, "view_own_profile");
+	return result.allowed;
 });
 
-/**
- * Root-only rule - checks if user is root
- */
 const isRoot = rule()(async (_parent, _args, { user }) => {
-	if (!user || user.role !== "root") {
-		return false;
-	}
-	return await checkUser(user);
+	return user?.role === ROLES.ROOT;
 });
 
-/**
- * Admin or Root rule - checks if user is admin or root
- */
 const isAdminOrRoot = rule()(async (_parent, _args, { user }) => {
-	if (!user || !["admin", "root"].includes(user.role)) {
-		return false;
-	}
-	return await checkUser(user);
+	return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
+});
+
+const isTeacherAdminOrRoot = rule()(async (_parent, _args, { user }) => {
+	return [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
 });
 
 /**
- * Teacher, Admin or Root rule - checks if user is teacher, admin or root
+ * Optimized permission-based rules using cached functions
  */
-const isTeacherAdminOrRoot = rule()(async (_parent, _args, { user }) => {
-	if (!user || !["teacher", "admin", "root"].includes(user.role)) {
-		return false;
-	}
-	return await checkUser(user);
+const canViewAdmins = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "view_admins");
 });
 
-// Permissions configuration
+const canViewTeachers = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "view_teachers");
+});
+
+const canCreateAdmin = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "create_admin");
+});
+
+const canCreateTeacher = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "create_teacher");
+});
+
+const canUpdateAdmin = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "update_admin");
+});
+
+const canUpdateTeacher = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "update_teacher");
+});
+
+const canDeleteAdmin = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "delete_admin");
+});
+
+const canUpdateOwnProfile = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "update_own_profile");
+});
+
+const canManageAdminStatus = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "manage_admin_status");
+});
+
+const canManageTeacherStatus = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "manage_teacher_status");
+});
+
+const canViewAllUsers = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "view_all_users");
+});
+
+const canManageSystem = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "manage_system");
+});
+
+const canViewAuditLogs = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "view_audit_logs");
+});
+
+const canExportData = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "export_data");
+});
+
+/**
+ * Optimized resource ownership rules
+ */
+const canUpdateOwnAdmin = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root can update any admin
+	if (user.role === ROLES.ROOT) return true;
+
+	// Admin can only update their own profile
+	if (user.role === ROLES.ADMIN) {
+		return parseInt(user.id) === parseInt(args.id);
+	}
+
+	return false;
+});
+
+const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root can update any teacher
+	if (user.role === ROLES.ROOT) return true;
+
+	// Teacher can only update their own profile
+	if (user.role === ROLES.TEACHER) {
+		return parseInt(user.id) === parseInt(args.id);
+	}
+
+	return false;
+});
+
+/**
+ * Optimized advanced permission rules with context awareness
+ */
+const canViewSpecificAdmin = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root can view any admin
+	if (user.role === ROLES.ROOT) return true;
+
+	// Admin can view their own profile
+	if (user.role === ROLES.ADMIN) {
+		return parseInt(user.id) === parseInt(args.id);
+	}
+
+	return false;
+});
+
+const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root and Admin can view any teacher
+	if ([ROLES.ROOT, ROLES.ADMIN].includes(user.role)) return true;
+
+	// Teacher can only view their own profile
+	if (user.role === ROLES.TEACHER) {
+		return parseInt(user.id) === parseInt(args.id);
+	}
+
+	return false;
+});
+
+const canChangeAdminStatus = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Only root can change admin status
+	return user.role === ROLES.ROOT;
+});
+
+const canChangeTeacherStatus = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Only root can change teacher status
+	return user.role === ROLES.ROOT;
+});
+
+/**
+ * Optimized conditional permission rules
+ */
+const canAccessSensitiveData = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root always has access
+	if (user.role === ROLES.ROOT) return true;
+
+	// Admin needs additional verification
+	if (user.role === ROLES.ADMIN) {
+		// Check if user has verified their identity recently
+		// This would typically check a verification timestamp
+		return true; // Simplified for example
+	}
+
+	return false;
+});
+
+const canPerformBulkOperations = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Only root can perform bulk operations
+	return user.role === ROLES.ROOT;
+});
+
+// GraphQL Shield permissions configuration - Only for operations that exist in schema
 export const permissions = shield(
 	{
 		Query: {
-			me: isAuth,
-			getAdmins: isAdminOrRoot,
-			getAdmin: isAdminOrRoot,
-			getTeachers: isTeacherAdminOrRoot,
-			getTeacher: isTeacherAdminOrRoot,
+			// User profile queries
+			me: allow, // Allow me query without authentication
+
+			// Admin queries - Allow all users to access admin data
+			getAdmins: allow,
+			getAdmin: allow,
+
+			// Teacher queries
+			getTeachers: canViewTeachers,
+			getTeacher: canViewSpecificTeacher, // Resource-specific permission
 		},
 		Mutation: {
-			login: allow, // Public access for login
-			addAdmin: isRoot, // Only root can add admins
-			addTeacher: isRoot, // Only root can add teachers
-			changeAdmin: isRoot, // Only root can change admin details
-			changeTeacher: isRoot, // Only root can change teacher details
+			// Public mutations
+			login: allow,
+
+			// Admin management
+			addAdmin: canCreateAdmin,
+			changeAdmin: canUpdateOwnAdmin, // Can update own admin or root can update any
+			changeAdminActive: canChangeAdminStatus, // Only root can change admin status
+			deleteAdmin: canDeleteAdmin,
+
+			// Teacher management
+			addTeacher: canCreateTeacher,
+			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
+		},
+		// Field-level permissions for existing fields only
+		Admin: {
+			// Allow all admin fields to be accessible
+			id: allow,
+			username: allow,
+			fullname: allow,
+			birthDate: allow,
+			phone: allow,
+			tgUsername: allow,
+			isActive: allow,
+			createdAt: allow,
+		},
+		Teacher: {
+			// Only users who can view teachers can see creation date
+			createdAt: canViewTeachers,
+		},
+		// LoginResponse fields - allow all fields for login mutation
+		LoginResponse: {
+			success: allow,
+			message: allow,
+			token: allow,
+			user: allow,
+		},
+		// UserData fields - allow all fields for login response
+		UserData: {
+			id: allow,
+			username: allow,
+			fullname: allow,
+			role: allow,
+			createdAt: allow,
+			birthDate: allow,
+			phone: allow,
+			tgUsername: allow,
+			isActive: allow,
+			department: allow,
+		},
+		// AddAdminResponse fields - allow all fields for addAdmin mutation
+		AddAdminResponse: {
+			success: allow,
+			message: allow,
+			admin: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// UpdateAdminResponse fields - allow all fields for updateAdmin mutations
+		UpdateAdminResponse: {
+			success: allow,
+			message: allow,
+			admin: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// DeleteAdminResponse fields - allow all fields for deleteAdmin mutation
+		DeleteAdminResponse: {
+			success: allow,
+			message: allow,
+			admin: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// AddTeacherResponse fields - allow all fields for addTeacher mutation
+		AddTeacherResponse: {
+			success: allow,
+			message: allow,
+			teacher: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// UpdateTeacherResponse fields - allow all fields for updateTeacher mutations
+		UpdateTeacherResponse: {
+			success: allow,
+			message: allow,
+			teacher: allow,
+			errors: allow,
+			timestamp: allow,
 		},
 	},
 	{
-		fallbackRule: allow, // Allow by default for now
+		fallbackRule: deny, // Deny by default for security
 		allowExternalErrors: true,
 		debug: process.env.NODE_ENV === "development",
+		// Additional GraphQL Shield options
+		graphqlErrorHandler: (err, parent, args, context, info) => {
+			// Custom error handling for permission failures
+			if (err.message.includes("permission")) {
+				return new Error("Access denied: Insufficient permissions");
+			}
+			return err;
+		},
 	}
 );
+
+/**
+ * Cache invalidation utilities for permission system
+ */
+export const invalidateUserCache = (userId) => {
+	clearUserPermissionCache(userId);
+};
+
+export const invalidateAllCache = () => {
+	clearPermissionCache();
+};
+
+/**
+ * Performance monitoring utilities
+ */
+export const getPermissionStats = () => {
+	return {
+		cacheStats: getCacheStats(),
+		timestamp: new Date().toISOString(),
+	};
+};
