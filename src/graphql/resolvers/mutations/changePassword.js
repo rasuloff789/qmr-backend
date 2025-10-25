@@ -1,5 +1,9 @@
 import { prisma } from "../../../database/index.js";
-import { hashPassword, verifyPassword, isPasswordSecure } from "../../../utils/auth/password.js";
+import {
+	hashPassword,
+	verifyPassword,
+	isPasswordSecure,
+} from "../../../utils/auth/password.js";
 
 /**
  * Change user password for all user types
@@ -11,7 +15,11 @@ import { hashPassword, verifyPassword, isPasswordSecure } from "../../../utils/a
  * @param {Object} context.user - Authenticated user
  * @returns {Object} - ChangePasswordResponse with success status
  */
-const changePassword = async (_parent, { currentPassword, newPassword }, { user }) => {
+const changePassword = async (
+	_parent,
+	{ currentPassword, newPassword },
+	{ user }
+) => {
 	try {
 		// Check if user is authenticated
 		if (!user) {
@@ -76,7 +84,10 @@ const changePassword = async (_parent, { currentPassword, newPassword }, { user 
 		}
 
 		// Verify current password
-		const isCurrentPasswordValid = await verifyPassword(currentPassword, currentUser.password);
+		const isCurrentPasswordValid = await verifyPassword(
+			currentPassword,
+			currentUser.password
+		);
 		if (!isCurrentPasswordValid) {
 			return {
 				success: false,

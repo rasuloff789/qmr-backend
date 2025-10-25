@@ -16,6 +16,20 @@ type ChangePasswordResponse {
     timestamp: String
 }
 
+type ForgotPasswordResponse {
+    success: Boolean!
+    message: String!
+    errors: [String!]
+    timestamp: String
+}
+
+type ResetPasswordResponse {
+    success: Boolean!
+    message: String!
+    errors: [String!]
+    timestamp: String
+}
+
 type Mutation {
     login(
         username: String!
@@ -32,4 +46,16 @@ type Mutation {
         currentPassword: String!
         newPassword: String!
     ): ChangePasswordResponse!
+    
+    forgotPassword(
+        username: String!
+        userType: String!
+    ): ForgotPasswordResponse!
+    
+    resetPassword(
+        username: String!
+        userType: String!
+        verificationCode: String!
+        newPassword: String!
+    ): ResetPasswordResponse!
 }

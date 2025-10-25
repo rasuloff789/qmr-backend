@@ -235,6 +235,8 @@ export const permissions = shield(
 		Mutation: {
 			// Public mutations
 			login: allow,
+			forgotPassword: allow, // Public - no authentication required
+			resetPassword: allow, // Public - no authentication required
 
 			// Profile management
 			updateProfile: rule()(async (_parent, _args, { user }) => {
@@ -342,6 +344,20 @@ export const permissions = shield(
 		},
 		// ChangePasswordResponse fields - allow all fields for changePassword mutation
 		ChangePasswordResponse: {
+			success: allow,
+			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// ForgotPasswordResponse fields - allow all fields for forgotPassword mutation
+		ForgotPasswordResponse: {
+			success: allow,
+			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// ResetPasswordResponse fields - allow all fields for resetPassword mutation
+		ResetPasswordResponse: {
 			success: allow,
 			message: allow,
 			errors: allow,
