@@ -26,6 +26,7 @@ import {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
+	updateProfile,
 } from "./mutations/index.js";
 
 /**
@@ -50,6 +51,7 @@ const Mutation = {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
+	updateProfile,
 };
 
 /**

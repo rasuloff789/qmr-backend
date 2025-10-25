@@ -1,10 +1,23 @@
 # Authentication Mutations
 # Login and authentication operations
 
+type UpdateProfileResponse {
+    success: Boolean!
+    message: String!
+    user: UserData
+    errors: [String!]
+    timestamp: String
+}
+
 type Mutation {
     login(
         username: String!
         password: String!
         userType: String!
     ): LoginResponse!
+    
+    updateProfile(
+        tgUsername: String
+        phone: Phone
+    ): UpdateProfileResponse!
 }

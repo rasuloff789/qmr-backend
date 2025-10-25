@@ -79,7 +79,7 @@ const login = async (_parent, { username, password, userType }) => {
 			});
 		} else if (userType === "admin") {
 			user = await prisma.admin.findUnique({
-				where: { username },
+				where: { username, isActive: true, isDeleted: false },
 				select: {
 					id: true,
 					username: true,

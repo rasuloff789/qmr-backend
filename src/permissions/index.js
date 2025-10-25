@@ -236,6 +236,12 @@ export const permissions = shield(
 			// Public mutations
 			login: allow,
 
+			// Profile management
+			updateProfile: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can update their own profile
+				return !!user;
+			}),
+
 			// Admin management
 			addAdmin: canCreateAdmin,
 			changeAdmin: canUpdateOwnAdmin, // Can update own admin or root can update any
@@ -319,6 +325,14 @@ export const permissions = shield(
 			success: allow,
 			message: allow,
 			teacher: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// UpdateProfileResponse fields - allow all fields for updateProfile mutation
+		UpdateProfileResponse: {
+			success: allow,
+			message: allow,
+			user: allow,
 			errors: allow,
 			timestamp: allow,
 		},

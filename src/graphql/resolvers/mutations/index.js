@@ -15,6 +15,7 @@ import { changeAdminActive } from "./changeAdminActive.js";
 import { changeTeacher } from "./changeTeacher.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { login } from "./login.js";
+import { updateProfile } from "./updateProfile.js";
 
 export {
 	addAdmin,
@@ -24,4 +25,5 @@ export {
 	changeTeacher,
 	deleteAdmin,
 	login,
+	updateProfile,
 };
