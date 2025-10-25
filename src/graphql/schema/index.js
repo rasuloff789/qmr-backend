@@ -1,8 +1,8 @@
 /**
  * QMR Backend - GraphQL Schema Aggregator
- * 
+ *
  * Clean aggregation of all GraphQL schema definitions.
- * 
+ *
  * @author QMR Development Team
  * @version 2.0.0
  */
@@ -39,7 +39,7 @@ const teacherMutations = loadSchemaFile("mutations/teacher.gql");
 /**
  * Combined GraphQL Schema
  */
-export const schema = gql`
+const schemaString = `
 	${commonTypes}
 	${userTypes}
 	${adminTypes}
@@ -51,3 +51,5 @@ export const schema = gql`
 	${adminMutations}
 	${teacherMutations}
 `;
+
+export const schema = schemaString;

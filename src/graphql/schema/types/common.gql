@@ -8,10 +8,24 @@ scalar Phone
 type SuccessResponse {
     success: Boolean!
     message: String!
+    timestamp: String
 }
 
 type ErrorResponse {
     success: Boolean!
     message: String!
     errors: [String!]
+    timestamp: String
 }
+
+# Typed error response
+type TypedErrorResponse {
+    success: Boolean!
+    type: String!
+    message: String!
+    details: [String!]
+    timestamp: String
+}
+
+# Union type for responses that can be either success or error
+union MutationResponse = SuccessResponse | ErrorResponse

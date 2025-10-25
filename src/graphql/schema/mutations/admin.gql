@@ -1,6 +1,30 @@
 # Admin Mutations
 # Admin-related mutations
 
+type AddAdminResponse {
+    success: Boolean!
+    message: String!
+    admin: Admin
+    errors: [String!]
+    timestamp: String
+}
+
+type UpdateAdminResponse {
+    success: Boolean!
+    message: String!
+    admin: Admin
+    errors: [String!]
+    timestamp: String
+}
+
+type DeleteAdminResponse {
+    success: Boolean!
+    message: String!
+    admin: Admin
+    errors: [String!]
+    timestamp: String
+}
+
 extend type Mutation {
     addAdmin(
         username: String!
@@ -9,7 +33,7 @@ extend type Mutation {
         tgUsername: String!
         birthDate: Date!
         phone: Phone!
-    ): Admin!
+    ): AddAdminResponse!
     
     changeAdmin(
         id: ID!
@@ -20,14 +44,14 @@ extend type Mutation {
         tgUsername: String
         password: String
         isActive: Boolean
-    ): Admin!
+    ): UpdateAdminResponse!
     
     changeAdminActive(
         adminId: ID!
         isActive: Boolean!
-    ): Admin!
+    ): UpdateAdminResponse!
     
     deleteAdmin(
         adminId: ID!
-    ): Admin!
+    ): DeleteAdminResponse!
 }
