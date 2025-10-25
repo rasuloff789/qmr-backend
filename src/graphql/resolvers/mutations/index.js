@@ -15,10 +15,7 @@ import { changeAdminActive } from "./changeAdminActive.js";
 import { changePassword } from "./changePassword.js";
 import { changeTeacher } from "./changeTeacher.js";
 import { deleteAdmin } from "./deleteAdmin.js";
-import { forgotPassword } from "./forgotPassword.js";
-import { linkFirebaseUser } from "./linkFirebaseUser.js";
 import { login } from "./login.js";
-import { resetPassword } from "./resetPassword.js";
 import { updateProfile } from "./updateProfile.js";
 
 export {
@@ -29,9 +26,6 @@ export {
 	changePassword,
 	changeTeacher,
 	deleteAdmin,
-	forgotPassword,
-	linkFirebaseUser,
 	login,
-	resetPassword,
 	updateProfile,
 };

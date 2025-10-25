@@ -40,17 +40,3 @@ model Teacher {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
 }
-
-model VerificationCode {
-  id        Int      @id @default(autoincrement())
-  username  String   
-  userType  String   
-  code      String   
-  phone     String   
-  expiresAt DateTime 
-  isUsed    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  
-  @@index([username, userType])
-  @@index([expiresAt])
-}
