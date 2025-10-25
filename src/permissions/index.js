@@ -224,9 +224,9 @@ export const permissions = shield(
 			// User profile queries
 			me: allow, // Allow me query without authentication
 
-			// Admin queries - Allow all users to access admin data
-			getAdmins: allow,
-			getAdmin: allow,
+			// Admin queries - Only root users can access admin data
+			getAdmins: canViewAdmins,
+			getAdmin: canViewSpecificAdmin,
 
 			// Teacher queries
 			getTeachers: canViewTeachers,
