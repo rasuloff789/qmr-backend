@@ -9,6 +9,13 @@ type UpdateProfileResponse {
     timestamp: String
 }
 
+type ChangePasswordResponse {
+    success: Boolean!
+    message: String!
+    errors: [String!]
+    timestamp: String
+}
+
 type Mutation {
     login(
         username: String!
@@ -20,4 +27,9 @@ type Mutation {
         tgUsername: String
         phone: Phone
     ): UpdateProfileResponse!
+    
+    changePassword(
+        currentPassword: String!
+        newPassword: String!
+    ): ChangePasswordResponse!
 }

@@ -12,6 +12,7 @@ import { addAdmin } from "./addAdmin.js";
 import { addTeacher } from "./addTeacher.js";
 import { changeAdmin } from "./changeAdmin.js";
 import { changeAdminActive } from "./changeAdminActive.js";
+import { changePassword } from "./changePassword.js";
 import { changeTeacher } from "./changeTeacher.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { login } from "./login.js";
@@ -22,6 +23,7 @@ export {
 	addTeacher,
 	changeAdmin,
 	changeAdminActive,
+	changePassword,
 	changeTeacher,
 	deleteAdmin,
 	login,

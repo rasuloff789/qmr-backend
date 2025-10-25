@@ -241,6 +241,10 @@ export const permissions = shield(
 				// Any authenticated user can update their own profile
 				return !!user;
 			}),
+			changePassword: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can change their own password
+				return !!user;
+			}),
 
 			// Admin management
 			addAdmin: canCreateAdmin,
@@ -333,6 +337,13 @@ export const permissions = shield(
 			success: allow,
 			message: allow,
 			user: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// ChangePasswordResponse fields - allow all fields for changePassword mutation
+		ChangePasswordResponse: {
+			success: allow,
+			message: allow,
 			errors: allow,
 			timestamp: allow,
 		},
