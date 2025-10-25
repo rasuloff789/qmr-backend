@@ -14,6 +14,7 @@ import { graphqlHTTP } from "express-graphql";
 // Core imports
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
+import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.js";
 import config from "./config/env.js";
 
 /**
@@ -61,31 +62,20 @@ app.get("/health", (req, res) => {
 });
 
 /**
- * GraphQL Endpoint with enhanced error handling
+ * GraphQL Endpoint with Firebase Authentication
  */
 app.use(
 	"/graphql",
+	firebaseAuthMiddleware, // Firebase authentication middleware
 	graphqlHTTP(async (req) => {
 		try {
-			const authHeader = req.headers.authorization;
-			let user = null;
-
-			if (authHeader && authHeader.startsWith("Bearer ")) {
-				const token = authHeader.split(" ")[1];
-				try {
-					const { verifyToken } = await import("./utils/auth/jwt.js");
-					user = verifyToken(token);
-				} catch (error) {
-					console.warn("Invalid token:", error.message);
-				}
-			}
-
 			// Log GraphQL requests for debugging
 			console.log("🔍 GraphQL Request:", {
 				method: req.method,
 				url: req.url,
-				hasAuth: !!authHeader,
-				user: user ? { id: user.id, role: user.role } : null,
+				hasFirebaseAuth: !!req.firebaseUser,
+				hasSystemUser: !!req.user,
+				user: req.user ? { id: req.user.id, role: req.user.role, firebaseUid: req.user.firebaseUid } : null,
 				timestamp: new Date().toISOString(),
 			});
 
@@ -114,12 +104,31 @@ app.use(
 
 			const graphqlConfig = {
 				schema: schema,
-				context: { user },
+				context: { 
+					user: req.user, // System user (if linked)
+					firebaseUser: req.firebaseUser, // Firebase user
+				},
 				graphiql:
 					config.NODE_ENV === "development"
 						? {
 								headerEditorEnabled: true,
 								defaultQuery: `# QMR Backend GraphQL API
+# Firebase Authentication Example
+mutation LinkFirebaseUser($username: String!, $userType: String!) {
+  linkFirebaseUser(username: $username, userType: $userType) {
+    success
+    message
+    user {
+      id
+      username
+      fullname
+      role
+    }
+    errors
+    timestamp
+  }
+}
+
 query Me {
   me {
     id
@@ -159,7 +168,7 @@ query Me {
 			// Return a basic GraphQL schema to prevent complete failure
 			return {
 				schema: schema,
-				context: { user: null },
+				context: { user: null, firebaseUser: null },
 				graphiql: false,
 			};
 		}

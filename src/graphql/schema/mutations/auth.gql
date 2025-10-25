@@ -30,6 +30,14 @@ type ResetPasswordResponse {
     timestamp: String
 }
 
+type LinkFirebaseUserResponse {
+    success: Boolean!
+    message: String!
+    user: UserData
+    errors: [String!]
+    timestamp: String
+}
+
 type Mutation {
     login(
         username: String!
@@ -58,4 +66,9 @@ type Mutation {
         verificationCode: String!
         newPassword: String!
     ): ResetPasswordResponse!
+    
+    linkFirebaseUser(
+        username: String!
+        userType: String!
+    ): LinkFirebaseUserResponse!
 }

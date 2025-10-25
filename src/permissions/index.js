@@ -237,6 +237,7 @@ export const permissions = shield(
 			login: allow,
 			forgotPassword: allow, // Public - no authentication required
 			resetPassword: allow, // Public - no authentication required
+			linkFirebaseUser: allow, // Public - requires Firebase authentication
 
 			// Profile management
 			updateProfile: rule()(async (_parent, _args, { user }) => {
@@ -360,6 +361,14 @@ export const permissions = shield(
 		ResetPasswordResponse: {
 			success: allow,
 			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// LinkFirebaseUserResponse fields - allow all fields for linkFirebaseUser mutation
+		LinkFirebaseUserResponse: {
+			success: allow,
+			message: allow,
+			user: allow,
 			errors: allow,
 			timestamp: allow,
 		},
