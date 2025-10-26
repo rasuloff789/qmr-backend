@@ -15,11 +15,18 @@ import { graphqlHTTP } from "express-graphql";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
+// Initialize Telegram bot
+import { initializeBot } from "./utils/telegram/bot.js";
 
 /**
  * Create Express Application
  */
 const app = express();
+
+/**
+ * Initialize Telegram Bot
+ */
+initializeBot();
 
 /**
  * GraphQL Schema Setup
@@ -58,29 +65,6 @@ app.get("/health", (req, res) => {
 		environment: config.NODE_ENV,
 		version: "2.0.0",
 	});
-});
-
-/**
- * Telegram Webhook Endpoint
- * Handles Telegram bot callbacks for password reset
- */
-app.post("/telegram/webhook", async (req, res) => {
-	try {
-		const { handleTelegramCallback } = await import("./utils/telegram/bot.js");
-		
-		if (req.body.callback_query) {
-			const result = await handleTelegramCallback(req.body.callback_query);
-			res.status(200).json({ success: true, result });
-		} else if (req.body.message) {
-			// Handle regular messages if needed
-			res.status(200).json({ success: true, message: "Message received" });
-		} else {
-			res.status(400).json({ success: false, message: "Invalid webhook data" });
-		}
-	} catch (error) {
-		console.error("❌ Telegram webhook error:", error);
-		res.status(500).json({ success: false, message: "Webhook processing failed" });
-	}
 });
 
 /**

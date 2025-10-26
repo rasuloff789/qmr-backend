@@ -16,13 +16,6 @@ type ChangePasswordResponse {
     timestamp: String
 }
 
-type TelegramResetPasswordResponse {
-    success: Boolean!
-    message: String!
-    errors: [String!]
-    timestamp: String
-}
-
 type Mutation {
     login(
         username: String!
@@ -39,9 +32,4 @@ type Mutation {
         currentPassword: String!
         newPassword: String!
     ): ChangePasswordResponse!
-    
-    telegramResetPassword(
-        username: String!
-        userType: String!
-    ): TelegramResetPasswordResponse!
 }

@@ -1,6 +1,7 @@
 /**
  * Telegram Bot Utility
  * Handles Telegram bot integration for password reset functionality
+ * Users interact directly with the bot - no GraphQL API needed
  */
 
 import TelegramBot from "node-telegram-bot-api";
@@ -20,8 +21,11 @@ const initializeTelegramBot = () => {
 				return null;
 			}
 			
-			bot = new TelegramBot(token, { polling: false });
+			bot = new TelegramBot(token, { polling: true });
 			console.log("✅ Telegram bot initialized successfully");
+			
+			// Set up bot commands
+			setupBotCommands();
 		} catch (error) {
 			console.error("❌ Telegram bot initialization error:", error);
 			return null;
@@ -31,241 +35,317 @@ const initializeTelegramBot = () => {
 };
 
 /**
- * Generate a 6-digit verification code
- * @returns {string} - 6-digit verification code
+ * Set up bot commands and message handlers
  */
-export const generateVerificationCode = () => {
-	return Math.floor(100000 + Math.random() * 900000).toString();
+const setupBotCommands = () => {
+	if (!bot) return;
+
+	// Handle /start command
+	bot.onText(/\/start/, (msg) => {
+		const chatId = msg.chat.id;
+		const welcomeMessage = `🤖 *Welcome to QMR Password Reset Bot*
+
+I can help you reset your password if you've forgotten it.
+
+*Available Commands:*
+/start - Show this welcome message
+/reset - Reset your password
+/help - Show help information
+
+*How to reset your password:*
+1. Use /reset command
+2. Enter your username
+3. Enter your user type (admin or teacher)
+4. Confirm your identity
+5. Get your new password
+
+*Note:* Only admin and teacher users can reset passwords through this bot.`;
+
+		bot.sendMessage(chatId, welcomeMessage, { parse_mode: "Markdown" });
+	});
+
+	// Handle /help command
+	bot.onText(/\/help/, (msg) => {
+		const chatId = msg.chat.id;
+		const helpMessage = `🆘 *Help - QMR Password Reset Bot*
+
+*Commands:*
+/start - Welcome message
+/reset - Reset your password
+/help - This help message
+
+*Password Reset Process:*
+1. Send /reset command
+2. Enter your username when prompted
+3. Enter your user type (admin or teacher)
+4. Confirm your identity
+5. Receive your new password
+
+*Requirements:*
+- You must be an admin or teacher user
+- Your Telegram username must match your system username
+- You must have an active account
+
+*Security:*
+- New passwords are auto-generated and secure
+- Change your password immediately after login
+- Only you can reset your own password`;
+
+		bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
+	});
+
+	// Handle /reset command
+	bot.onText(/\/reset/, (msg) => {
+		const chatId = msg.chat.id;
+		const telegramUsername = msg.from.username;
+
+		if (!telegramUsername) {
+			bot.sendMessage(chatId, "❌ *Error:* You need to have a Telegram username to use this bot.\n\nPlease set a username in your Telegram settings and try again.", { parse_mode: "Markdown" });
+			return;
+		}
+
+		// Start password reset process
+		bot.sendMessage(chatId, `🔐 *Password Reset Process*
+
+Please enter your username to continue with password reset.
+
+*Your Telegram username:* @${telegramUsername}
+
+Send your username now:`, { parse_mode: "Markdown" });
+
+		// Store the user's state
+		bot.userStates = bot.userStates || {};
+		bot.userStates[chatId] = {
+			step: 'waiting_for_username',
+			telegramUsername: telegramUsername
+		};
+	});
+
+	// Handle text messages (for password reset process)
+	bot.on('message', async (msg) => {
+		const chatId = msg.chat.id;
+		const text = msg.text;
+		const userState = bot.userStates?.[chatId];
+
+		if (!userState) return;
+
+		if (userState.step === 'waiting_for_username') {
+			await handleUsernameInput(chatId, text, userState);
+		} else if (userState.step === 'waiting_for_user_type') {
+			await handleUserTypeInput(chatId, text, userState);
+		} else if (userState.step === 'waiting_for_confirmation') {
+			await handleConfirmationInput(chatId, text, userState);
+		}
+	});
 };
 
 /**
- * Store verification code in database with expiration
- * @param {string} username - Username
- * @param {string} userType - User type (root, admin, teacher)
- * @param {string} code - Verification code
- * @param {string} telegramUsername - Telegram username
- * @returns {Promise<Object>} - Database record
+ * Handle username input
  */
-export const storeVerificationCode = async (username, userType, code, telegramUsername) => {
-	try {
-		// Store verification code with 10-minute expiration
-		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
-
-		const verificationRecord = await prisma.telegramVerificationCode.create({
-			data: {
-				username,
-				userType,
-				code,
-				telegramUsername,
-				expiresAt,
-				isUsed: false,
-			},
-		});
-
-		return verificationRecord;
-	} catch (error) {
-		console.error("Error storing verification code:", error);
-		throw new Error("Failed to store verification code");
+const handleUsernameInput = async (chatId, username, userState) => {
+	if (!username || username.length < 3) {
+		bot.sendMessage(chatId, "❌ *Invalid username.* Please enter a valid username (at least 3 characters).", { parse_mode: "Markdown" });
+		return;
 	}
+
+	userState.username = username;
+	userState.step = 'waiting_for_user_type';
+
+	bot.sendMessage(chatId, `✅ *Username received:* ${username}
+
+Now please enter your user type:
+- Type \`admin\` if you are an admin user
+- Type \`teacher\` if you are a teacher user
+
+*Note:* Root users cannot reset passwords through this bot.`, { parse_mode: "Markdown" });
 };
 
 /**
- * Verify and consume verification code
- * @param {string} username - Username
- * @param {string} userType - User type
- * @param {string} code - Verification code
- * @returns {Promise<Object>} - Verification record if valid
+ * Handle user type input
  */
-export const verifyAndConsumeCode = async (username, userType, code) => {
+const handleUserTypeInput = async (chatId, userType, userState) => {
+	const validTypes = ['admin', 'teacher'];
+	
+	if (!validTypes.includes(userType.toLowerCase())) {
+		bot.sendMessage(chatId, "❌ *Invalid user type.* Please enter either \`admin\` or \`teacher\`.", { parse_mode: "Markdown" });
+		return;
+	}
+
+	userState.userType = userType.toLowerCase();
+	userState.step = 'waiting_for_confirmation';
+
+	// Find user in database
 	try {
-		const verificationRecord = await prisma.telegramVerificationCode.findFirst({
-			where: {
-				username,
-				userType,
-				code,
-				isUsed: false,
-				expiresAt: {
-					gt: new Date(), // Not expired
+		let user = null;
+		if (userState.userType === 'admin') {
+			user = await prisma.admin.findUnique({
+				where: { username: userState.username },
+				select: {
+					id: true,
+					username: true,
+					fullname: true,
+					tgUsername: true,
+					isActive: true,
 				},
-			},
-		});
-
-		if (!verificationRecord) {
-			return null;
+			});
+		} else if (userState.userType === 'teacher') {
+			user = await prisma.teacher.findUnique({
+				where: { username: userState.username },
+				select: {
+					id: true,
+					username: true,
+					fullname: true,
+					tgUsername: true,
+					isActive: true,
+				},
+			});
 		}
 
-		// Mark code as used
-		await prisma.telegramVerificationCode.update({
-			where: { id: verificationRecord.id },
-			data: { isUsed: true },
-		});
-
-		return verificationRecord;
-	} catch (error) {
-		console.error("Error verifying code:", error);
-		throw new Error("Failed to verify code");
-	}
-};
-
-/**
- * Send Telegram message with inline keyboard for password reset
- * @param {string} telegramUsername - Telegram username
- * @param {string} code - Verification code
- * @param {string} username - System username
- * @param {string} userType - User type
- * @returns {Promise<boolean>} - Success status
- */
-export const sendTelegramPasswordResetMessage = async (telegramUsername, code, username, userType) => {
-	try {
-		const telegramBot = initializeTelegramBot();
-		if (!telegramBot) {
-			console.warn("⚠️ Telegram bot not initialized, simulating message send");
-			console.log(`📱 Telegram Message Simulation - To: @${telegramUsername}`);
-			console.log(`📱 Message: Password reset code: ${code}`);
-			console.log(`📱 Note: In production, this would send a real Telegram message`);
-			return true;
+		if (!user) {
+			bot.sendMessage(chatId, `❌ *User not found.*\n\nNo ${userState.userType} user found with username: ${userState.username}\n\nPlease check your username and try again.`, { parse_mode: "Markdown" });
+			delete bot.userStates[chatId];
+			return;
 		}
 
-		// Create inline keyboard with password reset button
+		if (!user.isActive) {
+			bot.sendMessage(chatId, `❌ *Account deactivated.*\n\nYour account is currently deactivated. Please contact an administrator.`, { parse_mode: "Markdown" });
+			delete bot.userStates[chatId];
+			return;
+		}
+
+		if (user.tgUsername !== userState.telegramUsername) {
+			bot.sendMessage(chatId, `❌ *Telegram username mismatch.*\n\nYour Telegram username (@${userState.telegramUsername}) does not match your system username (${user.tgUsername}).\n\nPlease contact an administrator to update your Telegram username.`, { parse_mode: "Markdown" });
+			delete bot.userStates[chatId];
+			return;
+		}
+
+		userState.user = user;
+
+		// Show confirmation
 		const keyboard = {
 			inline_keyboard: [
 				[
-					{
-						text: "🔐 Reset Password",
-						callback_data: `reset_password_${username}_${userType}_${code}`,
-					},
-				],
-				[
-					{
-						text: "❌ Cancel",
-						callback_data: `cancel_reset_${username}`,
-					},
-				],
-			],
+					{ text: "✅ Yes, Reset Password", callback_data: `confirm_reset_${chatId}` },
+					{ text: "❌ Cancel", callback_data: `cancel_reset_${chatId}` }
+				]
+			]
 		};
 
-		const message = `🔐 *Password Reset Request*
+		bot.sendMessage(chatId, `🔐 *Confirm Password Reset*
 
-Hello! You have requested a password reset for your account.
+*User Details:*
+• Username: ${user.username}
+• Full Name: ${user.fullname}
+• User Type: ${userState.userType}
+• Telegram: @${user.tgUsername}
 
-*Username:* ${username}
-*User Type:* ${userType}
-*Verification Code:* \`${code}\`
+*Warning:* This will generate a new password and invalidate your current password.
 
-This code will expire in 10 minutes.
-
-Click the button below to reset your password, or use the code manually.`;
-
-		// Send message to user
-		await telegramBot.sendMessage(telegramUsername, message, {
+Do you want to proceed with password reset?`, { 
 			parse_mode: "Markdown",
-			reply_markup: keyboard,
+			reply_markup: keyboard 
 		});
 
-		console.log(`✅ Telegram password reset message sent to @${telegramUsername}`);
-		return true;
 	} catch (error) {
-		console.error("❌ Failed to send Telegram message:", error.message);
-		return false;
+		console.error("Error finding user:", error);
+		bot.sendMessage(chatId, "❌ *Error occurred.* Please try again later.", { parse_mode: "Markdown" });
+		delete bot.userStates[chatId];
 	}
 };
 
 /**
- * Handle Telegram callback queries for password reset
- * This function should be called by the Telegram bot webhook
- * @param {Object} callbackQuery - Telegram callback query object
- * @returns {Promise<Object>} - Response object
+ * Handle confirmation input
  */
-export const handleTelegramCallback = async (callbackQuery) => {
+const handleConfirmationInput = async (chatId, text, userState) => {
+	// This is handled by callback queries, not text messages
+	// Just clear the state if user sends text
+	delete bot.userStates[chatId];
+	bot.sendMessage(chatId, "❌ *Process cancelled.* Use /reset to start again.", { parse_mode: "Markdown" });
+};
+
+/**
+ * Handle callback queries (button clicks)
+ */
+bot.on('callback_query', async (callbackQuery) => {
+	const chatId = callbackQuery.message.chat.id;
+	const data = callbackQuery.data;
+
+	if (data.startsWith('confirm_reset_')) {
+		await handlePasswordReset(chatId, callbackQuery);
+	} else if (data.startsWith('cancel_reset_')) {
+		await bot.answerCallbackQuery(callbackQuery.id, { text: "❌ Password reset cancelled" });
+		bot.sendMessage(chatId, "❌ *Password reset cancelled.* Use /reset to start again.", { parse_mode: "Markdown" });
+		delete bot.userStates[chatId];
+	}
+});
+
+/**
+ * Handle password reset
+ */
+const handlePasswordReset = async (chatId, callbackQuery) => {
 	try {
-		const { data, from, message } = callbackQuery;
-		const telegramUsername = from.username;
+		const userState = bot.userStates?.[chatId];
+		
+		if (!userState || !userState.user) {
+			await bot.answerCallbackQuery(callbackQuery.id, { text: "❌ Session expired. Please start again." });
+			return;
+		}
 
-		if (data.startsWith("reset_password_")) {
-			// Extract data from callback
-			const parts = data.split("_");
-			const username = parts[2];
-			const userType = parts[3];
-			const code = parts[4];
+		// Generate new password
+		const newPassword = generateNewPassword();
+		
+		// Hash new password
+		const { hashPassword } = await import("../utils/auth/password.js");
+		const hashedPassword = await hashPassword(newPassword);
 
-			// Verify the code
-			const verificationRecord = await verifyAndConsumeCode(username, userType, code);
+		// Update user password
+		let updatedUser = null;
+		if (userState.userType === 'admin') {
+			updatedUser = await prisma.admin.update({
+				where: { id: userState.user.id },
+				data: { password: hashedPassword },
+			});
+		} else if (userState.userType === 'teacher') {
+			updatedUser = await prisma.teacher.update({
+				where: { id: userState.user.id },
+				data: { password: hashedPassword },
+			});
+		}
 
-			if (!verificationRecord) {
-				await bot.answerCallbackQuery(callbackQuery.id, {
-					text: "❌ Invalid or expired verification code",
-					show_alert: true,
-				});
-				return { success: false, message: "Invalid verification code" };
-			}
+		if (updatedUser) {
+			// Send success message with new password
+			const successMessage = `✅ *Password Reset Successful*
 
-			// Generate new password
-			const newPassword = generateNewPassword();
-			
-			// Update user password
-			const { hashPassword } = await import("../utils/auth/password.js");
-			const hashedPassword = await hashPassword(newPassword);
-
-			let updatedUser = null;
-			if (userType === "root") {
-				updatedUser = await prisma.root.update({
-					where: { username },
-					data: { password: hashedPassword },
-				});
-			} else if (userType === "admin") {
-				updatedUser = await prisma.admin.update({
-					where: { username },
-					data: { password: hashedPassword },
-				});
-			} else if (userType === "teacher") {
-				updatedUser = await prisma.teacher.update({
-					where: { username },
-					data: { password: hashedPassword },
-				});
-			}
-
-			if (updatedUser) {
-				// Send new password to user
-				const successMessage = `✅ *Password Reset Successful*
-
-Your password has been reset successfully.
+Your password has been reset successfully!
 
 *New Password:* \`${newPassword}\`
 
-Please log in with your new password and change it immediately for security reasons.
+*Important Security Notes:*
+• Log in immediately with your new password
+• Change your password after logging in
+• Do not share this password with anyone
+• This password is only shown once
 
-*Username:* ${username}
-*User Type:* ${userType}`;
+*User Details:*
+• Username: ${userState.user.username}
+• Full Name: ${userState.user.fullname}
+• User Type: ${userState.userType}
 
-				await bot.sendMessage(telegramUsername, successMessage, {
-					parse_mode: "Markdown",
-				});
+Use /start to see available commands.`;
 
-				await bot.answerCallbackQuery(callbackQuery.id, {
-					text: "✅ Password reset successfully! Check your messages.",
-					show_alert: true,
-				});
-
-				return { success: true, message: "Password reset successfully" };
-			} else {
-				throw new Error("Failed to update password");
-			}
-		} else if (data.startsWith("cancel_reset_")) {
-			await bot.answerCallbackQuery(callbackQuery.id, {
-				text: "❌ Password reset cancelled",
-				show_alert: true,
-			});
-			return { success: false, message: "Password reset cancelled" };
+			await bot.sendMessage(chatId, successMessage, { parse_mode: "Markdown" });
+			await bot.answerCallbackQuery(callbackQuery.id, { text: "✅ Password reset successfully!" });
+		} else {
+			throw new Error("Failed to update password");
 		}
 
-		return { success: false, message: "Unknown callback data" };
 	} catch (error) {
-		console.error("❌ Telegram callback handling error:", error);
-		await bot.answerCallbackQuery(callbackQuery.id, {
-			text: "❌ An error occurred. Please try again.",
-			show_alert: true,
-		});
-		return { success: false, message: "Error processing callback" };
+		console.error("Password reset error:", error);
+		await bot.sendMessage(chatId, "❌ *Error occurred during password reset.* Please try again later.", { parse_mode: "Markdown" });
+		await bot.answerCallbackQuery(callbackQuery.id, { text: "❌ Error occurred" });
+	} finally {
+		// Clean up user state
+		delete bot.userStates[chatId];
 	}
 };
 
@@ -289,6 +369,13 @@ const generateNewPassword = () => {
 	
 	// Shuffle the password
 	return password.split("").sort(() => Math.random() - 0.5).join("");
+};
+
+/**
+ * Initialize the Telegram bot
+ */
+export const initializeBot = () => {
+	return initializeTelegramBot();
 };
 
 /**

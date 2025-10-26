@@ -235,7 +235,6 @@ export const permissions = shield(
 		Mutation: {
 			// Public mutations
 			login: allow,
-			telegramResetPassword: allow, // Public - no authentication required
 
 			// Profile management
 			updateProfile: rule()(async (_parent, _args, { user }) => {
@@ -343,13 +342,6 @@ export const permissions = shield(
 		},
 		// ChangePasswordResponse fields - allow all fields for changePassword mutation
 		ChangePasswordResponse: {
-			success: allow,
-			message: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-		// TelegramResetPasswordResponse fields - allow all fields for telegramResetPassword mutation
-		TelegramResetPasswordResponse: {
 			success: allow,
 			message: allow,
 			errors: allow,

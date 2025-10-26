@@ -27,7 +27,6 @@ import {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
-	telegramResetPassword,
 	updateProfile,
 } from "./mutations/index.js";
 
@@ -54,7 +53,6 @@ const Mutation = {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
-	telegramResetPassword,
 	updateProfile,
 };
 
