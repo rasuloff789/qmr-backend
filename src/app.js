@@ -16,7 +16,7 @@ import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
 // Initialize Telegram bot
-import { initializeBot } from "./utils/telegram/bot.js";
+import { initializeBot, stopBot } from "./utils/telegram/bot.js";
 
 /**
  * Create Express Application
@@ -26,7 +26,27 @@ const app = express();
 /**
  * Initialize Telegram Bot
  */
-initializeBot();
+const telegramBot = initializeBot();
+if (!telegramBot) {
+	console.warn(
+		"⚠️ Telegram bot initialization failed - bot features will not be available"
+	);
+}
+
+/**
+ * Graceful shutdown handling
+ */
+process.on("SIGINT", () => {
+	console.log("\n🛑 Received SIGINT, shutting down gracefully...");
+	stopBot();
+	process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+	console.log("\n🛑 Received SIGTERM, shutting down gracefully...");
+	stopBot();
+	process.exit(0);
+});
 
 /**
  * GraphQL Schema Setup

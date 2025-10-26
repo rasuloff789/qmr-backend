@@ -30,6 +30,9 @@ const config = {
 	// CORS
 	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
 
+	// Telegram Bot
+	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+
 	// Security
 	BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS) || 12,
 };
