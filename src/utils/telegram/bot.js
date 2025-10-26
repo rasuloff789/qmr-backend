@@ -429,7 +429,6 @@ const showPasswordResetConfirmation = async (chatId, user, phoneNumber) => {
 • **Username:** ${user.username}
 • **Full Name:** ${user.fullname}
 • **User Type:** ${user.userType.toUpperCase()}
-• **Phone:** \`${phoneNumber}\`
 • **Telegram:** @${user.tgUsername}
 
 ⚠️ *Important:* This will generate a new secure password and invalidate your current password.
