@@ -327,6 +327,7 @@ const findUsersByPhoneNumber = async (phoneNumber) => {
 
 		// Add user type to each admin
 		admins.forEach((admin) => {
+			console.log("Admin found:", { username: admin.username, phone: admin.phone, fullname: admin.fullname });
 			matchingUsers.push({
 				...admin,
 				userType: "admin",
@@ -351,6 +352,7 @@ const findUsersByPhoneNumber = async (phoneNumber) => {
 
 		// Add user type to each teacher
 		teachers.forEach((teacher) => {
+			console.log("Teacher found:", { username: teacher.username, phone: teacher.phone, fullname: teacher.fullname });
 			matchingUsers.push({
 				...teacher,
 				userType: "teacher",
@@ -371,6 +373,8 @@ const findUsersByPhoneNumber = async (phoneNumber) => {
  * @param {string} phoneNumber - Phone number
  */
 const showUserSelectionMenu = async (chatId, users, phoneNumber) => {
+	console.log("Showing user selection menu for users:", users.map(u => ({ username: u.username, phone: u.phone, fullname: u.fullname, userType: u.userType })));
+	
 	const keyboard = {
 		inline_keyboard: users.map((user, index) => [
 			{
