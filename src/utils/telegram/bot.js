@@ -372,11 +372,7 @@ Please select the account you want to reset password for:`;
  * @param {Object} user - User object
  * @param {string} phoneNumber - Phone number
  */
-const showPasswordResetConfirmation = async (
-	chatId,
-	user,
-	phoneNumber
-) => {
+const showPasswordResetConfirmation = async (chatId, user, phoneNumber) => {
 	const keyboard = {
 		inline_keyboard: [
 			[
@@ -679,7 +675,7 @@ const handlePasswordReset = async (chatId, callbackQuery) => {
 		const newPassword = generateNewPassword();
 
 		// Hash new password
-		const { hashPassword } = await import("../utils/auth/password.js");
+		const { hashPassword } = await import("../auth/password.js");
 		const hashedPassword = await hashPassword(newPassword);
 
 		// Update user password
