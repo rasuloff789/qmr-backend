@@ -223,7 +223,11 @@ To reset your password securely, I need to verify your identity using your phone
 
 			// Small delay to show processing message
 			setTimeout(async () => {
-				await handlePhoneNumberContact(chatId, msg.contact, processingMessage.message_id);
+				await handlePhoneNumberContact(
+					chatId,
+					msg.contact,
+					processingMessage.message_id
+				);
 			}, 1000);
 			return;
 		}
@@ -274,7 +278,11 @@ To reset your password securely, I need to verify your identity using your phone
  * @param {Object} contact - Contact object with phone number
  * @param {number} processingMessageId - Message ID of processing message to delete
  */
-const handlePhoneNumberContact = async (chatId, contact, processingMessageId) => {
+const handlePhoneNumberContact = async (
+	chatId,
+	contact,
+	processingMessageId
+) => {
 	try {
 		// Delete the processing message
 		if (processingMessageId) {
