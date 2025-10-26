@@ -241,7 +241,15 @@ To reset your password securely, I need to verify your identity using your phone
 	// Handle callback queries (button clicks)
 	bot.on("callback_query", async (callbackQuery) => {
 		const chatId = callbackQuery.message.chat.id;
+		const messageId = callbackQuery.message.message_id;
 		const data = callbackQuery.data;
+
+		// Delete the message that contained the button
+		try {
+			await bot.deleteMessage(chatId, messageId);
+		} catch (error) {
+			console.log("Could not delete message:", error.message);
+		}
 
 		if (data.startsWith("select_user_")) {
 			await handleUserSelection(chatId, callbackQuery);
@@ -374,7 +382,9 @@ const showUserSelectionMenu = async (chatId, users, phoneNumber) => {
 	const keyboard = {
 		inline_keyboard: users.map((user, index) => [
 			{
-				text: `${user.userType.toUpperCase()}: ${user.fullname} (@${user.username})`,
+				text: `${user.userType.toUpperCase()}: ${user.fullname} (@${
+					user.username
+				})`,
 				callback_data: `select_user_${user.userType}_${user.id}`,
 			},
 		]),
