@@ -85,21 +85,27 @@ const setupBotCommands = () => {
 		const chatId = msg.chat.id;
 		const welcomeMessage = `🤖 *Welcome to QMR Password Reset Bot*
 
-I can help you reset your password if you've forgotten it.
+I'm here to help you reset your password securely and quickly.
 
 *Available Commands:*
-/start - Show this welcome message
-/reset - Reset your password
-/help - Show help information
+• /start - Show this welcome message
+• /reset - Reset your password
+• /help - Get detailed help
 
 *How to reset your password:*
-1. Use /reset command
-2. Share your phone number
-3. Select your account (if multiple found)
-4. Confirm password reset
-5. Get your new password
+1️⃣ Use /reset command
+2️⃣ Share your phone number securely
+3️⃣ Select your account (if you have multiple)
+4️⃣ Confirm the password reset
+5️⃣ Receive your new secure password
 
-*Note:* Only admin and teacher users can reset passwords through this bot.`;
+*Security Features:*
+🔒 Phone number verification
+🔒 Secure password generation
+🔒 Account type selection
+🔒 Real-time confirmation
+
+*Note:* Only admin and teacher accounts can reset passwords through this bot.`;
 
 		bot.sendMessage(chatId, welcomeMessage, { parse_mode: "Markdown" });
 	});
@@ -109,27 +115,36 @@ I can help you reset your password if you've forgotten it.
 		const chatId = msg.chat.id;
 		const helpMessage = `🆘 *Help - QMR Password Reset Bot*
 
-*Commands:*
-/start - Welcome message
-/reset - Reset your password
-/help - This help message
+*Available Commands:*
+• /start - Welcome message and overview
+• /reset - Start password reset process
+• /help - This detailed help message
 
 *Password Reset Process:*
-1. Send /reset command
-2. Share your phone number when prompted
-3. Select your account (if multiple accounts found)
-4. Confirm password reset
-5. Receive your new password
+1️⃣ Send /reset command
+2️⃣ Share your phone number securely when prompted
+3️⃣ Select your account (if multiple accounts found)
+4️⃣ Confirm password reset with your details
+5️⃣ Receive your new secure password
 
 *Requirements:*
-- You must be an admin or teacher user
-- Your phone number must be registered in the system
-- You must have an active account
+✅ You must be an admin or teacher user
+✅ Your phone number must be registered in the system
+✅ You must have an active account
+✅ You need a Telegram username
 
-*Security:*
-- New passwords are auto-generated and secure
-- Change your password immediately after login
-- Only you can reset your own password`;
+*Security Features:*
+🔒 Phone number verification for identity
+🔒 Secure auto-generated passwords
+🔒 Account type selection (admin/teacher)
+🔒 Real-time confirmation process
+🔒 One-time password display
+
+*Important Notes:*
+⚠️ Change your password immediately after login
+⚠️ Do not share your new password with anyone
+⚠️ Contact administrator if your phone number is not recognized
+⚠️ This bot only works for admin and teacher accounts`;
 
 		bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
 	});
@@ -142,7 +157,7 @@ I can help you reset your password if you've forgotten it.
 		if (!telegramUsername) {
 			bot.sendMessage(
 				chatId,
-				"❌ *Error:* You need to have a Telegram username to use this bot.\n\nPlease set a username in your Telegram settings and try again.",
+				"❌ *Setup Required*\n\nYou need to set a Telegram username to use this bot.\n\n*How to set a username:*\n1️⃣ Open Telegram Settings\n2️⃣ Go to Username\n3️⃣ Set a unique username\n4️⃣ Come back and try /reset again\n\n*Note:* Your username helps us identify you securely.",
 				{ parse_mode: "Markdown" }
 			);
 			return;
@@ -167,11 +182,13 @@ I can help you reset your password if you've forgotten it.
 				chatId,
 				`🔐 *Password Reset Process*
 
-To reset your password, I need to verify your phone number.
+To reset your password securely, I need to verify your identity using your phone number.
 
 *Your Telegram username:* @${telegramUsername}
 
-Please share your phone number by clicking the button below:`,
+*Next Step:* Please share your phone number by clicking the button below.
+
+*Security Note:* Your phone number is only used for verification and is not stored by the bot.`,
 				{
 					parse_mode: "Markdown",
 					reply_markup: keyboard,
@@ -181,7 +198,7 @@ Please share your phone number by clicking the button below:`,
 			console.error("Error starting password reset:", error);
 			bot.sendMessage(
 				chatId,
-				"❌ *Error occurred while starting password reset.* Please try again later.",
+				"❌ *Service Temporarily Unavailable*\n\nWe're experiencing technical difficulties. Please try again in a few moments.\n\nIf the problem persists, contact your system administrator.",
 				{ parse_mode: "Markdown" }
 			);
 		}
@@ -202,7 +219,7 @@ Please share your phone number by clicking the button below:`,
 		if (!text.startsWith("/")) {
 			bot.sendMessage(
 				chatId,
-				"❓ *Unknown command.* Use /start to see available commands.",
+				"❓ *Unknown Command*\n\nI don't understand that message. Here are the available commands:\n\n• /start - Welcome message\n• /reset - Reset your password\n• /help - Get help\n\nType any of these commands to get started!",
 				{ parse_mode: "Markdown" }
 			);
 		}
@@ -223,7 +240,7 @@ Please share your phone number by clicking the button below:`,
 			});
 			bot.sendMessage(
 				chatId,
-				"❌ *Password reset cancelled.* Use /reset to start again.",
+				"❌ *Password Reset Cancelled*\n\nYou have cancelled the password reset process.\n\n*To reset your password:*\n• Use /reset command to start again\n• Use /help for detailed instructions\n\n*Need assistance?* Contact your system administrator.",
 				{ parse_mode: "Markdown" }
 			);
 		}
@@ -246,7 +263,7 @@ const handlePhoneNumberContact = async (chatId, contact) => {
 		if (matchingUsers.length === 0) {
 			bot.sendMessage(
 				chatId,
-				`❌ *No matching accounts found*\n\nNo accounts found with phone number: ${phoneNumber}\n\nPlease contact an administrator to verify your phone number in the system.`,
+				`❌ *Account Not Found*\n\nNo accounts found with phone number: \`${phoneNumber}\`\n\n*Possible reasons:*\n• Your phone number is not registered in the system\n• Your account might be deactivated\n• There might be a formatting difference\n\n*What to do:*\n1️⃣ Contact your system administrator\n2️⃣ Verify your phone number is correctly registered\n3️⃣ Make sure your account is active\n\n*Need help?* Use /help for more information.`,
 				{ parse_mode: "Markdown" }
 			);
 			return;
@@ -264,7 +281,7 @@ const handlePhoneNumberContact = async (chatId, contact) => {
 		console.error("Error handling phone number contact:", error);
 		bot.sendMessage(
 			chatId,
-			"❌ *Error occurred while processing your phone number.* Please try again later.",
+			"❌ *Processing Error*\n\nWe encountered an issue while processing your phone number. This might be a temporary problem.\n\n*Please try:*\n1️⃣ Wait a moment and try /reset again\n2️⃣ Make sure you're sharing your phone number correctly\n3️⃣ Contact your administrator if the problem continues\n\n*Need help?* Use /help for more information.",
 			{ parse_mode: "Markdown" }
 		);
 	}
@@ -354,11 +371,11 @@ const showUserSelectionMenu = async (chatId, users, phoneNumber) => {
 
 	const message = `🔍 *Multiple Accounts Found*
 
-Found ${users.length} account(s) with phone number: ${phoneNumber}
+I found ${users.length} accounts linked to phone number: \`${phoneNumber}\`
 
-*Note:* You can have both admin and teacher accounts with the same phone number.
+*Account Types:* You can have both admin and teacher accounts with the same phone number.
 
-Please select the account you want to reset password for:`;
+*Please select which account you want to reset the password for:*`;
 
 	bot.sendMessage(chatId, message, {
 		parse_mode: "Markdown",
@@ -388,15 +405,15 @@ const showPasswordResetConfirmation = async (chatId, user, phoneNumber) => {
 	const message = `🔐 *Confirm Password Reset*
 
 *Account Details:*
-• Username: ${user.username}
-• Full Name: ${user.fullname}
-• User Type: ${user.userType}
-• Phone: ${user.phone}
-• Telegram: @${user.tgUsername}
+• **Username:** ${user.username}
+• **Full Name:** ${user.fullname}
+• **User Type:** ${user.userType.toUpperCase()}
+• **Phone:** \`${user.phone}\`
+• **Telegram:** @${user.tgUsername}
 
-*Warning:* This will generate a new password and invalidate your current password.
+⚠️ *Important:* This will generate a new secure password and invalidate your current password.
 
-Do you want to proceed with password reset?`;
+*Do you want to proceed with password reset?*`;
 
 	bot.sendMessage(chatId, message, {
 		parse_mode: "Markdown",
@@ -694,24 +711,25 @@ const handlePasswordReset = async (chatId, callbackQuery) => {
 
 		if (updatedUser) {
 			// Send success message with new password
-			const successMessage = `✅ *Password Reset Successful*
+			const successMessage = `🎉 *Password Reset Successful!*
 
 Your password has been reset successfully!
 
-*New Password:* \`${newPassword}\`
+🔑 *New Password:* \`${newPassword}\`
 
-*Important Security Notes:*
-• Log in immediately with your new password
-• Change your password after logging in
-• Do not share this password with anyone
-• This password is only shown once
+⚠️ *Critical Security Instructions:*
+• **Log in immediately** with your new password
+• **Change your password** after logging in
+• **Do not share** this password with anyone
+• **This password is only shown once** - save it now!
 
-*User Details:*
-• Username: ${user.username}
-• Full Name: ${user.fullname}
-• User Type: ${userType}
+📋 *Account Information:*
+• **Username:** ${user.username}
+• **Full Name:** ${user.fullname}
+• **User Type:** ${userType.toUpperCase()}
+• **Phone:** \`${user.phone}\`
 
-Use /start to see available commands.`;
+*Need help?* Use /help for more information.`;
 
 			await bot.sendMessage(chatId, successMessage, { parse_mode: "Markdown" });
 			await bot.answerCallbackQuery(callbackQuery.id, {
@@ -724,11 +742,11 @@ Use /start to see available commands.`;
 		console.error("Password reset error:", error);
 		await bot.sendMessage(
 			chatId,
-			"❌ *Error occurred during password reset.* Please try again later.",
+			"❌ *Password Reset Failed*\n\nWe encountered an error while resetting your password. This might be a temporary issue.\n\n*Please try:*\n1️⃣ Wait a moment and try /reset again\n2️⃣ Make sure your account is active\n3️⃣ Contact your administrator if the problem continues\n\n*Need help?* Use /help for more information.",
 			{ parse_mode: "Markdown" }
 		);
 		await bot.answerCallbackQuery(callbackQuery.id, {
-			text: "❌ Error occurred",
+			text: "❌ Reset failed - try again",
 		});
 	}
 };
