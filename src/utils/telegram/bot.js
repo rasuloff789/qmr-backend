@@ -212,11 +212,15 @@ To reset your password securely, I need to verify your identity using your phone
 		// Handle contact (phone number) messages
 		if (msg.contact) {
 			// Remove the keyboard after phone number is shared
-			await bot.sendMessage(chatId, "📱 *Phone number received!* Processing...", {
-				parse_mode: "Markdown",
-				reply_markup: { remove_keyboard: true }
-			});
-			
+			await bot.sendMessage(
+				chatId,
+				"📱 *Phone number received!* Processing...",
+				{
+					parse_mode: "Markdown",
+					reply_markup: { remove_keyboard: true },
+				}
+			);
+
 			// Small delay to show processing message
 			setTimeout(async () => {
 				await handlePhoneNumberContact(chatId, msg.contact);
@@ -417,7 +421,7 @@ const showPasswordResetConfirmation = async (chatId, user, phoneNumber) => {
 • **Username:** ${user.username}
 • **Full Name:** ${user.fullname}
 • **User Type:** ${user.userType.toUpperCase()}
-• **Phone:** \`${user.phone}\`
+• **Phone:** \`${phoneNumber}\`
 • **Telegram:** @${user.tgUsername}
 
 ⚠️ *Important:* This will generate a new secure password and invalidate your current password.
@@ -673,6 +677,7 @@ const handlePasswordReset = async (chatId, callbackQuery) => {
 					id: true,
 					username: true,
 					fullname: true,
+					phone: true,
 					tgUsername: true,
 					isActive: true,
 				},
@@ -684,6 +689,7 @@ const handlePasswordReset = async (chatId, callbackQuery) => {
 					id: true,
 					username: true,
 					fullname: true,
+					phone: true,
 					tgUsername: true,
 					isActive: true,
 				},
