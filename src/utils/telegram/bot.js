@@ -94,9 +94,9 @@ I can help you reset your password if you've forgotten it.
 
 *How to reset your password:*
 1. Use /reset command
-2. Enter your username
-3. Enter your user type (admin or teacher)
-4. Confirm your identity
+2. Share your phone number
+3. Select your account (if multiple found)
+4. Confirm password reset
 5. Get your new password
 
 *Note:* Only admin and teacher users can reset passwords through this bot.`;
@@ -116,14 +116,14 @@ I can help you reset your password if you've forgotten it.
 
 *Password Reset Process:*
 1. Send /reset command
-2. Enter your username when prompted
-3. Enter your user type (admin or teacher)
-4. Confirm your identity
+2. Share your phone number when prompted
+3. Select your account (if multiple accounts found)
+4. Confirm password reset
 5. Receive your new password
 
 *Requirements:*
 - You must be an admin or teacher user
-- Your Telegram username must match your system username
+- Your phone number must be registered in the system
 - You must have an active account
 
 *Security:*
@@ -149,31 +149,39 @@ I can help you reset your password if you've forgotten it.
 		}
 
 		try {
-			// Find users with matching Telegram username
-			const matchingUsers = await findUsersByTelegramUsername(telegramUsername);
+			// Request phone number from user
+			const keyboard = {
+				keyboard: [
+					[
+						{
+							text: "📱 Share My Phone Number",
+							request_contact: true,
+						},
+					],
+				],
+				one_time_keyboard: true,
+				resize_keyboard: true,
+			};
 
-			if (matchingUsers.length === 0) {
-				bot.sendMessage(
-					chatId,
-					`❌ *No matching users found*\n\nNo users found with Telegram username: @${telegramUsername}\n\nPlease contact an administrator to update your Telegram username in the system.`,
-					{ parse_mode: "Markdown" }
-				);
-				return;
-			}
-
-			if (matchingUsers.length === 1) {
-				// Single user found - proceed directly to confirmation
-				const user = matchingUsers[0];
-				await showPasswordResetConfirmation(chatId, user, telegramUsername);
-			} else {
-				// Multiple users found - show selection menu
-				await showUserSelectionMenu(chatId, matchingUsers, telegramUsername);
-			}
-		} catch (error) {
-			console.error("Error finding users:", error);
 			bot.sendMessage(
 				chatId,
-				"❌ *Error occurred while searching for users.* Please try again later.",
+				`🔐 *Password Reset Process*
+
+To reset your password, I need to verify your phone number.
+
+*Your Telegram username:* @${telegramUsername}
+
+Please share your phone number by clicking the button below:`,
+				{
+					parse_mode: "Markdown",
+					reply_markup: keyboard,
+				}
+			);
+		} catch (error) {
+			console.error("Error starting password reset:", error);
+			bot.sendMessage(
+				chatId,
+				"❌ *Error occurred while starting password reset.* Please try again later.",
 				{ parse_mode: "Markdown" }
 			);
 		}
@@ -183,6 +191,12 @@ I can help you reset your password if you've forgotten it.
 	bot.on("message", async (msg) => {
 		const chatId = msg.chat.id;
 		const text = msg.text;
+
+		// Handle contact (phone number) messages
+		if (msg.contact) {
+			await handlePhoneNumberContact(chatId, msg.contact);
+			return;
+		}
 
 		// Only handle non-command messages
 		if (!text.startsWith("/")) {
@@ -217,37 +231,72 @@ I can help you reset your password if you've forgotten it.
 };
 
 /**
- * Find users by Telegram username (supports multiple usernames)
- * @param {string} telegramUsername - Telegram username to search for
+ * Handle phone number contact from user
+ * @param {number} chatId - Chat ID
+ * @param {Object} contact - Contact object with phone number
+ */
+const handlePhoneNumberContact = async (chatId, contact) => {
+	try {
+		const phoneNumber = contact.phone_number;
+		console.log(`📱 Received phone number: ${phoneNumber}`);
+
+		// Find users with matching phone number
+		const matchingUsers = await findUsersByPhoneNumber(phoneNumber);
+
+		if (matchingUsers.length === 0) {
+			bot.sendMessage(
+				chatId,
+				`❌ *No matching accounts found*\n\nNo accounts found with phone number: ${phoneNumber}\n\nPlease contact an administrator to verify your phone number in the system.`,
+				{ parse_mode: "Markdown" }
+			);
+			return;
+		}
+
+		if (matchingUsers.length === 1) {
+			// Single user found - proceed directly to confirmation
+			const user = matchingUsers[0];
+			await showPasswordResetConfirmation(chatId, user, phoneNumber);
+		} else {
+			// Multiple users found - show selection menu
+			await showUserSelectionMenu(chatId, matchingUsers, phoneNumber);
+		}
+	} catch (error) {
+		console.error("Error handling phone number contact:", error);
+		bot.sendMessage(
+			chatId,
+			"❌ *Error occurred while processing your phone number.* Please try again later.",
+			{ parse_mode: "Markdown" }
+		);
+	}
+};
+
+/**
+ * Find users by phone number
+ * @param {string} phoneNumber - Phone number to search for
  * @returns {Promise<Array>} - Array of matching users
  */
-const findUsersByTelegramUsername = async (telegramUsername) => {
+const findUsersByPhoneNumber = async (phoneNumber) => {
 	const matchingUsers = [];
 
 	try {
 		// Search in admin users
 		const admins = await prisma.admin.findMany({
 			where: {
+				phone: phoneNumber,
 				isActive: true,
 			},
 			select: {
 				id: true,
 				username: true,
 				fullname: true,
+				phone: true,
 				tgUsername: true,
 				isActive: true,
 			},
 		});
 
-		// Filter admins that match the Telegram username
-		const matchingAdmins = admins.filter((admin) => {
-			// Check if tgUsername contains the telegramUsername (supports comma-separated usernames)
-			const usernames = admin.tgUsername.split(',').map(u => u.trim());
-			return usernames.includes(telegramUsername);
-		});
-
-		// Add user type to each matching admin
-		matchingAdmins.forEach((admin) => {
+		// Add user type to each admin
+		admins.forEach((admin) => {
 			matchingUsers.push({
 				...admin,
 				userType: "admin",
@@ -257,26 +306,21 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 		// Search in teacher users
 		const teachers = await prisma.teacher.findMany({
 			where: {
+				phone: phoneNumber,
 				isActive: true,
 			},
 			select: {
 				id: true,
 				username: true,
 				fullname: true,
+				phone: true,
 				tgUsername: true,
 				isActive: true,
 			},
 		});
 
-		// Filter teachers that match the Telegram username
-		const matchingTeachers = teachers.filter((teacher) => {
-			// Check if tgUsername contains the telegramUsername (supports comma-separated usernames)
-			const usernames = teacher.tgUsername.split(',').map(u => u.trim());
-			return usernames.includes(telegramUsername);
-		});
-
-		// Add user type to each matching teacher
-		matchingTeachers.forEach((teacher) => {
+		// Add user type to each teacher
+		teachers.forEach((teacher) => {
 			matchingUsers.push({
 				...teacher,
 				userType: "teacher",
@@ -285,7 +329,7 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 
 		return matchingUsers;
 	} catch (error) {
-		console.error("Error finding users by Telegram username:", error);
+		console.error("Error finding users by phone number:", error);
 		throw error;
 	}
 };
@@ -294,9 +338,9 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
  * Show user selection menu when multiple users found
  * @param {number} chatId - Chat ID
  * @param {Array} users - Array of matching users
- * @param {string} telegramUsername - Telegram username
+ * @param {string} phoneNumber - Phone number
  */
-const showUserSelectionMenu = async (chatId, users, telegramUsername) => {
+const showUserSelectionMenu = async (chatId, users, phoneNumber) => {
 	const keyboard = {
 		inline_keyboard: users.map((user, index) => [
 			{
@@ -308,13 +352,13 @@ const showUserSelectionMenu = async (chatId, users, telegramUsername) => {
 		]),
 	};
 
-	const message = `🔍 *Multiple Users Found*
+	const message = `🔍 *Multiple Accounts Found*
 
-Found ${users.length} user(s) with Telegram username: @${telegramUsername}
+Found ${users.length} account(s) with phone number: ${phoneNumber}
 
-*Note:* Users can have multiple Telegram usernames stored as comma-separated values.
+*Note:* You can have both admin and teacher accounts with the same phone number.
 
-Please select the user you want to reset password for:`;
+Please select the account you want to reset password for:`;
 
 	bot.sendMessage(chatId, message, {
 		parse_mode: "Markdown",
@@ -326,12 +370,12 @@ Please select the user you want to reset password for:`;
  * Show password reset confirmation
  * @param {number} chatId - Chat ID
  * @param {Object} user - User object
- * @param {string} telegramUsername - Telegram username
+ * @param {string} phoneNumber - Phone number
  */
 const showPasswordResetConfirmation = async (
 	chatId,
 	user,
-	telegramUsername
+	phoneNumber
 ) => {
 	const keyboard = {
 		inline_keyboard: [
@@ -347,10 +391,11 @@ const showPasswordResetConfirmation = async (
 
 	const message = `🔐 *Confirm Password Reset*
 
-*User Details:*
+*Account Details:*
 • Username: ${user.username}
 • Full Name: ${user.fullname}
 • User Type: ${user.userType}
+• Phone: ${user.phone}
 • Telegram: @${user.tgUsername}
 
 *Warning:* This will generate a new password and invalidate your current password.
