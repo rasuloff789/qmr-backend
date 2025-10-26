@@ -711,6 +711,13 @@ const handlePasswordReset = async (chatId, callbackQuery) => {
 			return;
 		}
 
+		console.log("User found for password reset:", { 
+			username: user.username, 
+			phone: user.phone, 
+			fullname: user.fullname,
+			userType: userType 
+		});
+
 		// Generate new password
 		const newPassword = generateNewPassword();
 
