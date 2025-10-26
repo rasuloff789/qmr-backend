@@ -16,6 +16,7 @@ import { changePassword } from "./changePassword.js";
 import { changeTeacher } from "./changeTeacher.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { login } from "./login.js";
+import { telegramResetPassword } from "./telegramResetPassword.js";
 import { updateProfile } from "./updateProfile.js";
 
 export {
@@ -27,5 +28,6 @@ export {
 	changeTeacher,
 	deleteAdmin,
 	login,
+	telegramResetPassword,
 	updateProfile,
 };

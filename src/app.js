@@ -61,6 +61,29 @@ app.get("/health", (req, res) => {
 });
 
 /**
+ * Telegram Webhook Endpoint
+ * Handles Telegram bot callbacks for password reset
+ */
+app.post("/telegram/webhook", async (req, res) => {
+	try {
+		const { handleTelegramCallback } = await import("./utils/telegram/bot.js");
+		
+		if (req.body.callback_query) {
+			const result = await handleTelegramCallback(req.body.callback_query);
+			res.status(200).json({ success: true, result });
+		} else if (req.body.message) {
+			// Handle regular messages if needed
+			res.status(200).json({ success: true, message: "Message received" });
+		} else {
+			res.status(400).json({ success: false, message: "Invalid webhook data" });
+		}
+	} catch (error) {
+		console.error("❌ Telegram webhook error:", error);
+		res.status(500).json({ success: false, message: "Webhook processing failed" });
+	}
+});
+
+/**
  * GraphQL Endpoint with enhanced error handling
  */
 app.use(
