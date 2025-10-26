@@ -755,10 +755,19 @@ Your password has been reset successfully!
 
 *Need help?* Use /help for more information.`;
 
-			await bot.sendMessage(chatId, successMessage, { parse_mode: "Markdown" });
+			const sentMessage = await bot.sendMessage(chatId, successMessage, { parse_mode: "Markdown" });
 			await bot.answerCallbackQuery(callbackQuery.id, {
 				text: "✅ Password reset successfully!",
 			});
+
+			// Delete the success message after 5 minutes
+			setTimeout(async () => {
+				try {
+					await bot.deleteMessage(chatId, sentMessage.message_id);
+				} catch (error) {
+					console.log("Could not delete success message:", error.message);
+				}
+			}, 5 * 60 * 1000); // 5 minutes
 		} else {
 			throw new Error("Failed to update password");
 		}
