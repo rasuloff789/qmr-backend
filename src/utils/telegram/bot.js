@@ -211,7 +211,16 @@ To reset your password securely, I need to verify your identity using your phone
 
 		// Handle contact (phone number) messages
 		if (msg.contact) {
-			await handlePhoneNumberContact(chatId, msg.contact);
+			// Remove the keyboard after phone number is shared
+			await bot.sendMessage(chatId, "📱 *Phone number received!* Processing...", {
+				parse_mode: "Markdown",
+				reply_markup: { remove_keyboard: true }
+			});
+			
+			// Small delay to show processing message
+			setTimeout(async () => {
+				await handlePhoneNumberContact(chatId, msg.contact);
+			}, 1000);
 			return;
 		}
 
