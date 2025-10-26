@@ -212,7 +212,7 @@ To reset your password securely, I need to verify your identity using your phone
 		// Handle contact (phone number) messages
 		if (msg.contact) {
 			// Remove the keyboard after phone number is shared
-			await bot.sendMessage(
+			const processingMessage = await bot.sendMessage(
 				chatId,
 				"📱 *Phone number received!* Processing...",
 				{
@@ -223,7 +223,7 @@ To reset your password securely, I need to verify your identity using your phone
 
 			// Small delay to show processing message
 			setTimeout(async () => {
-				await handlePhoneNumberContact(chatId, msg.contact);
+				await handlePhoneNumberContact(chatId, msg.contact, processingMessage.message_id);
 			}, 1000);
 			return;
 		}
@@ -272,9 +272,19 @@ To reset your password securely, I need to verify your identity using your phone
  * Handle phone number contact from user
  * @param {number} chatId - Chat ID
  * @param {Object} contact - Contact object with phone number
+ * @param {number} processingMessageId - Message ID of processing message to delete
  */
-const handlePhoneNumberContact = async (chatId, contact) => {
+const handlePhoneNumberContact = async (chatId, contact, processingMessageId) => {
 	try {
+		// Delete the processing message
+		if (processingMessageId) {
+			try {
+				await bot.deleteMessage(chatId, processingMessageId);
+			} catch (error) {
+				console.log("Could not delete processing message:", error.message);
+			}
+		}
+
 		const phoneNumber = contact.phone_number;
 		console.log(`📱 Received phone number: ${phoneNumber}`);
 
@@ -755,7 +765,9 @@ Your password has been reset successfully!
 
 *Need help?* Use /help for more information.`;
 
-			const sentMessage = await bot.sendMessage(chatId, successMessage, { parse_mode: "Markdown" });
+			const sentMessage = await bot.sendMessage(chatId, successMessage, {
+				parse_mode: "Markdown",
+			});
 			await bot.answerCallbackQuery(callbackQuery.id, {
 				text: "✅ Password reset successfully!",
 			});
