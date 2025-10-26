@@ -185,7 +185,7 @@ I can help you reset your password if you've forgotten it.
 		const text = msg.text;
 
 		// Only handle non-command messages
-		if (!text.startsWith('/')) {
+		if (!text.startsWith("/")) {
 			bot.sendMessage(
 				chatId,
 				"❓ *Unknown command.* Use /start to see available commands.",
@@ -217,7 +217,7 @@ I can help you reset your password if you've forgotten it.
 };
 
 /**
- * Find users by Telegram username
+ * Find users by Telegram username (supports multiple usernames)
  * @param {string} telegramUsername - Telegram username to search for
  * @returns {Promise<Array>} - Array of matching users
  */
@@ -228,7 +228,6 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 		// Search in admin users
 		const admins = await prisma.admin.findMany({
 			where: {
-				tgUsername: telegramUsername,
 				isActive: true,
 			},
 			select: {
@@ -240,8 +239,15 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 			},
 		});
 
-		// Add user type to each admin
-		admins.forEach((admin) => {
+		// Filter admins that match the Telegram username
+		const matchingAdmins = admins.filter((admin) => {
+			// Check if tgUsername contains the telegramUsername (supports comma-separated usernames)
+			const usernames = admin.tgUsername.split(',').map(u => u.trim());
+			return usernames.includes(telegramUsername);
+		});
+
+		// Add user type to each matching admin
+		matchingAdmins.forEach((admin) => {
 			matchingUsers.push({
 				...admin,
 				userType: "admin",
@@ -251,7 +257,6 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 		// Search in teacher users
 		const teachers = await prisma.teacher.findMany({
 			where: {
-				tgUsername: telegramUsername,
 				isActive: true,
 			},
 			select: {
@@ -263,8 +268,15 @@ const findUsersByTelegramUsername = async (telegramUsername) => {
 			},
 		});
 
-		// Add user type to each teacher
-		teachers.forEach((teacher) => {
+		// Filter teachers that match the Telegram username
+		const matchingTeachers = teachers.filter((teacher) => {
+			// Check if tgUsername contains the telegramUsername (supports comma-separated usernames)
+			const usernames = teacher.tgUsername.split(',').map(u => u.trim());
+			return usernames.includes(telegramUsername);
+		});
+
+		// Add user type to each matching teacher
+		matchingTeachers.forEach((teacher) => {
 			matchingUsers.push({
 				...teacher,
 				userType: "teacher",
@@ -288,7 +300,9 @@ const showUserSelectionMenu = async (chatId, users, telegramUsername) => {
 	const keyboard = {
 		inline_keyboard: users.map((user, index) => [
 			{
-				text: `${user.userType.toUpperCase()}: ${user.fullname} (${user.username})`,
+				text: `${user.userType.toUpperCase()}: ${user.fullname} (${
+					user.username
+				})`,
 				callback_data: `select_user_${user.userType}_${user.id}`,
 			},
 		]),
@@ -297,6 +311,8 @@ const showUserSelectionMenu = async (chatId, users, telegramUsername) => {
 	const message = `🔍 *Multiple Users Found*
 
 Found ${users.length} user(s) with Telegram username: @${telegramUsername}
+
+*Note:* Users can have multiple Telegram usernames stored as comma-separated values.
 
 Please select the user you want to reset password for:`;
 
@@ -312,7 +328,11 @@ Please select the user you want to reset password for:`;
  * @param {Object} user - User object
  * @param {string} telegramUsername - Telegram username
  */
-const showPasswordResetConfirmation = async (chatId, user, telegramUsername) => {
+const showPasswordResetConfirmation = async (
+	chatId,
+	user,
+	telegramUsername
+) => {
 	const keyboard = {
 		inline_keyboard: [
 			[
