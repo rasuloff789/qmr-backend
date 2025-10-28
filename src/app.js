@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
+import { graphqlHTTP } from "express-graphql";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -66,28 +65,16 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// Initialize Apollo Server
-const server = new ApolloServer({
-	schema: schema,
-	csrfPrevention: false, // Disable CSRF for file uploads
-	formatError: (error) => {
-		if (config.NODE_ENV === "development") {
-			console.error("❌ GraphQL Error:", {
-				message: error.message,
-				locations: error.locations,
-				path: error.path,
-			});
-		}
-		return error;
-	},
-});
+// GraphQL Upload Middleware
+app.use(
+	"/graphql",
+	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
+);
 
-// Apollo Server will be started by startStandaloneServer
-
-// Start the standalone Apollo Server with custom context and CORS
-const { url } = await startStandaloneServer(server, {
-	listen: { port: 4000 },
-	context: async ({ req }) => {
+// GraphQL Endpoint
+app.use(
+	"/graphql",
+	graphqlHTTP(async (req) => {
 		const authHeader = req.headers?.authorization;
 		let user = null;
 
@@ -101,25 +88,26 @@ const { url } = await startStandaloneServer(server, {
 			}
 		}
 
-		return { user };
-	},
-	// Configure CORS for Apollo Server
-	cors: {
-		origin:
-			config.NODE_ENV === "development"
-				? ["http://localhost:3000", "http://localhost:5173"]
-				: [config.CORS_ORIGIN],
-		credentials: true,
-		methods: ["GET", "POST", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
-		optionsSuccessStatus: 200,
-	},
-});
+		return {
+			schema: schema,
+			context: { user },
+			graphiql: config.NODE_ENV === "development",
+		};
+	})
+);
 
-console.log(`🚀 Apollo Server ready at ${url}`);
-console.log(`🏥 Health: http://localhost:4000/health`);
-console.log(`🌍 Environment: ${config.NODE_ENV}`);
-console.log(`📦 Version: 2.0.0`);
-console.log(`🔄 Auto-restart enabled with nodemon`);
+// Error Handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+// Start Express server
+const PORT = config.PORT || 4000;
+app.listen(PORT, () => {
+	console.log(`🚀 GraphQL Server ready at http://localhost:${PORT}/graphql`);
+	console.log(`🏥 Health: http://localhost:${PORT}/health`);
+	console.log(`🌍 Environment: ${config.NODE_ENV}`);
+	console.log(`📦 Version: 2.0.0`);
+	console.log(`🔄 Auto-restart enabled with nodemon`);
+});
 
 export default app;
