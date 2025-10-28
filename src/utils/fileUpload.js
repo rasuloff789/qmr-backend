@@ -41,7 +41,6 @@ export const processUploadedFile = async (upload) => {
 	}
 
 	try {
-
 		// Validate file type
 		const allowedTypes = [
 			"image/jpeg",
