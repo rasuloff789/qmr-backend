@@ -265,6 +265,7 @@ export const permissions = shield(
 			// Teacher management
 			addTeacher: canCreateTeacher,
 			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
+			changeTeacherActive: canChangeTeacherStatus, // Only root can change teacher status
 
 			// Degree management - Only root and admin can manage degrees
 			addDegree: rule()(async (_parent, _args, { user }) => {
@@ -367,6 +368,14 @@ export const permissions = shield(
 		},
 		// UpdateTeacherResponse fields - allow all fields for updateTeacher mutations
 		UpdateTeacherResponse: {
+			success: allow,
+			message: allow,
+			teacher: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// ChangeTeacherActiveResponse fields - allow all fields for changeTeacherActive mutation
+		ChangeTeacherActiveResponse: {
 			success: allow,
 			message: allow,
 			teacher: allow,

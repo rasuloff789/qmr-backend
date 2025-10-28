@@ -15,6 +15,7 @@ import { changeAdmin } from "./changeAdmin.js";
 import { changeAdminActive } from "./changeAdminActive.js";
 import { changePassword } from "./changePassword.js";
 import { changeTeacher } from "./changeTeacher.js";
+import { changeTeacherActive } from "./changeTeacherActive.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { login } from "./login.js";
 import { updateProfile } from "./updateProfile.js";
@@ -29,6 +30,7 @@ export {
 	changeAdminActive,
 	changePassword,
 	changeTeacher,
+	changeTeacherActive,
 	deleteAdmin,
 	login,
 	updateProfile,

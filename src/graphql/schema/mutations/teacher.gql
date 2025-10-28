@@ -17,6 +17,14 @@ type UpdateTeacherResponse {
     timestamp: String
 }
 
+type ChangeTeacherActiveResponse {
+    success: Boolean!
+    message: String!
+    teacher: Teacher
+    errors: [String!]
+    timestamp: String
+}
+
 extend type Mutation {
     addTeacher(
         username: String!
@@ -43,4 +51,9 @@ extend type Mutation {
         degreeIds: [ID!]
         isActive: Boolean
     ): UpdateTeacherResponse!
+    
+    changeTeacherActive(
+        id: ID!
+        isActive: Boolean!
+    ): ChangeTeacherActiveResponse!
 }
