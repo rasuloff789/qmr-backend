@@ -51,16 +51,27 @@ const addTeacher = async (
 		password,
 	}
 ) => {
-	console.log("addTeacher", {
+	console.log("🚀 addTeacher mutation called");
+	console.log("📝 Args:", {
 		username,
 		fullname,
 		birthDate,
 		phone,
 		tgUsername,
 		gender,
-		profilePicture,
+		profilePicture: profilePicture ? "File provided" : "No file",
 		degreeIds,
-		password,
+		password: password ? "Password provided" : "No password",
+	});
+	console.log("👤 User context:", {
+		id: _parent?.user?.id || "No user ID",
+		username: _parent?.user?.username || "No username",
+		role: _parent?.user?.role || "No role",
+	});
+	console.log("🔍 ProfilePicture details:", {
+		hasProfilePicture: !!profilePicture,
+		profilePictureType: typeof profilePicture,
+		profilePictureKeys: profilePicture ? Object.keys(profilePicture) : "No file",
 	});
 	try {
 		// Input validation
@@ -123,10 +134,14 @@ const addTeacher = async (
 		}
 
 		// Process profile picture upload
+		console.log("📸 Processing profile picture upload...");
 		let profilePictureUrl = null;
 		if (profilePicture && profilePicture.createReadStream) {
+			console.log("📁 File upload detected, processing...");
 			const uploadResult = await processUploadedFile(profilePicture);
+			console.log("📤 Upload result:", uploadResult);
 			if (!uploadResult.success) {
+				console.log("❌ File upload failed:", uploadResult.error);
 				return {
 					success: false,
 					message: "File upload failed",
@@ -136,6 +151,9 @@ const addTeacher = async (
 				};
 			}
 			profilePictureUrl = uploadResult.url;
+			console.log("✅ File uploaded successfully:", profilePictureUrl);
+		} else {
+			console.log("📷 No file upload or invalid file object");
 		}
 
 		// Check if username already exists
@@ -166,6 +184,19 @@ const addTeacher = async (
 				: {};
 
 		// Create a new teacher in the database
+		// Create the teacher
+		console.log("💾 Creating teacher in database...");
+		console.log("📊 Teacher data:", {
+			username,
+			fullname,
+			birthDate: new Date(birthDate).toISOString(),
+			phone: normalizedPhone,
+			tgUsername,
+			gender,
+			profilePicture: profilePictureUrl,
+			degrees: degreesConnection,
+		});
+		
 		const newTeacher = await prisma.teacher.create({
 			data: {
 				username,
@@ -199,6 +230,7 @@ const addTeacher = async (
 			},
 		});
 
+		console.log("✅ Teacher created successfully:", newTeacher);
 		return {
 			success: true,
 			message: "Teacher user created successfully",
@@ -207,7 +239,9 @@ const addTeacher = async (
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		console.error("Add teacher error:", error);
+		console.error("❌ Add teacher error:", error);
+		console.error("❌ Error stack:", error.stack);
+		console.error("❌ Error message:", error.message);
 		return {
 			success: false,
 			message: "Failed to create teacher user",
