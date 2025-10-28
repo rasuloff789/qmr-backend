@@ -108,6 +108,7 @@ app.listen(PORT, () => {
 	console.log(`🌍 Environment: ${config.NODE_ENV}`);
 	console.log(`📦 Version: 2.0.0`);
 	console.log(`🔄 Auto-restart enabled with nodemon`);
+	console.log(`📤 File uploads enabled`);
 });
 
 export default app;
