@@ -72,9 +72,24 @@ app.use(
 
 /**
  * Body Parsing Middleware
+ * Skip multipart/form-data to let graphql-upload handle it
  */
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use((req, res, next) => {
+	if (req.headers["content-type"]?.includes("multipart/form-data")) {
+		console.log("📤 Skipping body parsing for multipart request");
+		next();
+	} else {
+		express.json({ limit: "10mb" })(req, res, next);
+	}
+});
+
+app.use((req, res, next) => {
+	if (req.headers["content-type"]?.includes("multipart/form-data")) {
+		next();
+	} else {
+		express.urlencoded({ extended: true, limit: "10mb" })(req, res, next);
+	}
+});
 
 /**
  * Health Check Endpoint
@@ -114,7 +129,7 @@ app.use("/graphql", (req, res, next) => {
 try {
 	app.use(
 		"/graphql",
-		graphqlUploadExpress({ 
+		graphqlUploadExpress({
 			maxFileSize: 10000000, // 10MB
 			maxFiles: 10
 		})
@@ -175,7 +190,10 @@ app.use(
 			}
 
 			// Log request body for debugging (only for JSON requests)
-			if (req.method === "POST" && req.headers["content-type"]?.includes("application/json")) {
+			if (
+				req.method === "POST" &&
+				req.headers["content-type"]?.includes("application/json")
+			) {
 				let body = "";
 				req.on("data", (chunk) => {
 					body += chunk.toString();
@@ -195,7 +213,10 @@ app.use(
 						);
 					}
 				});
-			} else if (req.method === "POST" && req.headers["content-type"]?.includes("multipart/form-data")) {
+			} else if (
+				req.method === "POST" &&
+				req.headers["content-type"]?.includes("multipart/form-data")
+			) {
 				console.log("📝 GraphQL Request: Multipart form data (file upload)");
 			}
 
