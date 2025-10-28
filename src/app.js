@@ -11,7 +11,7 @@
 import express from "express";
 import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
-import graphqlUploadExpress from "../node_modules/graphql-upload/graphqlUploadExpress.mjs";
+import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 // Core imports
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -193,20 +193,12 @@ app.post("/graphql-test", (req, res) => {
 });
 
 /**
- * File Upload Middleware for GraphQL
- * Must be placed before the GraphQL endpoint
+ * GraphQL Upload Middleware
  */
-try {
-	app.use(
-		"/graphql",
-		graphqlUploadExpress({
-			maxFileSize: 10000000, // 10MB
-			maxFiles: 10,
-		})
-	);
-} catch (error) {
-	throw error;
-}
+app.use(
+	"/graphql",
+	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
+);
 
 /**
  * GraphQL Endpoint with enhanced error handling
@@ -237,11 +229,13 @@ app.use(
 				try {
 					const { verifyToken } = await import("./utils/auth/jwt.js");
 					user = verifyToken(token);
-				} catch (error) {}
+				} catch (error) {
+					console.warn("❌ Invalid token:", error.message);
+				}
 			}
 
 			const graphqlConfig = {
-				schema: schema, // Using the centralized schema
+				schema: schema,
 				context: { user },
 				graphiql:
 					config.NODE_ENV === "development"
@@ -300,5 +294,7 @@ query Me {
  */
 app.use(notFoundHandler);
 app.use(errorHandler);
+
+console.log("✅ GraphQL Server initialized successfully");
 
 export default app;
