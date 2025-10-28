@@ -51,6 +51,7 @@ const addTeacher = async (
 		password,
 	}
 ) => {
+	console.log("profilePicture", profilePicture);
 	try {
 		// Input validation
 		const usernameValidation = checkUsername(username);
@@ -113,7 +114,7 @@ const addTeacher = async (
 
 		// Process profile picture upload
 		let profilePictureUrl = null;
-		if (profilePicture) {
+		if (profilePicture && profilePicture.createReadStream) {
 			const uploadResult = await processUploadedFile(profilePicture);
 			if (!uploadResult.success) {
 				return {

@@ -137,7 +137,7 @@ const changeTeacher = async (
 
 		// Add profilePicture if provided
 		if (profilePicture !== undefined) {
-			if (profilePicture) {
+			if (profilePicture && profilePicture.createReadStream) {
 				const uploadResult = await processUploadedFile(profilePicture);
 				if (!uploadResult.success) {
 					throw new Error(uploadResult.error);
