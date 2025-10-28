@@ -55,14 +55,49 @@ process.on("SIGTERM", () => {
  */
 
 /**
+ * Request Logging Middleware
+ */
+app.use((req, res, next) => {
+	console.log("🌐 Incoming Request:", {
+		method: req.method,
+		url: req.url,
+		origin: req.headers.origin,
+		userAgent: req.headers["user-agent"],
+		contentType: req.headers["content-type"],
+		timestamp: new Date().toISOString(),
+	});
+	next();
+});
+
+/**
  * CORS Configuration
  */
 app.use(
 	cors({
-		origin:
-			config.NODE_ENV === "development"
+		origin: (origin, callback) => {
+			console.log("🔒 CORS Check:", {
+				origin: origin,
+				allowedOrigins: config.NODE_ENV === "development" 
+					? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+					: config.CORS_ORIGIN,
+				nodeEnv: config.NODE_ENV
+			});
+			
+			const allowedOrigins = config.NODE_ENV === "development"
 				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-				: config.CORS_ORIGIN,
+				: config.CORS_ORIGIN;
+			
+			// Allow requests with no origin (like mobile apps or curl requests)
+			if (!origin) return callback(null, true);
+			
+			if (allowedOrigins.includes(origin)) {
+				console.log("✅ CORS: Origin allowed");
+				return callback(null, true);
+			} else {
+				console.log("❌ CORS: Origin blocked");
+				return callback(new Error("Not allowed by CORS"));
+			}
+		},
 		credentials: true,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -72,9 +107,24 @@ app.use(
 
 /**
  * Body Parsing Middleware
+ * Skip multipart/form-data to let graphql-upload handle it
  */
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use((req, res, next) => {
+	if (req.headers["content-type"]?.includes("multipart/form-data")) {
+		console.log("📤 Skipping body parsing for multipart request");
+		next();
+	} else {
+		express.json({ limit: "10mb" })(req, res, next);
+	}
+});
+
+app.use((req, res, next) => {
+	if (req.headers["content-type"]?.includes("multipart/form-data")) {
+		next();
+	} else {
+		express.urlencoded({ extended: true, limit: "10mb" })(req, res, next);
+	}
+});
 
 /**
  * Static file serving for uploaded images
@@ -92,7 +142,6 @@ app.get("/health", (req, res) => {
 		version: "2.0.0",
 	});
 });
-
 
 /**
  * File Upload Middleware for GraphQL
@@ -117,6 +166,17 @@ app.use(
 	"/graphql",
 	graphqlHTTP(async (req) => {
 		try {
+			console.log("🔍 GraphQL Request Details:", {
+				method: req.method,
+				url: req.url,
+				headers: {
+					authorization: req.headers?.authorization ? "Bearer token present" : "No auth",
+					contentType: req.headers["content-type"],
+					origin: req.headers.origin,
+					userAgent: req.headers["user-agent"]
+				},
+				timestamp: new Date().toISOString(),
+			});
 
 			const authHeader = req.headers?.authorization;
 			let user = null;
@@ -126,11 +186,8 @@ app.use(
 				try {
 					const { verifyToken } = await import("./utils/auth/jwt.js");
 					user = verifyToken(token);
-				} catch (error) {
-				}
+				} catch (error) {}
 			}
-
-
 
 			const graphqlConfig = {
 				schema: schema, // Using the centralized schema
@@ -176,7 +233,6 @@ query Me {
 				timestamp: new Date().toISOString(),
 				errorType: error.constructor.name,
 			});
-
 
 			// Return a basic GraphQL schema to prevent complete failure
 			return {

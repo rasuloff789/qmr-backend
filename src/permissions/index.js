@@ -283,6 +283,11 @@ export const permissions = shield(
 
 			// Test file upload - Allow all authenticated users for testing
 			testFileUpload: rule()(async (_parent, _args, { user }) => {
+				console.log("🔍 testFileUpload permission check:", {
+					user,
+					role: user?.role,
+					timestamp: new Date().toISOString(),
+				});
 				// Any authenticated user can test file upload
 				return !!user;
 			}),

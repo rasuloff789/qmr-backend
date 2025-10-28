@@ -8,6 +8,7 @@ export const testFileUpload = async (_parent, args, context) => {
 	const { file } = args;
 	const { user } = context;
 
+	console.log("🧪 testFileUpload mutation called");
 	console.log("👤 User:", {
 		id: user?.id,
 		username: user?.username,
@@ -17,6 +18,7 @@ export const testFileUpload = async (_parent, args, context) => {
 		hasFile: !!file,
 		fileType: typeof file,
 		fileKeys: file ? Object.keys(file) : "No file",
+		fileValue: file, // Log the entire file object to debug
 	});
 
 	try {
