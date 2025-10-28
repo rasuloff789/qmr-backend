@@ -11,7 +11,7 @@
 import express from "express";
 import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
-import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
+import graphqlUploadExpress from "../node_modules/graphql-upload/graphqlUploadExpress.mjs";
 // Core imports
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -131,7 +131,7 @@ try {
 		"/graphql",
 		graphqlUploadExpress({
 			maxFileSize: 10000000, // 10MB
-			maxFiles: 10
+			maxFiles: 10,
 		})
 	);
 	console.log("✅ GraphQL Upload middleware initialized successfully");

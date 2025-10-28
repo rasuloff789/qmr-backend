@@ -49,20 +49,19 @@ export const processUploadedFile = async (upload) => {
 			"image/gif",
 			"image/webp",
 		];
-		
+
 		console.log("🔍 File validation details:", {
 			mimetype: upload.mimetype,
 			filename: upload.filename,
 			size: upload.size,
 			allowedTypes: allowedTypes,
-			isAllowed: allowedTypes.includes(upload.mimetype)
+			isAllowed: allowedTypes.includes(upload.mimetype),
 		});
-		
+
 		if (!allowedTypes.includes(upload.mimetype)) {
 			return {
 				success: false,
-				error:
-					`Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed. Received: ${upload.mimetype}`,
+				error: `Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed. Received: ${upload.mimetype}`,
 			};
 		}
 

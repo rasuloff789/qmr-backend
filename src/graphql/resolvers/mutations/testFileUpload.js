@@ -18,6 +18,7 @@ export const testFileUpload = async (parent, args, context) => {
 		hasFile: !!file,
 		fileType: typeof file,
 		fileKeys: file ? Object.keys(file) : "No file",
+		fileValue: file, // Log the entire file object
 	});
 
 	try {
