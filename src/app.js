@@ -105,9 +105,10 @@ const { url } = await startStandaloneServer(server, {
 	},
 	// Configure CORS for Apollo Server
 	cors: {
-		origin: config.NODE_ENV === "development"
-			? ["http://localhost:3000", "http://localhost:5173"]
-			: [config.CORS_ORIGIN],
+		origin:
+			config.NODE_ENV === "development"
+				? ["http://localhost:3000", "http://localhost:5173"]
+				: [config.CORS_ORIGIN],
 		credentials: true,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -119,5 +120,6 @@ console.log(`🚀 Apollo Server ready at ${url}`);
 console.log(`🏥 Health: http://localhost:4000/health`);
 console.log(`🌍 Environment: ${config.NODE_ENV}`);
 console.log(`📦 Version: 2.0.0`);
+console.log(`🔄 Auto-restart enabled with nodemon`);
 
 export default app;

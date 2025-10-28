@@ -27,7 +27,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
+    "dev": "nodemon --watch src --ext js,json --exec \"node src/index.js\"",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -46,6 +46,7 @@
   },
   "homepage": "https://github.com/rasuloff789/qmr-backend#readme",
   "devDependencies": {
+    "nodemon": "^3.1.10",
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",
     "prisma": "^6.17.1"
