@@ -94,12 +94,36 @@ app.get("/health", (req, res) => {
 app.use("/uploads", express.static("uploads"));
 
 /**
- * File Upload Middleware for GraphQL
+ * Log multipart requests before file upload processing
  */
-app.use(
-	"/graphql",
-	graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
-);
+app.use("/graphql", (req, res, next) => {
+	if (req.headers["content-type"]?.includes("multipart/form-data")) {
+		console.log("📤 Multipart request detected:", {
+			contentType: req.headers["content-type"],
+			method: req.method,
+			timestamp: new Date().toISOString(),
+		});
+	}
+	next();
+});
+
+/**
+ * File Upload Middleware for GraphQL
+ * Must be placed before the GraphQL endpoint
+ */
+try {
+	app.use(
+		"/graphql",
+		graphqlUploadExpress({ 
+			maxFileSize: 10000000, // 10MB
+			maxFiles: 10
+		})
+	);
+	console.log("✅ GraphQL Upload middleware initialized successfully");
+} catch (error) {
+	console.error("❌ Failed to initialize GraphQL Upload middleware:", error);
+	throw error;
+}
 
 /**
  * GraphQL Endpoint with enhanced error handling
@@ -108,7 +132,13 @@ app.use(
 	"/graphql",
 	graphqlHTTP(async (req) => {
 		try {
-			const authHeader = req.headers.authorization;
+			// Add request validation
+			if (!req) {
+				console.error("❌ GraphQL request is undefined");
+				throw new Error("Invalid request object");
+			}
+
+			const authHeader = req.headers?.authorization;
 			let user = null;
 
 			if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -144,8 +174,8 @@ app.use(
 				});
 			}
 
-			// Log request body for debugging
-			if (req.method === "POST") {
+			// Log request body for debugging (only for JSON requests)
+			if (req.method === "POST" && req.headers["content-type"]?.includes("application/json")) {
 				let body = "";
 				req.on("data", (chunk) => {
 					body += chunk.toString();
@@ -165,6 +195,8 @@ app.use(
 						);
 					}
 				});
+			} else if (req.method === "POST" && req.headers["content-type"]?.includes("multipart/form-data")) {
+				console.log("📝 GraphQL Request: Multipart form data (file upload)");
 			}
 
 			const graphqlConfig = {
@@ -206,10 +238,17 @@ query Me {
 			console.error("❌ GraphQL Endpoint Error:", {
 				message: error.message,
 				stack: error.stack,
-				url: req.url,
-				method: req.method,
+				url: req?.url || "unknown",
+				method: req?.method || "unknown",
 				timestamp: new Date().toISOString(),
+				errorType: error.constructor.name,
 			});
+
+			// Check for specific error types
+			if (error.message?.includes("right.request")) {
+				console.error("❌ GraphQL Upload Error: Request object issue detected");
+				console.error("❌ This might be a graphql-upload middleware issue");
+			}
 
 			// Return a basic GraphQL schema to prevent complete failure
 			return {
