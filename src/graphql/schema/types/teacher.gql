@@ -9,6 +9,7 @@ type Teacher {
     phone: String!
     tgUsername: String!
     gender: Gender!
+    profilePicture: String
     degrees: [Degree!]!
     isActive: Boolean!
     createdAt: Date!
