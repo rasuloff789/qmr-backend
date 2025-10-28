@@ -88,40 +88,11 @@ app.get("/health", (req, res) => {
 	});
 });
 
-/**
- * Upload Test Endpoint for localhost development
- */
-app.get("/upload-test", (req, res) => {
-	res.status(200).json({
-		message: "File upload endpoint is accessible",
-		uploadPath: "/uploads",
-		profilePicturesPath: "/uploads/profile-pictures",
-		localhost: "http://localhost:4000",
-		timestamp: new Date().toISOString(),
-	});
-});
 
 /**
  * Static file serving for uploaded images
- * Enhanced for localhost development
  */
-app.use("/uploads", express.static("uploads", {
-	setHeaders: (res, path) => {
-		// Allow CORS for uploaded files
-		res.setHeader("Access-Control-Allow-Origin", "*");
-		res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-		res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-		
-		// Set cache headers for development
-		if (config.NODE_ENV === "development") {
-			res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-			res.setHeader("Pragma", "no-cache");
-			res.setHeader("Expires", "0");
-		}
-		
-		console.log(`📁 Serving static file: ${path}`);
-	}
-}));
+app.use("/uploads", express.static("uploads"));
 
 /**
  * File Upload Middleware for GraphQL
