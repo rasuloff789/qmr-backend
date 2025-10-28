@@ -293,8 +293,18 @@ export const permissions = shield(
 			createdAt: allow,
 		},
 		Teacher: {
-			// Only users who can view teachers can see creation date
-			createdAt: canViewTeachers,
+			// Allow all teacher fields to be accessible
+			id: allow,
+			username: allow,
+			fullname: allow,
+			birthDate: allow,
+			phone: allow,
+			tgUsername: allow,
+			gender: allow,
+			profilePicture: allow,
+			degrees: allow,
+			isActive: allow,
+			createdAt: allow,
 		},
 		Degree: {
 			// Allow all degree fields to be accessible
