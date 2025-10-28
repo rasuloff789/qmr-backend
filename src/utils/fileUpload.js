@@ -41,6 +41,7 @@ export const processUploadedFile = async (upload) => {
 	}
 
 	try {
+
 		// Validate file type
 		const allowedTypes = [
 			"image/jpeg",
@@ -50,25 +51,26 @@ export const processUploadedFile = async (upload) => {
 			"image/webp",
 		];
 
-		if (!allowedTypes.includes(upload.mimetype)) {
+		if (!upload.mimetype || !allowedTypes.includes(upload.mimetype)) {
 			return {
 				success: false,
 				error: `Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed. Received: ${upload.mimetype}`,
 			};
 		}
 
-		// Validate file size (5MB limit)
+		// Validate file size (5MB limit) - handle missing size
 		const maxSize = 5 * 1024 * 1024;
-		if (upload.size > maxSize) {
+		if (upload.size && upload.size > maxSize) {
 			return {
 				success: false,
 				error: "File too large. Maximum size is 5MB",
 			};
 		}
 
-		// Generate unique filename
+		// Generate unique filename - handle missing filename
 		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-		const ext = path.extname(upload.filename);
+		const originalFilename = upload.filename || "upload";
+		const ext = path.extname(originalFilename) || ".png"; // Default to .png if no extension
 		const filename = `teacher-${uniqueSuffix}${ext}`;
 		const filePath = path.join(profilePicturesDir, filename);
 
