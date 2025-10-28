@@ -51,7 +51,17 @@ const addTeacher = async (
 		password,
 	}
 ) => {
-	console.log("profilePicture", profilePicture);
+	console.log("addTeacher", {
+		username,
+		fullname,
+		birthDate,
+		phone,
+		tgUsername,
+		gender,
+		profilePicture,
+		degreeIds,
+		password,
+	});
 	try {
 		// Input validation
 		const usernameValidation = checkUsername(username);
