@@ -8,13 +8,6 @@ export const testFileUpload = async (_parent, args, context) => {
 	const { file } = args;
 	const { user } = context;
 
-	console.log("🧪 testFileUpload mutation called");
-	console.log("👤 User:", {
-		id: user?.id,
-		username: user?.username,
-		role: user?.role,
-	});
-
 	try {
 		// Check if file is provided
 		if (!file) {
