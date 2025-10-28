@@ -84,47 +84,7 @@ const server = new ApolloServer({
 
 // Apollo Server will be started by startStandaloneServer
 
-// Create a custom Express server that handles both GraphQL and file uploads
-const expressApp = express();
-
-// Apply CORS to the Express app
-expressApp.use(
-	cors({
-		origin:
-			config.NODE_ENV === "development"
-				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-				: config.CORS_ORIGIN,
-		credentials: true,
-		methods: ["GET", "POST", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
-		optionsSuccessStatus: 200,
-	})
-);
-
-// Body parsing for Express app
-expressApp.use(express.json({ limit: "10mb" }));
-expressApp.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// File upload middleware for Express app
-expressApp.use(
-	"/graphql",
-	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
-);
-
-// Static file serving
-expressApp.use("/uploads", express.static("uploads"));
-
-// Health check endpoint
-expressApp.get("/health", (req, res) => {
-	res.status(200).json({
-		status: "OK",
-		timestamp: new Date().toISOString(),
-		environment: config.NODE_ENV,
-		version: "2.0.0",
-	});
-});
-
-// Start the standalone Apollo Server with custom context
+// Start the standalone Apollo Server with custom context and CORS
 const { url } = await startStandaloneServer(server, {
 	listen: { port: 4000 },
 	context: async ({ req }) => {
@@ -142,6 +102,27 @@ const { url } = await startStandaloneServer(server, {
 		}
 
 		return { user };
+	},
+	// Configure CORS for Apollo Server
+	cors: {
+		origin: (origin, callback) => {
+			const allowedOrigins = config.NODE_ENV === "development"
+				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+				: [config.CORS_ORIGIN];
+
+			// Allow requests with no origin (like mobile apps or curl requests)
+			if (!origin) return callback(null, true);
+
+			if (allowedOrigins.includes(origin)) {
+				return callback(null, true);
+			} else {
+				return callback(new Error("Not allowed by CORS"));
+			}
+		},
+		credentials: true,
+		methods: ["GET", "POST", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+		optionsSuccessStatus: 200,
 	},
 });
 
