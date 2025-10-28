@@ -3,6 +3,7 @@
     "@apollo/server": "^5.1.0",
     "@graphql-tools/schema": "^10.0.25",
     "@prisma/client": "^6.17.1",
+    "apollo-server-express": "^3.13.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

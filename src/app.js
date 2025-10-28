@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { graphqlHTTP } from "express-graphql";
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -65,10 +66,68 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// GraphQL Endpoint
-app.use(
+// Initialize Apollo Server
+const server = new ApolloServer({
+	schema: schema,
+	csrfPrevention: false, // Disable CSRF for file uploads
+	formatError: (error) => {
+		if (config.NODE_ENV === "development") {
+			console.error("❌ GraphQL Error:", {
+				message: error.message,
+				locations: error.locations,
+				path: error.path,
+			});
+		}
+		return error;
+	},
+});
+
+// Apollo Server will be started by startStandaloneServer
+
+// Create a custom Express server that handles both GraphQL and file uploads
+const expressApp = express();
+
+// Apply CORS to the Express app
+expressApp.use(
+	cors({
+		origin:
+			config.NODE_ENV === "development"
+				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+				: config.CORS_ORIGIN,
+		credentials: true,
+		methods: ["GET", "POST", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+		optionsSuccessStatus: 200,
+	})
+);
+
+// Body parsing for Express app
+expressApp.use(express.json({ limit: "10mb" }));
+expressApp.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// File upload middleware for Express app
+expressApp.use(
 	"/graphql",
-	graphqlHTTP(async (req) => {
+	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
+);
+
+// Static file serving
+expressApp.use("/uploads", express.static("uploads"));
+
+// Health check endpoint
+expressApp.get("/health", (req, res) => {
+	res.status(200).json({
+		status: "OK",
+		timestamp: new Date().toISOString(),
+		environment: config.NODE_ENV,
+		version: "2.0.0",
+	});
+});
+
+// Start the standalone Apollo Server with custom context
+const { url } = await startStandaloneServer(server, {
+	listen: { port: 4000 },
+	context: async ({ req }) => {
 		const authHeader = req.headers?.authorization;
 		let user = null;
 
@@ -82,16 +141,13 @@ app.use(
 			}
 		}
 
-		return {
-			schema: schema,
-			context: { user },
-			graphiql: config.NODE_ENV === "development",
-		};
-	})
-);
+		return { user };
+	},
+});
 
-// Error Handling
-app.use(notFoundHandler);
-app.use(errorHandler);
+console.log(`🚀 Apollo Server ready at ${url}`);
+console.log(`🏥 Health: http://localhost:4000/health`);
+console.log(`🌍 Environment: ${config.NODE_ENV}`);
+console.log(`📦 Version: 2.0.0`);
 
 export default app;
