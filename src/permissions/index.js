@@ -413,11 +413,11 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		
-		// Upload scalar permissions - allow admin and root users to upload files
+
+		// Upload scalar permissions - allow root, admin, and teacher users to upload files
 		Upload: rule()(async (_parent, _args, { user }) => {
 			if (!user) return false;
-			return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			return [ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role);
 		}),
 	},
 	{

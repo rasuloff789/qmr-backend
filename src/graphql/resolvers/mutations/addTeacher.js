@@ -71,7 +71,9 @@ const addTeacher = async (
 	console.log("🔍 ProfilePicture details:", {
 		hasProfilePicture: !!profilePicture,
 		profilePictureType: typeof profilePicture,
-		profilePictureKeys: profilePicture ? Object.keys(profilePicture) : "No file",
+		profilePictureKeys: profilePicture
+			? Object.keys(profilePicture)
+			: "No file",
 	});
 	try {
 		// Input validation
@@ -196,7 +198,7 @@ const addTeacher = async (
 			profilePicture: profilePictureUrl,
 			degrees: degreesConnection,
 		});
-		
+
 		const newTeacher = await prisma.teacher.create({
 			data: {
 				username,
