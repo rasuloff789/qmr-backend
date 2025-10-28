@@ -89,7 +89,7 @@ export const PERMISSIONS = {
 		// Profile Management
 		"update_own_profile",
 		"view_own_profile",
-		
+
 		// File Upload
 		"upload_files",
 		"upload_profile_pictures",
