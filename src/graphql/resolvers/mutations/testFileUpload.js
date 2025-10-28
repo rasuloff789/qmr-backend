@@ -14,12 +14,6 @@ export const testFileUpload = async (_parent, args, context) => {
 		username: user?.username,
 		role: user?.role,
 	});
-	console.log("📁 File details:", {
-		hasFile: !!file,
-		fileType: typeof file,
-		fileKeys: file ? Object.keys(file) : "No file",
-		fileValue: file, // Log the entire file object to debug
-	});
 
 	try {
 		// Check if file is provided
@@ -33,8 +27,11 @@ export const testFileUpload = async (_parent, args, context) => {
 			};
 		}
 
+		// Await the file object as per Apollo Server v3 documentation
+		const fileData = await file;
+
 		// Process the uploaded file
-		const uploadResult = await processUploadedFile(file);
+		const uploadResult = await processUploadedFile(fileData);
 
 		if (!uploadResult.success) {
 			return {

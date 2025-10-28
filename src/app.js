@@ -43,14 +43,8 @@ app.use(
 );
 
 // Body Parsing Middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// GraphQL Upload Middleware
-app.use(
-	"/graphql",
-	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
-);
+// app.use(express.json({ limit: "10mb" }));
+// app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Static file serving
 app.use("/uploads", express.static("uploads"));
@@ -65,7 +59,7 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// GraphQL Upload Middleware
+// GraphQL Upload Middleware (single instance)
 app.use(
 	"/graphql",
 	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })

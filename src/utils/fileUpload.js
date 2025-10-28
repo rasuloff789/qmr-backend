@@ -40,6 +40,7 @@ export const processUploadedFile = async (upload) => {
 		return { success: false, error: "No file provided" };
 	}
 
+
 	try {
 		// Validate file type
 		const allowedTypes = [
