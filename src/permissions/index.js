@@ -231,6 +231,16 @@ export const permissions = shield(
 			// Teacher queries
 			getTeachers: canViewTeachers,
 			getTeacher: canViewSpecificTeacher, // Resource-specific permission
+
+			// Degree queries - Allow authenticated users to view degrees
+			getDegrees: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can view degrees
+				return !!user;
+			}),
+			getDegree: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can view a specific degree
+				return !!user;
+			}),
 		},
 		Mutation: {
 			// Public mutations
@@ -255,6 +265,20 @@ export const permissions = shield(
 			// Teacher management
 			addTeacher: canCreateTeacher,
 			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
+
+			// Degree management - Only root and admin can manage degrees
+			addDegree: rule()(async (_parent, _args, { user }) => {
+				// Only root and admin can create degrees
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+			}),
+			updateDegree: rule()(async (_parent, _args, { user }) => {
+				// Only root and admin can update degrees
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+			}),
+			deleteDegree: rule()(async (_parent, _args, { user }) => {
+				// Only root and admin can delete degrees
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+			}),
 		},
 		// Field-level permissions for existing fields only
 		Admin: {
@@ -271,6 +295,13 @@ export const permissions = shield(
 		Teacher: {
 			// Only users who can view teachers can see creation date
 			createdAt: canViewTeachers,
+		},
+		Degree: {
+			// Allow all degree fields to be accessible
+			id: allow,
+			name: allow,
+			teachers: allow,
+			createdAt: allow,
 		},
 		// LoginResponse fields - allow all fields for login mutation
 		LoginResponse: {
@@ -344,6 +375,22 @@ export const permissions = shield(
 		ChangePasswordResponse: {
 			success: allow,
 			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// AddDegreeResponse fields - allow all fields for addDegree mutation
+		AddDegreeResponse: {
+			success: allow,
+			message: allow,
+			degree: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// UpdateDegreeResponse fields - allow all fields for updateDegree mutations
+		UpdateDegreeResponse: {
+			success: allow,
+			message: allow,
+			degree: allow,
 			errors: allow,
 			timestamp: allow,
 		},
