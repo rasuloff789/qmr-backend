@@ -59,6 +59,8 @@ export const PERMISSIONS = {
 	],
 	[ROLES.ADMIN]: [
 		// User Management
+		"create_teacher",
+		"update_teacher",
 		"view_admins",
 		"view_teachers",
 		"view_own_profile",

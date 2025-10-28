@@ -3,6 +3,7 @@
 
 scalar Date
 scalar Phone
+scalar Upload
 
 # Common response types
 type SuccessResponse {
@@ -29,3 +30,18 @@ type TypedErrorResponse {
 
 # Union type for responses that can be either success or error
 union MutationResponse = SuccessResponse | ErrorResponse
+
+# Degree type
+type Degree {
+    id: ID!
+    name: String!
+    teachers: [Teacher!]!
+    createdAt: Date!
+}
+
+# Gender enum
+enum Gender {
+    MALE
+    FEMALE
+    CHILD
+}

@@ -17,7 +17,15 @@ export default async function (_, args, context) {
 				birthDate: true,
 				phone: true,
 				tgUsername: true,
-				department: true,
+				gender: true,
+				profilePicture: true,
+				degrees: {
+					select: {
+						id: true,
+						name: true,
+						createdAt: true,
+					},
+				},
 				isActive: true,
 				createdAt: true,
 			},

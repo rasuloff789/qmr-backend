@@ -29,28 +29,29 @@ model Admin {
 }
 
 model Teacher {
-  id         Int      @id @default(autoincrement())
-  fullname   String   
-  username   String   @unique
-  password   String
-  birthDate  DateTime 
-  phone      String   
-  tgUsername String   
-  department String   // New field specific to Teacher
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  fullname       String   
+  username       String   @unique
+  password       String
+  birthDate      DateTime 
+  phone          String   
+  tgUsername     String  
+  degrees        Degree[]
+  gender         Gender   @default(MALE)
+  profilePicture String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
 }
 
-model TelegramVerificationCode {
-  id              Int      @id @default(autoincrement())
-  username        String   
-  userType        String   
-  code            String   
-  telegramUsername String   
-  expiresAt       DateTime 
-  isUsed          Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  
-  @@index([username, userType])
-  @@index([expiresAt])
+model Degree {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  teachers  Teacher[]
+  createdAt DateTime @default(now())
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  CHILD
 }

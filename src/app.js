@@ -11,6 +11,7 @@
 import express from "express";
 import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
+import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 // Core imports
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -86,6 +87,19 @@ app.get("/health", (req, res) => {
 		version: "2.0.0",
 	});
 });
+
+/**
+ * Static file serving for uploaded images
+ */
+app.use("/uploads", express.static("uploads"));
+
+/**
+ * File Upload Middleware for GraphQL
+ */
+app.use(
+	"/graphql",
+	graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
+);
 
 /**
  * GraphQL Endpoint with enhanced error handling

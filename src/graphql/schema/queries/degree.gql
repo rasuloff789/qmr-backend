@@ -1,0 +1,7 @@
+# Degree Queries
+# Degree-related queries
+
+extend type Query {
+    getDegrees: [Degree!]!
+    getDegree(id: ID!): Degree
+}

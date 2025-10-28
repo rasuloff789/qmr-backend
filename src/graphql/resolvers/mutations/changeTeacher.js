@@ -1,5 +1,8 @@
 import { prisma } from "../../../database/index.js";
-import { hashPassword, isPasswordSecure } from "../../../utils/auth/password.js";
+import {
+	hashPassword,
+	isPasswordSecure,
+} from "../../../utils/auth/password.js";
 import {
 	checkUzPhoneInt,
 	checkTelegramUsername,
@@ -7,6 +10,10 @@ import {
 	checkTurkeyPhoneInt,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
+import {
+	processUploadedFile,
+	deleteProfilePicture,
+} from "../../../utils/fileUpload.js";
 
 /**
  * Change/Update teacher user information
@@ -25,7 +32,19 @@ import {
  */
 const changeTeacher = async (
 	_parent,
-	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive }
+	{
+		id,
+		username,
+		fullname,
+		birthDate,
+		phone,
+		tgUsername,
+		password,
+		gender,
+		profilePicture,
+		degreeIds,
+		isActive,
+	}
 ) => {
 	try {
 		// Check if teacher exists
@@ -111,6 +130,47 @@ const changeTeacher = async (
 			updateData.password = await hashPassword(password);
 		}
 
+		// Add gender if provided
+		if (gender !== undefined) {
+			updateData.gender = gender;
+		}
+
+		// Add profilePicture if provided
+		if (profilePicture !== undefined) {
+			if (profilePicture) {
+				const uploadResult = await processUploadedFile(profilePicture);
+				if (!uploadResult.success) {
+					throw new Error(uploadResult.error);
+				}
+
+				// Delete old profile picture if it exists
+				if (existingTeacher.profilePicture) {
+					const oldFilename = existingTeacher.profilePicture.split("/").pop();
+					deleteProfilePicture(oldFilename);
+				}
+
+				updateData.profilePicture = uploadResult.url;
+			} else {
+				// If profilePicture is explicitly set to null/empty, remove it
+				if (existingTeacher.profilePicture) {
+					const oldFilename = existingTeacher.profilePicture.split("/").pop();
+					deleteProfilePicture(oldFilename);
+				}
+				updateData.profilePicture = null;
+			}
+		}
+
+		// Add degrees if provided
+		if (degreeIds !== undefined) {
+			if (degreeIds.length > 0) {
+				updateData.degrees = {
+					set: degreeIds.map((id) => ({ id: parseInt(id) })),
+				};
+			} else {
+				updateData.degrees = { set: [] };
+			}
+		}
+
 		// Add isActive if provided
 		if (isActive !== undefined) {
 			updateData.isActive = isActive;
@@ -132,7 +192,15 @@ const changeTeacher = async (
 				birthDate: true,
 				phone: true,
 				tgUsername: true,
-				department: true,
+				gender: true,
+				profilePicture: true,
+				degrees: {
+					select: {
+						id: true,
+						name: true,
+						createdAt: true,
+					},
+				},
 				isActive: true,
 				createdAt: true,
 			},

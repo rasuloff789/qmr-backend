@@ -12,6 +12,15 @@ import getAdmins from "./getAdmins.js";
 import getAdmin from "./getAdmin.js";
 import getTeachers from "./getTeachers.js";
 import getTeacher from "./getTeacher.js";
+import { getDegrees, getDegree } from "./getDegrees.js";
 import me from "./me.js";
 
-export { getAdmins, getAdmin, getTeachers, getTeacher, me };
+export {
+	getAdmins,
+	getAdmin,
+	getTeachers,
+	getTeacher,
+	getDegrees,
+	getDegree,
+	me,
+};

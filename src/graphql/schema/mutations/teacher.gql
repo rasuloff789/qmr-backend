@@ -25,7 +25,9 @@ extend type Mutation {
         tgUsername: String!
         birthDate: Date!
         phone: Phone!
-        department: String!
+        gender: Gender!
+        profilePicture: Upload
+        degreeIds: [ID!]
     ): AddTeacherResponse!
     
     changeTeacher(
@@ -36,6 +38,9 @@ extend type Mutation {
         phone: Phone
         tgUsername: String
         password: String
+        gender: Gender
+        profilePicture: Upload
+        degreeIds: [ID!]
         isActive: Boolean
     ): UpdateTeacherResponse!
 }

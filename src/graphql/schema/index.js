@@ -31,10 +31,12 @@ const teacherTypes = loadSchemaFile("types/teacher.gql");
 const userQueries = loadSchemaFile("queries/user.gql");
 const adminQueries = loadSchemaFile("queries/admin.gql");
 const teacherQueries = loadSchemaFile("queries/teacher.gql");
+const degreeQueries = loadSchemaFile("queries/degree.gql");
 
 const authMutations = loadSchemaFile("mutations/auth.gql");
 const adminMutations = loadSchemaFile("mutations/admin.gql");
 const teacherMutations = loadSchemaFile("mutations/teacher.gql");
+const degreeMutations = loadSchemaFile("mutations/degree.gql");
 
 /**
  * Combined GraphQL Schema
@@ -47,9 +49,11 @@ const schemaString = `
 	${userQueries}
 	${adminQueries}
 	${teacherQueries}
+	${degreeQueries}
 	${authMutations}
 	${adminMutations}
 	${teacherMutations}
+	${degreeMutations}
 `;
 
 export const schema = schemaString;

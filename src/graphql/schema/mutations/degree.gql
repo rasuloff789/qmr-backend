@@ -1,0 +1,33 @@
+# Degree Mutations
+# Degree-related mutations
+
+type AddDegreeResponse {
+    success: Boolean!
+    message: String!
+    degree: Degree
+    errors: [String!]
+    timestamp: String
+}
+
+type UpdateDegreeResponse {
+    success: Boolean!
+    message: String!
+    degree: Degree
+    errors: [String!]
+    timestamp: String
+}
+
+extend type Mutation {
+    addDegree(
+        name: String!
+    ): AddDegreeResponse!
+    
+    updateDegree(
+        id: ID!
+        name: String
+    ): UpdateDegreeResponse!
+    
+    deleteDegree(
+        id: ID!
+    ): UpdateDegreeResponse!
+}

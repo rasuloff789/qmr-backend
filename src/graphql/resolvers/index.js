@@ -8,12 +8,16 @@
  * @version 1.0.0
  */
 
+import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
+
 // Import query resolvers
 import {
 	getAdmins,
 	getAdmin,
 	getTeachers,
 	getTeacher,
+	getDegrees,
+	getDegree,
 	me,
 } from "./queries/index.js";
 
@@ -27,6 +31,9 @@ import {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
+	addDegree,
+	updateDegree,
+	deleteDegree,
 	updateProfile,
 } from "./mutations/index.js";
 
@@ -39,6 +46,8 @@ const Query = {
 	getAdmin,
 	getTeachers,
 	getTeacher,
+	getDegrees,
+	getDegree,
 };
 
 /**
@@ -53,6 +62,9 @@ const Mutation = {
 	deleteAdmin,
 	addTeacher,
 	changeTeacher,
+	addDegree,
+	updateDegree,
+	deleteDegree,
 	updateProfile,
 };
 
@@ -60,6 +72,7 @@ const Mutation = {
  * Combined resolvers
  */
 export const resolvers = {
+	Upload: GraphQLUpload,
 	Query,
 	Mutation,
 };

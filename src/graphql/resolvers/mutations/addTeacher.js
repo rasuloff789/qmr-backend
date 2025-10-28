@@ -18,6 +18,10 @@ import {
 	createServerError,
 	ERROR_MESSAGES,
 } from "../../../utils/errors.js";
+import {
+	processUploadedFile,
+	deleteProfilePicture,
+} from "../../../utils/fileUpload.js";
 
 /**
  * Add a new teacher user
@@ -35,7 +39,17 @@ import {
  */
 const addTeacher = async (
 	_parent,
-	{ username, fullname, birthDate, phone, tgUsername, department, password }
+	{
+		username,
+		fullname,
+		birthDate,
+		phone,
+		tgUsername,
+		gender,
+		profilePicture,
+		degreeIds,
+		password,
+	}
 ) => {
 	try {
 		// Input validation
@@ -97,6 +111,22 @@ const addTeacher = async (
 			};
 		}
 
+		// Process profile picture upload
+		let profilePictureUrl = null;
+		if (profilePicture) {
+			const uploadResult = await processUploadedFile(profilePicture);
+			if (!uploadResult.success) {
+				return {
+					success: false,
+					message: "File upload failed",
+					teacher: null,
+					errors: [uploadResult.error],
+					timestamp: new Date().toISOString(),
+				};
+			}
+			profilePictureUrl = uploadResult.url;
+		}
+
 		// Check if username already exists
 		const existingTeacher = await prisma.teacher.findUnique({
 			where: { username },
@@ -118,6 +148,12 @@ const addTeacher = async (
 			: trPhoneValidation.normalized;
 		const normalizedTgUsername = tgValidation.normalized;
 
+		// Prepare degrees connection if provided
+		const degreesConnection =
+			degreeIds && degreeIds.length > 0
+				? { connect: degreeIds.map((id) => ({ id: parseInt(id) })) }
+				: {};
+
 		// Create a new teacher in the database
 		const newTeacher = await prisma.teacher.create({
 			data: {
@@ -126,7 +162,9 @@ const addTeacher = async (
 				birthDate: new Date(birthDate).toISOString(),
 				phone: normalizedPhone,
 				tgUsername: normalizedTgUsername,
-				department,
+				gender,
+				profilePicture: profilePictureUrl,
+				degrees: degreesConnection,
 				password: await hashPassword(password),
 			},
 			select: {
@@ -136,7 +174,15 @@ const addTeacher = async (
 				birthDate: true,
 				phone: true,
 				tgUsername: true,
-				department: true,
+				gender: true,
+				profilePicture: true,
+				degrees: {
+					select: {
+						id: true,
+						name: true,
+						createdAt: true,
+					},
+				},
 				isActive: true,
 				createdAt: true,
 			},
