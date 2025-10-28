@@ -4,11 +4,10 @@ import { processUploadedFile } from "../../../utils/fileUpload.js";
  * Test File Upload Resolver
  * Simple mutation to test file upload functionality
  */
-export const testFileUpload = async (parent, args, context) => {
+export const testFileUpload = async (_parent, args, context) => {
 	const { file } = args;
 	const { user } = context;
 
-	console.log("🧪 testFileUpload mutation called");
 	console.log("👤 User:", {
 		id: user?.id,
 		username: user?.username,
@@ -18,7 +17,6 @@ export const testFileUpload = async (parent, args, context) => {
 		hasFile: !!file,
 		fileType: typeof file,
 		fileKeys: file ? Object.keys(file) : "No file",
-		fileValue: file, // Log the entire file object
 	});
 
 	try {
@@ -34,12 +32,9 @@ export const testFileUpload = async (parent, args, context) => {
 		}
 
 		// Process the uploaded file
-		console.log("📸 Processing file upload...");
 		const uploadResult = await processUploadedFile(file);
-		console.log("📤 Upload result:", uploadResult);
 
 		if (!uploadResult.success) {
-			console.log("❌ File upload failed:", uploadResult.error);
 			return {
 				success: false,
 				message: "File upload failed",
@@ -49,7 +44,6 @@ export const testFileUpload = async (parent, args, context) => {
 			};
 		}
 
-		console.log("✅ File uploaded successfully:", uploadResult.url);
 		return {
 			success: true,
 			message: "File uploaded successfully",
@@ -62,7 +56,6 @@ export const testFileUpload = async (parent, args, context) => {
 		};
 	} catch (error) {
 		console.error("❌ Test file upload error:", error);
-		console.error("❌ Error stack:", error.stack);
 		return {
 			success: false,
 			message: "File upload failed due to server error",

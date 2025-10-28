@@ -50,14 +50,6 @@ export const processUploadedFile = async (upload) => {
 			"image/webp",
 		];
 
-		console.log("🔍 File validation details:", {
-			mimetype: upload.mimetype,
-			filename: upload.filename,
-			size: upload.size,
-			allowedTypes: allowedTypes,
-			isAllowed: allowedTypes.includes(upload.mimetype),
-		});
-
 		if (!allowedTypes.includes(upload.mimetype)) {
 			return {
 				success: false,

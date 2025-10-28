@@ -72,24 +72,14 @@ app.use(
 
 /**
  * Body Parsing Middleware
- * Skip multipart/form-data to let graphql-upload handle it
  */
-app.use((req, res, next) => {
-	if (req.headers["content-type"]?.includes("multipart/form-data")) {
-		console.log("📤 Skipping body parsing for multipart request");
-		next();
-	} else {
-		express.json({ limit: "10mb" })(req, res, next);
-	}
-});
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-app.use((req, res, next) => {
-	if (req.headers["content-type"]?.includes("multipart/form-data")) {
-		next();
-	} else {
-		express.urlencoded({ extended: true, limit: "10mb" })(req, res, next);
-	}
-});
+/**
+ * Static file serving for uploaded images
+ */
+app.use("/uploads", express.static("uploads"));
 
 /**
  * Health Check Endpoint
@@ -103,24 +93,6 @@ app.get("/health", (req, res) => {
 	});
 });
 
-/**
- * Static file serving for uploaded images
- */
-app.use("/uploads", express.static("uploads"));
-
-/**
- * Log multipart requests before file upload processing
- */
-app.use("/graphql", (req, res, next) => {
-	if (req.headers["content-type"]?.includes("multipart/form-data")) {
-		console.log("📤 Multipart request detected:", {
-			contentType: req.headers["content-type"],
-			method: req.method,
-			timestamp: new Date().toISOString(),
-		});
-	}
-	next();
-});
 
 /**
  * File Upload Middleware for GraphQL
@@ -134,9 +106,7 @@ try {
 			maxFiles: 10,
 		})
 	);
-	console.log("✅ GraphQL Upload middleware initialized successfully");
 } catch (error) {
-	console.error("❌ Failed to initialize GraphQL Upload middleware:", error);
 	throw error;
 }
 
@@ -147,11 +117,6 @@ app.use(
 	"/graphql",
 	graphqlHTTP(async (req) => {
 		try {
-			// Add request validation
-			if (!req) {
-				console.error("❌ GraphQL request is undefined");
-				throw new Error("Invalid request object");
-			}
 
 			const authHeader = req.headers?.authorization;
 			let user = null;
@@ -161,64 +126,11 @@ app.use(
 				try {
 					const { verifyToken } = await import("./utils/auth/jwt.js");
 					user = verifyToken(token);
-					console.log("✅ Token verified successfully:", {
-						id: user.id,
-						role: user.role,
-						username: user.username,
-					});
 				} catch (error) {
-					console.warn("❌ Invalid token:", error.message);
 				}
 			}
 
-			// Log GraphQL requests for debugging
-			console.log("🔍 GraphQL Request:", {
-				method: req.method,
-				url: req.url,
-				hasAuth: !!authHeader,
-				user: user ? { id: user.id, role: user.role } : null,
-				timestamp: new Date().toISOString(),
-			});
 
-			// Additional logging for root users
-			if (user && user.role === "root") {
-				console.log("🔍 Root user request detected:", {
-					id: user.id,
-					role: user.role,
-					username: user.username,
-				});
-			}
-
-			// Log request body for debugging (only for JSON requests)
-			if (
-				req.method === "POST" &&
-				req.headers["content-type"]?.includes("application/json")
-			) {
-				let body = "";
-				req.on("data", (chunk) => {
-					body += chunk.toString();
-				});
-				req.on("end", () => {
-					try {
-						const parsedBody = JSON.parse(body);
-						console.log("📝 GraphQL Request Body:", {
-							query: parsedBody.query?.substring(0, 100) + "...",
-							variables: parsedBody.variables,
-							operationName: parsedBody.operationName,
-						});
-					} catch (err) {
-						console.log(
-							"📝 GraphQL Request Body (raw):",
-							body.substring(0, 200)
-						);
-					}
-				});
-			} else if (
-				req.method === "POST" &&
-				req.headers["content-type"]?.includes("multipart/form-data")
-			) {
-				console.log("📝 GraphQL Request: Multipart form data (file upload)");
-			}
 
 			const graphqlConfig = {
 				schema: schema, // Using the centralized schema
@@ -265,11 +177,6 @@ query Me {
 				errorType: error.constructor.name,
 			});
 
-			// Check for specific error types
-			if (error.message?.includes("right.request")) {
-				console.error("❌ GraphQL Upload Error: Request object issue detected");
-				console.error("❌ This might be a graphql-upload middleware issue");
-			}
 
 			// Return a basic GraphQL schema to prevent complete failure
 			return {
