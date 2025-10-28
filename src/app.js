@@ -88,7 +88,6 @@ app.get("/health", (req, res) => {
 	});
 });
 
-
 /**
  * Static file serving for uploaded images
  */

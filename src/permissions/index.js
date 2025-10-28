@@ -280,6 +280,12 @@ export const permissions = shield(
 				// Only root and admin can delete degrees
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
+
+			// Test file upload - Allow all authenticated users for testing
+			testFileUpload: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can test file upload
+				return !!user;
+			}),
 		},
 		// Field-level permissions for existing fields only
 		Admin: {
@@ -382,6 +388,17 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
+		// TestFileUploadResponse fields - allow all fields for testFileUpload mutation
+		TestFileUploadResponse: {
+			success: allow,
+			message: allow,
+			fileUrl: allow,
+			filename: allow,
+			size: allow,
+			mimetype: allow,
+			errors: allow,
+			timestamp: allow,
+		},
 		// UpdateProfileResponse fields - allow all fields for updateProfile mutation
 		UpdateProfileResponse: {
 			success: allow,
@@ -417,7 +434,7 @@ export const permissions = shield(
 		// Upload scalar permissions - allow root, admin, and teacher users to upload files
 		Upload: rule()(async (_parent, _args, { user }) => {
 			if (!user) return false;
-			return [ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role);
+			return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 		}),
 	},
 	{

@@ -18,6 +18,7 @@ import { changeTeacher } from "./changeTeacher.js";
 import { changeTeacherActive } from "./changeTeacherActive.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { login } from "./login.js";
+import { testFileUpload } from "./testFileUpload.js";
 import { updateProfile } from "./updateProfile.js";
 
 export {
@@ -33,5 +34,6 @@ export {
 	changeTeacherActive,
 	deleteAdmin,
 	login,
+	testFileUpload,
 	updateProfile,
 };

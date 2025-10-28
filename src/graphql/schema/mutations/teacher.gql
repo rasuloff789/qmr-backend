@@ -25,6 +25,17 @@ type ChangeTeacherActiveResponse {
     timestamp: String
 }
 
+type TestFileUploadResponse {
+    success: Boolean!
+    message: String!
+    fileUrl: String
+    filename: String
+    size: Int
+    mimetype: String
+    errors: [String!]
+    timestamp: String
+}
+
 extend type Mutation {
     addTeacher(
         username: String!
@@ -56,4 +67,8 @@ extend type Mutation {
         id: ID!
         isActive: Boolean!
     ): ChangeTeacherActiveResponse!
+    
+    testFileUpload(
+        file: Upload!
+    ): TestFileUploadResponse!
 }
