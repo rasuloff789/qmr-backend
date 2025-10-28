@@ -31,9 +31,10 @@ process.on("SIGTERM", () => {
 // CORS Configuration
 app.use(
 	cors({
-		origin: config.NODE_ENV === "development" 
-			? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-			: config.CORS_ORIGIN,
+		origin:
+			config.NODE_ENV === "development"
+				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+				: config.CORS_ORIGIN,
 		credentials: true,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -44,6 +45,12 @@ app.use(
 // Body Parsing Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// GraphQL Upload Middleware
+app.use(
+	"/graphql",
+	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
+);
 
 // Static file serving
 app.use("/uploads", express.static("uploads"));
@@ -57,12 +64,6 @@ app.get("/health", (req, res) => {
 		version: "2.0.0",
 	});
 });
-
-// GraphQL Upload Middleware
-app.use(
-	"/graphql",
-	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
-);
 
 // GraphQL Endpoint
 app.use(
