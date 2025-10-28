@@ -77,19 +77,29 @@ app.use(
 		origin: (origin, callback) => {
 			console.log("🔒 CORS Check:", {
 				origin: origin,
-				allowedOrigins: config.NODE_ENV === "development" 
-					? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-					: config.CORS_ORIGIN,
-				nodeEnv: config.NODE_ENV
+				allowedOrigins:
+					config.NODE_ENV === "development"
+						? [
+								config.CORS_ORIGIN,
+								"http://localhost:3000",
+								"http://localhost:5173",
+						  ]
+						: config.CORS_ORIGIN,
+				nodeEnv: config.NODE_ENV,
 			});
-			
-			const allowedOrigins = config.NODE_ENV === "development"
-				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-				: config.CORS_ORIGIN;
-			
+
+			const allowedOrigins =
+				config.NODE_ENV === "development"
+					? [
+							config.CORS_ORIGIN,
+							"http://localhost:3000",
+							"http://localhost:5173",
+					  ]
+					: config.CORS_ORIGIN;
+
 			// Allow requests with no origin (like mobile apps or curl requests)
 			if (!origin) return callback(null, true);
-			
+
 			if (allowedOrigins.includes(origin)) {
 				console.log("✅ CORS: Origin allowed");
 				return callback(null, true);
@@ -144,6 +154,40 @@ app.get("/health", (req, res) => {
 });
 
 /**
+ * Frontend Debug Endpoint
+ */
+app.get("/debug", (req, res) => {
+	res.status(200).json({
+		message: "Frontend debug endpoint working",
+		origin: req.headers.origin,
+		userAgent: req.headers["user-agent"],
+		timestamp: new Date().toISOString(),
+		cors: {
+			allowedOrigins: config.NODE_ENV === "development" 
+				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
+				: config.CORS_ORIGIN,
+			nodeEnv: config.NODE_ENV
+		}
+	});
+});
+
+/**
+ * GraphQL Test Endpoint (Simple)
+ */
+app.post("/graphql-test", (req, res) => {
+	res.status(200).json({
+		message: "GraphQL test endpoint working",
+		body: req.body,
+		headers: {
+			contentType: req.headers["content-type"],
+			origin: req.headers.origin,
+			authorization: req.headers.authorization ? "Present" : "Missing"
+		},
+		timestamp: new Date().toISOString(),
+	});
+});
+
+/**
  * File Upload Middleware for GraphQL
  * Must be placed before the GraphQL endpoint
  */
@@ -170,10 +214,12 @@ app.use(
 				method: req.method,
 				url: req.url,
 				headers: {
-					authorization: req.headers?.authorization ? "Bearer token present" : "No auth",
+					authorization: req.headers?.authorization
+						? "Bearer token present"
+						: "No auth",
 					contentType: req.headers["content-type"],
 					origin: req.headers.origin,
-					userAgent: req.headers["user-agent"]
+					userAgent: req.headers["user-agent"],
 				},
 				timestamp: new Date().toISOString(),
 			});
