@@ -61,6 +61,7 @@ export const PERMISSIONS = {
 		// User Management
 		"create_teacher",
 		"update_teacher",
+		"manage_teacher_status",
 		"view_admins",
 		"view_teachers",
 		"view_own_profile",

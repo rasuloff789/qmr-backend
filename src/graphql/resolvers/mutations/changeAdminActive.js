@@ -10,6 +10,11 @@ import { prisma } from "../../../database/index.js";
  * @returns {Object} - Updated admin object
  */
 const changeAdminActive = async (_parent, { adminId, isActive }, context) => {
+	console.log("changeAdminActive", {
+		adminId,
+		isActive,
+	});
+
 	try {
 		// Validate input
 		if (typeof isActive !== "boolean") {

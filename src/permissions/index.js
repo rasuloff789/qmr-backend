@@ -187,8 +187,8 @@ const canChangeAdminStatus = rule()(async (_parent, args, { user }) => {
 const canChangeTeacherStatus = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
 
-	// Only root can change teacher status
-	return user.role === ROLES.ROOT;
+	// Root and Admin can change teacher status
+	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 });
 
 /**
