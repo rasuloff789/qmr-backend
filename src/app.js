@@ -163,11 +163,16 @@ app.get("/debug", (req, res) => {
 		userAgent: req.headers["user-agent"],
 		timestamp: new Date().toISOString(),
 		cors: {
-			allowedOrigins: config.NODE_ENV === "development" 
-				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-				: config.CORS_ORIGIN,
-			nodeEnv: config.NODE_ENV
-		}
+			allowedOrigins:
+				config.NODE_ENV === "development"
+					? [
+							config.CORS_ORIGIN,
+							"http://localhost:3000",
+							"http://localhost:5173",
+					  ]
+					: config.CORS_ORIGIN,
+			nodeEnv: config.NODE_ENV,
+		},
 	});
 });
 
@@ -181,7 +186,7 @@ app.post("/graphql-test", (req, res) => {
 		headers: {
 			contentType: req.headers["content-type"],
 			origin: req.headers.origin,
-			authorization: req.headers.authorization ? "Present" : "Missing"
+			authorization: req.headers.authorization ? "Present" : "Missing",
 		},
 		timestamp: new Date().toISOString(),
 	});
