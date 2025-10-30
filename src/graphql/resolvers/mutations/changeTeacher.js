@@ -14,7 +14,6 @@ import {
 	processUploadedFile,
 	deleteProfilePicture,
 } from "../../../utils/fileUpload.js";
-import { logDataModification } from "../../../utils/audit.js";
 
 /**
  * Change/Update teacher user information
@@ -45,8 +44,7 @@ const changeTeacher = async (
 		profilePicture,
 		degreeIds,
 		isActive,
-    },
-    context
+	}
 ) => {
 	try {
 		// Check if teacher exists
@@ -64,9 +62,8 @@ const changeTeacher = async (
 			};
 		}
 
-        // Prepare update data object and change summary
-        const updateData = {};
-        const changeSummary = {};
+		// Prepare update data object
+		const updateData = {};
 
 		// Validate and add username if provided
 		if (username !== undefined) {
@@ -99,14 +96,12 @@ const changeTeacher = async (
 				};
 			}
 
-            updateData.username = username;
-            changeSummary.username = { from: existingTeacher.username, to: username };
+			updateData.username = username;
 		}
 
 		// Add fullname if provided
 		if (fullname !== undefined) {
-            updateData.fullname = fullname;
-            changeSummary.fullname = { from: existingTeacher.fullname, to: fullname };
+			updateData.fullname = fullname;
 		}
 
 		// Validate and add birthDate if provided
@@ -120,8 +115,7 @@ const changeTeacher = async (
 					timestamp: new Date().toISOString(),
 				};
 			}
-            updateData.birthDate = new Date(birthDate).toISOString();
-            changeSummary.birthDate = true;
+			updateData.birthDate = new Date(birthDate).toISOString();
 		}
 
 		// Validate and add phone if provided
@@ -144,8 +138,7 @@ const changeTeacher = async (
 			const normalizedPhone = uzPhoneValidation.valid
 				? uzPhoneValidation.normalized
 				: trPhoneValidation.normalized;
-            updateData.phone = normalizedPhone;
-            changeSummary.phone = true;
+			updateData.phone = normalizedPhone;
 		}
 
 		// Validate and add tgUsername if provided
@@ -160,8 +153,7 @@ const changeTeacher = async (
 					timestamp: new Date().toISOString(),
 				};
 			}
-            updateData.tgUsername = tgValidation.normalized;
-            changeSummary.tgUsername = true;
+			updateData.tgUsername = tgValidation.normalized;
 		}
 
 		// Validate and add password if provided
@@ -177,21 +169,18 @@ const changeTeacher = async (
 					timestamp: new Date().toISOString(),
 				};
 			}
-            updateData.password = await hashPassword(password);
-            changeSummary.password = true;
+			updateData.password = await hashPassword(password);
 		}
 
 		// Add gender if provided
 		if (gender !== undefined) {
-            updateData.gender = gender;
-            changeSummary.gender = true;
+			updateData.gender = gender;
 		}
 
-		// Add profilePicture if provided (await Upload like in addTeacher)
+		// Add profilePicture if provided
 		if (profilePicture !== undefined) {
-			if (profilePicture) {
-				const fileData = await profilePicture; // resolves to { filename, mimetype, createReadStream }
-				const uploadResult = await processUploadedFile(fileData);
+			if (profilePicture && profilePicture.createReadStream) {
+				const uploadResult = await processUploadedFile(profilePicture);
 				if (!uploadResult.success) {
 					return {
 						success: false,
@@ -208,36 +197,31 @@ const changeTeacher = async (
 					deleteProfilePicture(oldFilename);
 				}
 
-                updateData.profilePicture = uploadResult.url;
-                changeSummary.profilePicture = true;
+				updateData.profilePicture = uploadResult.url;
 			} else {
 				// If profilePicture is explicitly set to null/empty, remove it
 				if (existingTeacher.profilePicture) {
 					const oldFilename = existingTeacher.profilePicture.split("/").pop();
 					deleteProfilePicture(oldFilename);
 				}
-                updateData.profilePicture = null;
-                changeSummary.profilePicture = true;
+				updateData.profilePicture = null;
 			}
 		}
 
 		// Add degrees if provided
 		if (degreeIds !== undefined) {
 			if (degreeIds.length > 0) {
-                updateData.degrees = {
+				updateData.degrees = {
 					set: degreeIds.map((id) => ({ id: parseInt(id) })),
 				};
-                changeSummary.degreeIds = degreeIds;
 			} else {
-                updateData.degrees = { set: [] };
-                changeSummary.degreeIds = [];
+				updateData.degrees = { set: [] };
 			}
 		}
 
 		// Add isActive if provided
 		if (isActive !== undefined) {
-            updateData.isActive = isActive;
-            changeSummary.isActive = isActive;
+			updateData.isActive = isActive;
 		}
 
 		// Check if there are any fields to update
@@ -276,21 +260,7 @@ const changeTeacher = async (
 			},
 		});
 
-        // Audit
-        try {
-            await logDataModification(
-                context?.user,
-                "change_teacher",
-                "Teacher",
-                parseInt(id),
-                changeSummary,
-                {}
-            );
-        } catch (e) {
-            // ignore audit failures
-        }
-
-        return {
+		return {
 			success: true,
 			message: "Teacher updated successfully",
 			teacher: updatedTeacher,
