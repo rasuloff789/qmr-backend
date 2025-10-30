@@ -263,7 +263,10 @@ export const permissions = shield(
 			deleteAdmin: canDeleteAdmin,
 
 			// Teacher management
-			addTeacher: canCreateTeacher,
+			addTeacher: rule()(async (_parent, _args, { user }) => {
+				// Allow admin and root to add teachers
+				return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
+			}),
 			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
 			changeTeacherActive: canChangeTeacherStatus, // Only root can change teacher status
 
