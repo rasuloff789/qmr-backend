@@ -177,36 +177,37 @@ const changeTeacher = async (
 			updateData.gender = gender;
 		}
 
-		// Add profilePicture if provided
-		if (profilePicture !== undefined) {
-			if (profilePicture && profilePicture.createReadStream) {
-				const uploadResult = await processUploadedFile(profilePicture);
-				if (!uploadResult.success) {
-					return {
-						success: false,
-						message: "File upload failed",
-						teacher: null,
-						errors: [uploadResult.error],
-						timestamp: new Date().toISOString(),
-					};
-				}
+        // Add profilePicture if provided (await Upload like in addTeacher)
+        if (profilePicture !== undefined) {
+            if (profilePicture) {
+                const fileData = await profilePicture; // resolves to { filename, mimetype, createReadStream }
+                const uploadResult = await processUploadedFile(fileData);
+                if (!uploadResult.success) {
+                    return {
+                        success: false,
+                        message: "File upload failed",
+                        teacher: null,
+                        errors: [uploadResult.error],
+                        timestamp: new Date().toISOString(),
+                    };
+                }
 
-				// Delete old profile picture if it exists
-				if (existingTeacher.profilePicture) {
-					const oldFilename = existingTeacher.profilePicture.split("/").pop();
-					deleteProfilePicture(oldFilename);
-				}
+                // Delete old profile picture if it exists
+                if (existingTeacher.profilePicture) {
+                    const oldFilename = existingTeacher.profilePicture.split("/").pop();
+                    deleteProfilePicture(oldFilename);
+                }
 
-				updateData.profilePicture = uploadResult.url;
-			} else {
-				// If profilePicture is explicitly set to null/empty, remove it
-				if (existingTeacher.profilePicture) {
-					const oldFilename = existingTeacher.profilePicture.split("/").pop();
-					deleteProfilePicture(oldFilename);
-				}
-				updateData.profilePicture = null;
-			}
-		}
+                updateData.profilePicture = uploadResult.url;
+            } else {
+                // If profilePicture is explicitly set to null/empty, remove it
+                if (existingTeacher.profilePicture) {
+                    const oldFilename = existingTeacher.profilePicture.split("/").pop();
+                    deleteProfilePicture(oldFilename);
+                }
+                updateData.profilePicture = null;
+            }
+        }
 
 		// Add degrees if provided
 		if (degreeIds !== undefined) {
