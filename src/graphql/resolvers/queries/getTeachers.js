@@ -34,7 +34,7 @@ export default async function (_, args, context) {
 			},
 		});
 
-        return teachers.map((t) => ({ ...t, degrees: t.degrees || [] }));
+		return teachers.map((t) => ({ ...t, degrees: t.degrees || [] }));
 	} catch (error) {
 		console.error("Error fetching teachers:", error);
 		throw new Error("Failed to fetch teacher users");

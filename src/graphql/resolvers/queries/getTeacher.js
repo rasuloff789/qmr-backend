@@ -9,6 +9,7 @@ import { prisma } from "../../../database/index.js";
  * @returns {Object|null} - Teacher object or null if not found
  */
 export default async function (_, { id }, context) {
+	console.log("🔍 getTeacher query called with id:", id);
 	try {
 		const teacher = await prisma.teacher.findUnique({
 			where: { id: parseInt(id) },
@@ -33,8 +34,8 @@ export default async function (_, { id }, context) {
 			},
 		});
 
-        if (!teacher) return null;
-        return { ...teacher, degrees: teacher.degrees || [] };
+		if (!teacher) return null;
+		return { ...teacher, degrees: teacher.degrees || [] };
 	} catch (error) {
 		console.error("Error fetching teacher:", error);
 		throw new Error("Failed to fetch teacher user");

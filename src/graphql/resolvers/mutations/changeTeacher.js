@@ -46,21 +46,21 @@ const changeTeacher = async (
 		isActive,
 	}
 ) => {
-    try {
+	try {
 		// Check if teacher exists
 		const existingTeacher = await prisma.teacher.findUnique({
 			where: { id: parseInt(id) },
 		});
 
-        if (!existingTeacher) {
-            return {
-                success: false,
-                message: "Teacher not found",
-                teacher: null,
-                errors: ["Teacher not found"],
-                timestamp: new Date().toISOString(),
-            };
-        }
+		if (!existingTeacher) {
+			return {
+				success: false,
+				message: "Teacher not found",
+				teacher: null,
+				errors: ["Teacher not found"],
+				timestamp: new Date().toISOString(),
+			};
+		}
 
 		// Prepare update data object
 		const updateData = {};
@@ -68,15 +68,15 @@ const changeTeacher = async (
 		// Validate and add username if provided
 		if (username !== undefined) {
 			const usernameValidation = checkUsername(username);
-            if (!usernameValidation.valid) {
-                return {
-                    success: false,
-                    message: "Validation failed",
-                    teacher: null,
-                    errors: [usernameValidation.reason],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (!usernameValidation.valid) {
+				return {
+					success: false,
+					message: "Validation failed",
+					teacher: null,
+					errors: [usernameValidation.reason],
+					timestamp: new Date().toISOString(),
+				};
+			}
 
 			// Check if username is already taken by another teacher
 			const usernameExists = await prisma.teacher.findFirst({
@@ -86,15 +86,15 @@ const changeTeacher = async (
 				},
 			});
 
-            if (usernameExists) {
-                return {
-                    success: false,
-                    message: "Username already exists",
-                    teacher: null,
-                    errors: ["Username already exists"],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (usernameExists) {
+				return {
+					success: false,
+					message: "Username already exists",
+					teacher: null,
+					errors: ["Username already exists"],
+					timestamp: new Date().toISOString(),
+				};
+			}
 
 			updateData.username = username;
 		}
@@ -106,15 +106,15 @@ const changeTeacher = async (
 
 		// Validate and add birthDate if provided
 		if (birthDate !== undefined) {
-            if (!isValidBirthdate(birthDate)) {
-                return {
-                    success: false,
-                    message: "Validation failed",
-                    teacher: null,
-                    errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (!isValidBirthdate(birthDate)) {
+				return {
+					success: false,
+					message: "Validation failed",
+					teacher: null,
+					errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
+					timestamp: new Date().toISOString(),
+				};
+			}
 			updateData.birthDate = new Date(birthDate).toISOString();
 		}
 
@@ -122,17 +122,17 @@ const changeTeacher = async (
 		if (phone !== undefined) {
 			const uzPhoneValidation = checkUzPhoneInt(phone);
 			const trPhoneValidation = checkTurkeyPhoneInt(phone);
-            if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
-                return {
-                    success: false,
-                    message: "Validation failed",
-                    teacher: null,
-                    errors: [
-                        "Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)",
-                    ],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
+				return {
+					success: false,
+					message: "Validation failed",
+					teacher: null,
+					errors: [
+						"Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)",
+					],
+					timestamp: new Date().toISOString(),
+				};
+			}
 
 			// Normalize phone number
 			const normalizedPhone = uzPhoneValidation.valid
@@ -144,31 +144,31 @@ const changeTeacher = async (
 		// Validate and add tgUsername if provided
 		if (tgUsername !== undefined) {
 			const tgValidation = checkTelegramUsername(tgUsername);
-            if (!tgValidation.valid) {
-                return {
-                    success: false,
-                    message: "Validation failed",
-                    teacher: null,
-                    errors: [tgValidation.reason],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (!tgValidation.valid) {
+				return {
+					success: false,
+					message: "Validation failed",
+					teacher: null,
+					errors: [tgValidation.reason],
+					timestamp: new Date().toISOString(),
+				};
+			}
 			updateData.tgUsername = tgValidation.normalized;
 		}
 
 		// Validate and add password if provided
 		if (password !== undefined) {
-            if (!isPasswordSecure(password)) {
-                return {
-                    success: false,
-                    message: "Validation failed",
-                    teacher: null,
-                    errors: [
-                        "Password must be at least 8 characters with uppercase, lowercase, and number.",
-                    ],
-                    timestamp: new Date().toISOString(),
-                };
-            }
+			if (!isPasswordSecure(password)) {
+				return {
+					success: false,
+					message: "Validation failed",
+					teacher: null,
+					errors: [
+						"Password must be at least 8 characters with uppercase, lowercase, and number.",
+					],
+					timestamp: new Date().toISOString(),
+				};
+			}
 			updateData.password = await hashPassword(password);
 		}
 
@@ -179,16 +179,16 @@ const changeTeacher = async (
 
 		// Add profilePicture if provided
 		if (profilePicture !== undefined) {
-            if (profilePicture && profilePicture.createReadStream) {
-                const uploadResult = await processUploadedFile(profilePicture);
+			if (profilePicture && profilePicture.createReadStream) {
+				const uploadResult = await processUploadedFile(profilePicture);
 				if (!uploadResult.success) {
-                    return {
-                        success: false,
-                        message: "File upload failed",
-                        teacher: null,
-                        errors: [uploadResult.error],
-                        timestamp: new Date().toISOString(),
-                    };
+					return {
+						success: false,
+						message: "File upload failed",
+						teacher: null,
+						errors: [uploadResult.error],
+						timestamp: new Date().toISOString(),
+					};
 				}
 
 				// Delete old profile picture if it exists
@@ -225,18 +225,18 @@ const changeTeacher = async (
 		}
 
 		// Check if there are any fields to update
-        if (Object.keys(updateData).length === 0) {
-            return {
-                success: false,
-                message: "No fields provided to update",
-                teacher: null,
-                errors: ["No fields provided to update"],
-                timestamp: new Date().toISOString(),
-            };
-        }
+		if (Object.keys(updateData).length === 0) {
+			return {
+				success: false,
+				message: "No fields provided to update",
+				teacher: null,
+				errors: ["No fields provided to update"],
+				timestamp: new Date().toISOString(),
+			};
+		}
 
 		// Update the teacher
-        const updatedTeacher = await prisma.teacher.update({
+		const updatedTeacher = await prisma.teacher.update({
 			where: { id: parseInt(id) },
 			data: updateData,
 			select: {
@@ -260,22 +260,22 @@ const changeTeacher = async (
 			},
 		});
 
-        return {
-            success: true,
-            message: "Teacher updated successfully",
-            teacher: updatedTeacher,
-            errors: [],
-            timestamp: new Date().toISOString(),
-        };
+		return {
+			success: true,
+			message: "Teacher updated successfully",
+			teacher: updatedTeacher,
+			errors: [],
+			timestamp: new Date().toISOString(),
+		};
 	} catch (error) {
-        console.error("Change teacher error:", error);
-        return {
-            success: false,
-            message: error.message || "Failed to update teacher",
-            teacher: null,
-            errors: [error.message || "Unexpected error"],
-            timestamp: new Date().toISOString(),
-        };
+		console.error("Change teacher error:", error);
+		return {
+			success: false,
+			message: error.message || "Failed to update teacher",
+			teacher: null,
+			errors: [error.message || "Unexpected error"],
+			timestamp: new Date().toISOString(),
+		};
 	}
 };
 

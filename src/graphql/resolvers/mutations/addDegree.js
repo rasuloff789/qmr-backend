@@ -205,20 +205,20 @@ const deleteDegree = async (_parent, { id }) => {
 			};
 		}
 
-    // If associated with teachers, disconnect them first
-    if (existingDegree.teachers.length > 0) {
-        await prisma.degree.update({
-            where: { id: parseInt(id) },
-            data: {
-                teachers: {
-                    set: [],
-                },
-            },
-        });
-    }
+		// If associated with teachers, disconnect them first
+		if (existingDegree.teachers.length > 0) {
+			await prisma.degree.update({
+				where: { id: parseInt(id) },
+				data: {
+					teachers: {
+						set: [],
+					},
+				},
+			});
+		}
 
-    // Delete the degree after disconnection
-    await prisma.degree.delete({ where: { id: parseInt(id) } });
+		// Delete the degree after disconnection
+		await prisma.degree.delete({ where: { id: parseInt(id) } });
 
 		return {
 			success: true,

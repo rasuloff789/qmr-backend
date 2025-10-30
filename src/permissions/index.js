@@ -136,10 +136,10 @@ const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
 
 	// Root can update any teacher
-    if (user.role === ROLES.ROOT) return true;
+	if (user.role === ROLES.ROOT) return true;
 
-    // Admin can update any teacher
-    if (user.role === ROLES.ADMIN) return true;
+	// Admin can update any teacher
+	if (user.role === ROLES.ADMIN) return true;
 
 	// Teacher can only update their own profile
 	if (user.role === ROLES.TEACHER) {

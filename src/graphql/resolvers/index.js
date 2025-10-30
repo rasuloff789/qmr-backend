@@ -35,7 +35,6 @@ import {
 	addDegree,
 	updateDegree,
 	deleteDegree,
-	testFileUpload,
 	updateProfile,
 } from "./mutations/index.js";
 
@@ -68,7 +67,6 @@ const Mutation = {
 	addDegree,
 	updateDegree,
 	deleteDegree,
-	testFileUpload,
 	updateProfile,
 };
 
