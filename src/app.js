@@ -50,7 +50,10 @@ app.use(
 		setHeaders: (res, _path) => {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 			res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-			res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+			res.setHeader(
+				"Access-Control-Allow-Headers",
+				"Content-Type, Authorization"
+			);
 			// Cache images aggressively; adjust if needed
 			res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
 		},

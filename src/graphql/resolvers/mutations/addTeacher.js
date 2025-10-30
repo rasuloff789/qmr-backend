@@ -1,5 +1,8 @@
 import { prisma } from "../../../database/index.js";
-import { hashPassword, isPasswordSecure } from "../../../utils/auth/password.js";
+import {
+	hashPassword,
+	isPasswordSecure,
+} from "../../../utils/auth/password.js";
 import {
 	checkUsername,
 	checkUzPhoneInt,
@@ -24,8 +27,8 @@ const addTeacher = async (
 		gender,
 		profilePicture,
 		degreeIds,
-	},
-)	=> {
+	}
+) => {
 	try {
 		// Validate username
 		const usernameValidation = checkUsername(username);
@@ -120,7 +123,9 @@ const addTeacher = async (
 		}
 
 		// Normalize inputs
-		const normalizedPhone = uzPhone.valid ? uzPhone.normalized : trPhone.normalized;
+		const normalizedPhone = uzPhone.valid
+			? uzPhone.normalized
+			: trPhone.normalized;
 		const normalizedTg = tg.normalized;
 		const degreesConnection =
 			Array.isArray(degreeIds) && degreeIds.length > 0
