@@ -205,23 +205,20 @@ const deleteDegree = async (_parent, { id }) => {
 			};
 		}
 
-		// Check if degree is associated with any teachers
-		if (existingDegree.teachers.length > 0) {
-			return {
-				success: false,
-				message: "Cannot delete degree",
-				degree: null,
-				errors: [
-					`Cannot delete degree '${existingDegree.name}' because it is associated with ${existingDegree.teachers.length} teacher(s)`,
-				],
-				timestamp: new Date().toISOString(),
-			};
-		}
+    // If associated with teachers, disconnect them first
+    if (existingDegree.teachers.length > 0) {
+        await prisma.degree.update({
+            where: { id: parseInt(id) },
+            data: {
+                teachers: {
+                    set: [],
+                },
+            },
+        });
+    }
 
-		// Delete the degree
-		await prisma.degree.delete({
-			where: { id: parseInt(id) },
-		});
+    // Delete the degree after disconnection
+    await prisma.degree.delete({ where: { id: parseInt(id) } });
 
 		return {
 			success: true,
