@@ -61,4 +61,4 @@ docker-compose.override.yml
 *.pem
 keys/
 /src/generated/prisma
-./uploads
+uploads/
