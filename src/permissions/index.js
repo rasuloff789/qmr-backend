@@ -129,7 +129,7 @@ const canUpdateOwnAdmin = rule()(async (_parent, args, { user }) => {
 		return parseInt(user.id) === parseInt(args.id);
 	}
 
-	return false;
+		return false;
 });
 
 const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
@@ -160,7 +160,7 @@ const canViewSpecificAdmin = rule()(async (_parent, args, { user }) => {
 		return parseInt(user.id) === parseInt(args.id);
 	}
 
-	return false;
+		return false;
 });
 
 const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
@@ -224,9 +224,9 @@ export const permissions = shield(
 			// User profile queries
 			me: allow, // Allow me query without authentication
 
-			// Admin queries - Only root users can access admin data
-			getAdmins: canViewAdmins,
-			getAdmin: canViewSpecificAdmin,
+			// Admin queries - Allow admins and root to access admin data
+			getAdmins: isAdminOrRoot,
+			getAdmin: isAdminOrRoot,
 
 			// Teacher queries
 			getTeachers: canViewTeachers,
