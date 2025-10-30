@@ -33,7 +33,8 @@ export default async function (_, { id }, context) {
 			},
 		});
 
-		return teacher;
+        if (!teacher) return null;
+        return { ...teacher, degrees: teacher.degrees || [] };
 	} catch (error) {
 		console.error("Error fetching teacher:", error);
 		throw new Error("Failed to fetch teacher user");
