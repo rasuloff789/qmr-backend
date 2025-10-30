@@ -1,59 +1,33 @@
 import { prisma } from "../../../database/index.js";
+import { hashPassword, isPasswordSecure } from "../../../utils/auth/password.js";
 import {
-	hashPassword,
-	isPasswordSecure,
-} from "../../../utils/auth/password.js";
-import {
-	checkUzPhoneInt,
-	checkTelegramUsername,
 	checkUsername,
+	checkUzPhoneInt,
 	checkTurkeyPhoneInt,
+	checkTelegramUsername,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
-import {
-	createErrorResponse,
-	createSuccessResponse,
-	createValidationError,
-	createConflictError,
-	createServerError,
-	ERROR_MESSAGES,
-} from "../../../utils/errors.js";
-import {
-	processUploadedFile,
-	deleteProfilePicture,
-} from "../../../utils/fileUpload.js";
+import { processUploadedFile } from "../../../utils/fileUpload.js";
 
 /**
- * Add a new teacher user
- * @param {Object} _parent - Parent object (unused)
- * @param {Object} args - Mutation arguments
- * @param {string} args.username - Username
- * @param {string} args.fullname - Full name
- * @param {string} args.birthDate - Birth date
- * @param {string} args.phone - Phone number
- * @param {string} args.tgUsername - Telegram username
- * @param {string} args.department - Department
- * @param {string} args.password - Password
- * @param {Object} context - GraphQL context
- * @returns {Object} - AddTeacherResponse with success status and teacher data
+ * Add a new teacher user with validation and optional profile picture upload
  */
 const addTeacher = async (
 	_parent,
 	{
 		username,
+		password,
 		fullname,
+		tgUsername,
 		birthDate,
 		phone,
-		tgUsername,
 		gender,
 		profilePicture,
 		degreeIds,
-		password,
 	},
-	context
-) => {
+)	=> {
 	try {
-		// Input validation
+		// Validate username
 		const usernameValidation = checkUsername(username);
 		if (!usernameValidation.valid) {
 			return {
@@ -65,6 +39,7 @@ const addTeacher = async (
 			};
 		}
 
+		// Validate password strength
 		if (!isPasswordSecure(password)) {
 			return {
 				success: false,
@@ -77,9 +52,10 @@ const addTeacher = async (
 			};
 		}
 
-		const uzPhoneValidation = checkUzPhoneInt(phone);
-		const trPhoneValidation = checkTurkeyPhoneInt(phone);
-		if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
+		// Validate phone (UZ or TR format)
+		const uzPhone = checkUzPhoneInt(phone);
+		const trPhone = checkTurkeyPhoneInt(phone);
+		if (!uzPhone.valid && !trPhone.valid) {
 			return {
 				success: false,
 				message: "Validation failed",
@@ -91,17 +67,19 @@ const addTeacher = async (
 			};
 		}
 
-		const tgValidation = checkTelegramUsername(tgUsername);
-		if (!tgValidation.valid) {
+		// Validate telegram username
+		const tg = checkTelegramUsername(tgUsername);
+		if (!tg.valid) {
 			return {
 				success: false,
 				message: "Validation failed",
 				teacher: null,
-				errors: [tgValidation.reason],
+				errors: [tg.reason],
 				timestamp: new Date().toISOString(),
 			};
 		}
 
+		// Validate birth date
 		if (!isValidBirthdate(birthDate)) {
 			return {
 				success: false,
@@ -112,30 +90,9 @@ const addTeacher = async (
 			};
 		}
 
-		// Process profile picture upload
-		let profilePictureUrl = null;
-		if (profilePicture) {
-			// Await the file object as per Apollo Server v3 documentation
-			const fileData = await profilePicture;
-			const uploadResult = await processUploadedFile(fileData);
-			if (!uploadResult.success) {
-				return {
-					success: false,
-					message: "File upload failed",
-					teacher: null,
-					errors: [uploadResult.error],
-					timestamp: new Date().toISOString(),
-				};
-			}
-			profilePictureUrl = uploadResult.url;
-		}
-
-		// Check if username already exists
-		const existingTeacher = await prisma.teacher.findUnique({
-			where: { username },
-		});
-
-		if (existingTeacher) {
+		// Ensure unique username
+		const existing = await prisma.teacher.findUnique({ where: { username } });
+		if (existing) {
 			return {
 				success: false,
 				message: "Username already exists",
@@ -145,27 +102,39 @@ const addTeacher = async (
 			};
 		}
 
-		// Normalize phone number
-		const normalizedPhone = uzPhoneValidation.valid
-			? uzPhoneValidation.normalized
-			: trPhoneValidation.normalized;
-		const normalizedTgUsername = tgValidation.normalized;
+		// Optional profile picture
+		let profilePictureUrl = null;
+		if (profilePicture) {
+			const file = await profilePicture; // Await Upload
+			const uploaded = await processUploadedFile(file);
+			if (!uploaded.success) {
+				return {
+					success: false,
+					message: "File upload failed",
+					teacher: null,
+					errors: [uploaded.error],
+					timestamp: new Date().toISOString(),
+				};
+			}
+			profilePictureUrl = uploaded.url;
+		}
 
-		// Prepare degrees connection if provided
+		// Normalize inputs
+		const normalizedPhone = uzPhone.valid ? uzPhone.normalized : trPhone.normalized;
+		const normalizedTg = tg.normalized;
 		const degreesConnection =
-			degreeIds && degreeIds.length > 0
+			Array.isArray(degreeIds) && degreeIds.length > 0
 				? { connect: degreeIds.map((id) => ({ id: parseInt(id) })) }
 				: {};
 
-		// Create a new teacher in the database
-
+		// Persist
 		const newTeacher = await prisma.teacher.create({
 			data: {
 				username,
 				fullname,
 				birthDate: new Date(birthDate).toISOString(),
 				phone: normalizedPhone,
-				tgUsername: normalizedTgUsername,
+				tgUsername: normalizedTg,
 				gender,
 				profilePicture: profilePictureUrl,
 				degrees: degreesConnection,
@@ -180,13 +149,7 @@ const addTeacher = async (
 				tgUsername: true,
 				gender: true,
 				profilePicture: true,
-				degrees: {
-					select: {
-						id: true,
-						name: true,
-						createdAt: true,
-					},
-				},
+				degrees: { select: { id: true, name: true, createdAt: true } },
 				isActive: true,
 				createdAt: true,
 			},
@@ -200,9 +163,7 @@ const addTeacher = async (
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		console.error("❌ Add teacher error:", error);
-		console.error("❌ Error stack:", error.stack);
-		console.error("❌ Error message:", error.message);
+		console.error("❌ addTeacher error:", error.message);
 		return {
 			success: false,
 			message: "Failed to create teacher user",
