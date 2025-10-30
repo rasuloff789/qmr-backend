@@ -42,8 +42,20 @@ app.use(
 	})
 );
 
-// Static file serving
-app.use("/uploads", express.static("uploads"));
+// Static file serving for uploaded files with permissive CORS and caching
+app.use(
+	"/uploads",
+	cors({ origin: true, credentials: false }),
+	express.static("uploads", {
+		setHeaders: (res, _path) => {
+			res.setHeader("Access-Control-Allow-Origin", "*");
+			res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+			res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+			// Cache images aggressively; adjust if needed
+			res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+		},
+	})
+);
 
 // Health Check
 app.get("/health", (req, res) => {
