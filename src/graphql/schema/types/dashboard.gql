@@ -1,0 +1,25 @@
+# Dashboard Types
+# Dashboard statistics and overview types
+
+type DashboardStats {
+    totalStudents: Int!
+    totalTeachers: Int!
+    totalAdmins: Int!
+    activeStudents: Int!
+    activeTeachers: Int!
+    activeAdmins: Int!
+    totalUsers: Int!
+    activeUsers: Int!
+    averageStudentAge: Float
+    averageTeacherAge: Float
+    averageAdminAge: Float
+    studentGenderDistribution: GenderDistribution!
+    teacherGenderDistribution: GenderDistribution!
+}
+
+type GenderDistribution {
+    male: Int!
+    female: Int!
+    child: Int!
+}
+

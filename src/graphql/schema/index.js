@@ -27,16 +27,24 @@ const commonTypes = loadSchemaFile("types/common.gql");
 const userTypes = loadSchemaFile("types/user.gql");
 const adminTypes = loadSchemaFile("types/admin.gql");
 const teacherTypes = loadSchemaFile("types/teacher.gql");
+const studentTypes = loadSchemaFile("types/student.gql");
+const dashboardTypes = loadSchemaFile("types/dashboard.gql");
+const courseTypes = loadSchemaFile("types/course.gql");
 
 const userQueries = loadSchemaFile("queries/user.gql");
 const adminQueries = loadSchemaFile("queries/admin.gql");
 const teacherQueries = loadSchemaFile("queries/teacher.gql");
+const studentQueries = loadSchemaFile("queries/student.gql");
 const degreeQueries = loadSchemaFile("queries/degree.gql");
+const courseQueries = loadSchemaFile("queries/course.gql");
+const dashboardQueries = loadSchemaFile("queries/dashboard.gql");
 
 const authMutations = loadSchemaFile("mutations/auth.gql");
 const adminMutations = loadSchemaFile("mutations/admin.gql");
 const teacherMutations = loadSchemaFile("mutations/teacher.gql");
+const studentMutations = loadSchemaFile("mutations/student.gql");
 const degreeMutations = loadSchemaFile("mutations/degree.gql");
+const courseMutations = loadSchemaFile("mutations/course.gql");
 
 /**
  * Combined GraphQL Schema
@@ -46,14 +54,22 @@ const schemaString = `
 	${userTypes}
 	${adminTypes}
 	${teacherTypes}
+	${studentTypes}
+	${dashboardTypes}
+	${courseTypes}
 	${userQueries}
 	${adminQueries}
 	${teacherQueries}
+	${studentQueries}
 	${degreeQueries}
+	${courseQueries}
+	${dashboardQueries}
 	${authMutations}
 	${adminMutations}
 	${teacherMutations}
+	${studentMutations}
 	${degreeMutations}
+	${courseMutations}
 `;
 
 export const schema = schemaString;

@@ -1,0 +1,26 @@
+# Course Mutations
+# Course-related mutations
+
+type AddCourseResponse {
+    success: Boolean!
+    message: String!
+    course: Course
+    errors: [String!]
+    timestamp: String
+}
+
+extend type Mutation {
+    addCourse(
+        name: String!
+        description: String
+        daysOfWeek: [DaysOfWeek!]!
+        gender: Gender!
+        startAt: Date!
+        endAt: Date
+        startTime: Date!
+        endTime: Date!
+        teacherId: ID!
+        degreeIds: [ID!]!
+    ): AddCourseResponse!
+}
+

@@ -37,8 +37,11 @@ model Teacher {
   phone          String   
   tgUsername     String  
   degrees        Degree[]
+  teacherCourses Course[]
+  substituteTeachers SubstituteTeacher[]
   gender         Gender   @default(MALE)
   profilePicture String?
+  isDeleted      Boolean? @default(false)
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
 }
@@ -47,7 +50,24 @@ model Degree {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   teachers  Teacher[]
+  courses   Course[]
   createdAt DateTime @default(now())
+}
+
+model Student {
+  id             Int       @id @default(autoincrement())
+  fullname       String   
+  username       String    @unique
+  password       String
+  birthDate      DateTime 
+  phone          String?   
+  tgUsername     String  
+  gender         Gender    @default(MALE)
+  courses        CourseStudent[]
+  profilePicture String?
+  isActive       Boolean   @default(true)
+  isDeleted      Boolean?  @default(false)
+  createdAt      DateTime  @default(now())
 }
 
 enum Gender {
@@ -55,3 +75,67 @@ enum Gender {
   FEMALE
   CHILD
 }
+
+model Course{
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  description String?
+  daysOfWeek DaysOfWeek[]
+  gender Gender
+  startAt DateTime
+  endAt DateTime?
+  startTime DateTime
+  endTime DateTime
+  students  CourseStudent[]
+  teacher     Teacher        @relation(fields: [teacherId], references: [id])
+  teacherId   Int
+  substituteTeacher SubstituteTeacher[]
+  degrees   Degree[]
+  createdAt DateTime  @default(now())
+}
+
+model SubstituteTeacher {
+  id         Int      @id @default(autoincrement())
+  course     Course   @relation(fields: [courseId], references: [id])
+  courseId   Int
+  teacher    Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId  Int
+  startDate  DateTime // qachondan
+  endDate    DateTime // qachongacha
+  reason     String?  // istasa sabab: "asosiy o‘qituvchi ta'tilda"
+  createdAt  DateTime @default(now())
+}
+
+enum DaysOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model CourseStudent {
+  id        Int      @id @default(autoincrement())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId Int
+  feeChanges FeeChanges[]
+  joinedAt DateTime @default(now())
+  monthlyPayment Int
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+model FeeChanges {
+  id        Int      @id @default(autoincrement())
+  courseStudentId Int
+  CourseStudent CourseStudent @relation(fields: [courseStudentId], references: [id])
+  date DateTime
+  newFee Int
+}
+
+
+

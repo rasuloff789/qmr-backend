@@ -1,0 +1,8 @@
+# Student Queries
+# Student-related queries
+
+extend type Query {
+    getStudents: [Student!]!
+    getStudent(id: ID!): Student
+}
+

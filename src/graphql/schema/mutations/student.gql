@@ -1,54 +1,51 @@
-# Teacher Mutations
-# Teacher-related mutations
+# Student Mutations
+# Student-related mutations
 
-type AddTeacherResponse {
+type AddStudentResponse {
     success: Boolean!
     message: String!
-    teacher: Teacher
+    student: Student
     errors: [String!]
     timestamp: String
 }
 
-type UpdateTeacherResponse {
+type UpdateStudentResponse {
     success: Boolean!
     message: String!
-    teacher: Teacher
+    student: Student
     errors: [String!]
     timestamp: String
 }
 
-type ChangeTeacherActiveResponse {
+type ChangeStudentActiveResponse {
     success: Boolean!
     message: String!
-    teacher: Teacher
+    student: Student
     errors: [String!]
     timestamp: String
 }
 
-type DeleteTeacherResponse {
+type DeleteStudentResponse {
     success: Boolean!
     message: String!
-    teacher: Teacher
+    student: Student
     errors: [String!]
     timestamp: String
 }
-
- 
 
 extend type Mutation {
-    addTeacher(
+    addStudent(
         username: String!
         password: String!
         fullname: String!
         tgUsername: String!
         birthDate: Date!
-        phone: Phone!
+        phone: Phone
         gender: Gender!
         profilePicture: Upload
-        degreeIds: [ID!]
-    ): AddTeacherResponse!
+    ): AddStudentResponse!
     
-    changeTeacher(
+    changeStudent(
         id: ID!
         username: String
         fullname: String
@@ -58,17 +55,16 @@ extend type Mutation {
         password: String
         gender: Gender
         profilePicture: Upload
-        degreeIds: [ID!]
         isActive: Boolean
-    ): UpdateTeacherResponse!
+    ): UpdateStudentResponse!
     
-    changeTeacherActive(
+    changeStudentActive(
         id: ID!
         isActive: Boolean!
-    ): ChangeTeacherActiveResponse!
+    ): ChangeStudentActiveResponse!
     
-    deleteTeacher(
+    deleteStudent(
         id: ID!
-    ): DeleteTeacherResponse!
-    
+    ): DeleteStudentResponse!
 }
+

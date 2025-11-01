@@ -1,0 +1,50 @@
+# Course Types
+# Course-specific types and operations
+
+type Course {
+    id: ID!
+    name: String!
+    description: String
+    daysOfWeek: [DaysOfWeek!]!
+    gender: Gender!
+    startAt: Date!
+    endAt: Date
+    startTime: Date!
+    endTime: Date!
+    students: [CourseStudent!]!
+    teacher: Teacher!
+    substituteTeachers: [SubstituteTeacher!]!
+    degrees: [Degree!]!
+    createdAt: Date!
+}
+
+type CourseStudent {
+    id: ID!
+    course: Course!
+    student: Student!
+    joinedAt: Date!
+    monthlyPayment: Int!
+    isActive: Boolean!
+    createdAt: Date!
+}
+
+type SubstituteTeacher {
+    id: ID!
+    course: Course!
+    teacher: Teacher!
+    startDate: Date!
+    endDate: Date!
+    reason: String
+    createdAt: Date!
+}
+
+enum DaysOfWeek {
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
+}
+

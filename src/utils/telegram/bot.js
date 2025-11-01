@@ -6,7 +6,7 @@
 
 import TelegramBot from "node-telegram-bot-api";
 import { PrismaClient } from "@prisma/client";
-
+import config from "../../config/env.js";
 const prisma = new PrismaClient();
 
 // Initialize Telegram Bot
@@ -15,7 +15,7 @@ let bot = null;
 const initializeTelegramBot = () => {
 	if (!bot) {
 		try {
-			const token = process.env.TELEGRAM_BOT_TOKEN;
+			const token = config.TELEGRAM_BOT_TOKEN;
 			if (!token) {
 				console.warn(
 					"⚠️ TELEGRAM_BOT_TOKEN not found in environment variables"
@@ -24,41 +24,63 @@ const initializeTelegramBot = () => {
 				return null;
 			}
 
-			// Stop any existing bot instance first
-			if (bot && bot.stopPolling) {
-				bot.stopPolling();
-			}
-
 			bot = new TelegramBot(token, {
 				polling: {
 					interval: 300,
 					autoStart: false,
 					params: {
-						timeout: 10,
+						timeout: 30,
 						// Add unique identifier to prevent conflicts
 						allowed_updates: ["message", "callback_query"],
 					},
 				},
 			});
 
+			// Initialize user states object for tracking user interactions
+			bot.userStates = {};
+
 			// Set up bot commands only if bot is successfully created
 			if (bot) {
 				setupBotCommands();
 
-				// Add error handling for polling
+				// Add comprehensive error handling for polling
 				bot.on("polling_error", (error) => {
 					console.error("❌ Telegram polling error:", error.message);
+
+					// Handle bot conflict (409 error)
 					if (error.code === "ETELEGRAM" && error.message.includes("409")) {
 						console.error(
 							"❌ Bot conflict detected. Another instance may be running."
 						);
 						console.error("❌ Stopping polling to prevent conflicts...");
 						bot.stopPolling();
+						return;
 					}
+
+					// Handle network errors (these are usually temporary)
+					if (
+						error.code === "EFATAL" ||
+						error.message.includes("ECONNRESET") ||
+						error.message.includes("ETIMEDOUT") ||
+						error.message.includes("ENOTFOUND")
+					) {
+						console.warn("⚠️ Network error detected. Polling will continue...");
+						// Polling will automatically retry
+						return;
+					}
+
+					console.error("❌ Unexpected polling error, but continuing...");
+				});
+
+				// Successfully connected
+				bot.on("polling_success", () => {
+					console.log("✅ Telegram bot polling successful");
 				});
 
 				// Start polling after setup
-				bot.startPolling();
+				bot.startPolling().catch((error) => {
+					console.error("❌ Failed to start polling:", error.message);
+				});
 				console.log("✅ Telegram bot initialized and polling started");
 			}
 		} catch (error) {
@@ -539,7 +561,9 @@ const handleUserTypeInput = async (chatId, userType, userState) => {
 				`❌ *User not found.*\n\nNo ${userState.userType} user found with username: ${userState.username}\n\nPlease check your username and try again.`,
 				{ parse_mode: "Markdown" }
 			);
-			delete bot.userStates[chatId];
+			if (bot.userStates && bot.userStates[chatId]) {
+				delete bot.userStates[chatId];
+			}
 			return;
 		}
 
@@ -549,7 +573,9 @@ const handleUserTypeInput = async (chatId, userType, userState) => {
 				`❌ *Account deactivated.*\n\nYour account is currently deactivated. Please contact an administrator.`,
 				{ parse_mode: "Markdown" }
 			);
-			delete bot.userStates[chatId];
+			if (bot.userStates && bot.userStates[chatId]) {
+				delete bot.userStates[chatId];
+			}
 			return;
 		}
 
@@ -559,7 +585,9 @@ const handleUserTypeInput = async (chatId, userType, userState) => {
 				`❌ *Telegram username mismatch.*\n\nYour Telegram username (@${userState.telegramUsername}) does not match your system username (${user.tgUsername}).\n\nPlease contact an administrator to update your Telegram username.`,
 				{ parse_mode: "Markdown" }
 			);
-			delete bot.userStates[chatId];
+			if (bot.userStates && bot.userStates[chatId]) {
+				delete bot.userStates[chatId];
+			}
 			return;
 		}
 
@@ -601,7 +629,9 @@ Do you want to proceed with password reset?`,
 		bot.sendMessage(chatId, "❌ *Error occurred.* Please try again later.", {
 			parse_mode: "Markdown",
 		});
-		delete bot.userStates[chatId];
+		if (bot.userStates && bot.userStates[chatId]) {
+			delete bot.userStates[chatId];
+		}
 	}
 };
 
@@ -611,12 +641,16 @@ Do you want to proceed with password reset?`,
 const handleConfirmationInput = async (chatId, text, userState) => {
 	// This is handled by callback queries, not text messages
 	// Just clear the state if user sends text
-	delete bot.userStates[chatId];
-	bot.sendMessage(
-		chatId,
-		"❌ *Process cancelled.* Use /reset to start again.",
-		{ parse_mode: "Markdown" }
-	);
+	if (bot && bot.userStates && bot.userStates[chatId]) {
+		delete bot.userStates[chatId];
+	}
+	if (bot) {
+		bot.sendMessage(
+			chatId,
+			"❌ *Process cancelled.* Use /reset to start again.",
+			{ parse_mode: "Markdown" }
+		);
+	}
 };
 
 /**

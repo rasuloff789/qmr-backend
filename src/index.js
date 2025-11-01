@@ -10,8 +10,15 @@
 
 import app from "./app.js";
 import config from "./config/env.js";
+import { initializeBot, stopBot } from "./utils/telegram/bot.js";
 
 const PORT = config.PORT;
+
+// Initialize Telegram Bot
+const telegramBot = initializeBot();
+if (!telegramBot) {
+	console.warn("⚠️ Telegram bot initialization failed");
+}
 
 /**
  * Start Server
@@ -32,6 +39,7 @@ const gracefulShutdown = (signal) => {
 
 	server.close(() => {
 		console.log("✅ Server closed successfully");
+		stopBot();
 		process.exit(0);
 	});
 

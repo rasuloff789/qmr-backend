@@ -16,9 +16,14 @@ import {
 	getAdmin,
 	getTeachers,
 	getTeacher,
+	getStudents,
+	getStudent,
 	getDegrees,
 	getDegree,
+	getCourses,
+	getCourse,
 	me,
+	getDashboardStats,
 } from "./queries/index.js";
 
 // Import mutation resolvers
@@ -32,9 +37,15 @@ import {
 	addTeacher,
 	changeTeacher,
 	changeTeacherActive,
+	deleteTeacher,
+	addStudent,
+	changeStudent,
+	changeStudentActive,
+	deleteStudent,
 	addDegree,
 	updateDegree,
 	deleteDegree,
+	addCourse,
 	updateProfile,
 } from "./mutations/index.js";
 
@@ -47,8 +58,13 @@ const Query = {
 	getAdmin,
 	getTeachers,
 	getTeacher,
+	getStudents,
+	getStudent,
 	getDegrees,
 	getDegree,
+	getCourses,
+	getCourse,
+	getDashboardStats,
 };
 
 /**
@@ -64,9 +80,15 @@ const Mutation = {
 	addTeacher,
 	changeTeacher,
 	changeTeacherActive,
+	deleteTeacher,
+	addStudent,
+	changeStudent,
+	changeStudentActive,
+	deleteStudent,
 	addDegree,
 	updateDegree,
 	deleteDegree,
+	addCourse,
 	updateProfile,
 };
 

@@ -1,0 +1,8 @@
+# Course Queries
+# Course-related queries
+
+extend type Query {
+    getCourses: [Course!]!
+    getCourse(id: ID!): Course
+}
+

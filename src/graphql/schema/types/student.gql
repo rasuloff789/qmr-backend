@@ -1,0 +1,17 @@
+# Student Types
+# Student-specific types and operations
+
+type Student {
+    id: ID!
+    username: String!
+    fullname: String!
+    birthDate: Date!
+    phone: String
+    tgUsername: String!
+    gender: Gender!
+    profilePicture: String
+    isActive: Boolean!
+    isDeleted: Boolean
+    createdAt: Date!
+}
+

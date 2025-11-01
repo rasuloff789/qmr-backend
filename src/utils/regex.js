@@ -81,7 +81,7 @@ function checkTelegramUsername(username) {
  * @returns {Object} - Validation result with valid flag and normalized username
  */
 function checkUsername(username) {
-	const regex = /^(?!.*\s)[a-z0-9]{4,10}$/;
+	const regex = /^(?!.*\s)[a-z0-9]{4,32}$/;
 
 	if (!regex.test(username)) {
 		return {
@@ -92,6 +92,32 @@ function checkUsername(username) {
 	}
 
 	return { valid: true, normalized: username };
+}
+
+/**
+ * Validate and normalize international phone numbers (any country)
+ * @param {string|number} input - Phone number to validate
+ * @returns {Object} - Validation result with valid flag and normalized number
+ */
+function checkInternationalPhone(input) {
+	const digits = input.toString().replace(/\D/g, ""); // Remove non-digits
+
+	// International phone numbers typically have:
+	// - Country code: 1-3 digits
+	// - National number: 7-15 digits
+	// Total: 8-17 digits
+	// Most common range: 10-15 digits
+
+	if (digits.length >= 8 && digits.length <= 17) {
+		// Valid international phone number format
+		return { valid: true, normalized: digits };
+	}
+
+	return {
+		valid: false,
+		reason:
+			"Invalid phone format. Expected international format with 8-17 digits.",
+	};
 }
 
 /**
@@ -126,6 +152,7 @@ export {
 	checkTelegramUsername,
 	checkUzPhoneInt,
 	checkTurkeyPhoneInt,
+	checkInternationalPhone,
 	checkUsername,
 	isValidBirthdate,
 	isValidPassword,

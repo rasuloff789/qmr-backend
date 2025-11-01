@@ -36,6 +36,7 @@ type Degree {
     id: ID!
     name: String!
     teachers: [Teacher!]!
+    courses: [Course!]!
     createdAt: Date!
 }
 

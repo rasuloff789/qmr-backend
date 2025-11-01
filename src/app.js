@@ -5,28 +5,8 @@ import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
-import { initializeBot, stopBot } from "./utils/telegram/bot.js";
 
 const app = express();
-
-// Initialize Telegram Bot
-const telegramBot = initializeBot();
-if (!telegramBot) {
-	console.warn("⚠️ Telegram bot initialization failed");
-}
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-	console.log("\n🛑 Shutting down gracefully...");
-	stopBot();
-	process.exit(0);
-});
-
-process.on("SIGTERM", () => {
-	console.log("\n🛑 Shutting down gracefully...");
-	stopBot();
-	process.exit(0);
-});
 
 // CORS Configuration
 app.use(
@@ -104,16 +84,5 @@ app.use(
 // Error Handling
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-// Start Express server
-const PORT = config.PORT || 4000;
-app.listen(PORT, () => {
-	console.log(`🚀 GraphQL Server ready at http://localhost:${PORT}/graphql`);
-	console.log(`🏥 Health: http://localhost:${PORT}/health`);
-	console.log(`🌍 Environment: ${config.NODE_ENV}`);
-	console.log(`📦 Version: 2.0.0`);
-	console.log(`🔄 Auto-restart enabled with nodemon`);
-	console.log(`📤 File uploads enabled`);
-});
 
 export default app;

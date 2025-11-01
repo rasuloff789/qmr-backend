@@ -67,6 +67,10 @@ const canViewTeachers = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "view_teachers");
 });
 
+const canViewStudents = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "view_students");
+});
+
 const canCreateAdmin = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "create_admin");
 });
@@ -75,12 +79,20 @@ const canCreateTeacher = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "create_teacher");
 });
 
+const canCreateStudent = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "create_student");
+});
+
 const canUpdateAdmin = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "update_admin");
 });
 
 const canUpdateTeacher = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "update_teacher");
+});
+
+const canUpdateStudent = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "update_student");
 });
 
 const canDeleteAdmin = rule()(async (_parent, _args, { user }) => {
@@ -97,6 +109,10 @@ const canManageAdminStatus = rule()(async (_parent, _args, { user }) => {
 
 const canManageTeacherStatus = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "manage_teacher_status");
+});
+
+const canManageStudentStatus = rule()(async (_parent, _args, { user }) => {
+	return await checkUserPermission(user, "manage_student_status");
 });
 
 const canViewAllUsers = rule()(async (_parent, _args, { user }) => {
@@ -149,6 +165,18 @@ const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
 	return false;
 });
 
+const canUpdateOwnStudent = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root can update any student
+	if (user.role === ROLES.ROOT) return true;
+
+	// Admin can update any student
+	if (user.role === ROLES.ADMIN) return true;
+
+	return false;
+});
+
 /**
  * Optimized advanced permission rules with context awareness
  */
@@ -180,6 +208,15 @@ const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
 	return false;
 });
 
+const canViewSpecificStudent = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root, Admin, and Teacher can view any student
+	if ([ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role)) return true;
+
+	return false;
+});
+
 const canChangeAdminStatus = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
 
@@ -191,6 +228,13 @@ const canChangeTeacherStatus = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
 
 	// Root and Admin can change teacher status
+	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+});
+
+const canChangeStudentStatus = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+
+	// Root, Admin, and Teacher can change student status
 	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 });
 
@@ -235,6 +279,10 @@ export const permissions = shield(
 			getTeachers: canViewTeachers,
 			getTeacher: canViewSpecificTeacher, // Resource-specific permission
 
+			// Student queries
+			getStudents: canViewStudents,
+			getStudent: canViewSpecificStudent,
+
 			// Degree queries - Allow authenticated users to view degrees
 			getDegrees: rule()(async (_parent, _args, { user }) => {
 				// Any authenticated user can view degrees
@@ -242,6 +290,22 @@ export const permissions = shield(
 			}),
 			getDegree: rule()(async (_parent, _args, { user }) => {
 				// Any authenticated user can view a specific degree
+				return !!user;
+			}),
+
+			// Course queries - Allow authenticated users to view courses
+			getCourses: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can view courses
+				return !!user;
+			}),
+			getCourse: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can view a specific course
+				return !!user;
+			}),
+
+			// Dashboard queries - Allow authenticated users to view dashboard stats
+			getDashboardStats: rule()(async (_parent, _args, { user }) => {
+				// Any authenticated user can view dashboard stats
 				return !!user;
 			}),
 		},
@@ -272,6 +336,13 @@ export const permissions = shield(
 			}),
 			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
 			changeTeacherActive: canChangeTeacherStatus, // Only root can change teacher status
+			deleteTeacher: canDeleteAdmin, // Root and Admin can delete teachers
+
+			// Student management
+			addStudent: canCreateStudent,
+			changeStudent: canUpdateOwnStudent,
+			changeStudentActive: canChangeStudentStatus,
+			deleteStudent: canDeleteAdmin, // Root and Admin can delete students
 
 			// Degree management - Only root and admin can manage degrees
 			addDegree: rule()(async (_parent, _args, { user }) => {
@@ -284,6 +355,12 @@ export const permissions = shield(
 			}),
 			deleteDegree: rule()(async (_parent, _args, { user }) => {
 				// Only root and admin can delete degrees
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+			}),
+
+			// Course management - Only root and admin can manage courses
+			addCourse: rule()(async (_parent, _args, { user }) => {
+				// Only root and admin can create courses
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
 
@@ -320,7 +397,89 @@ export const permissions = shield(
 			id: allow,
 			name: allow,
 			teachers: allow,
+			courses: allow,
 			createdAt: allow,
+		},
+		Course: {
+			// Allow all course fields to be accessible
+			id: allow,
+			name: allow,
+			description: allow,
+			daysOfWeek: allow,
+			gender: allow,
+			startAt: allow,
+			endAt: allow,
+			startTime: allow,
+			endTime: allow,
+			students: allow,
+			teacher: allow,
+			substituteTeachers: allow,
+			degrees: allow,
+			createdAt: allow,
+		},
+		CourseStudent: {
+			// Allow all CourseStudent fields to be accessible
+			id: allow,
+			course: allow,
+			student: allow,
+			joinedAt: allow,
+			monthlyPayment: allow,
+			isActive: allow,
+			createdAt: allow,
+		},
+		SubstituteTeacher: {
+			// Allow all SubstituteTeacher fields to be accessible
+			id: allow,
+			course: allow,
+			teacher: allow,
+			startDate: allow,
+			endDate: allow,
+			reason: allow,
+			createdAt: allow,
+		},
+		Student: {
+			// Allow all student fields to be accessible
+			id: allow,
+			username: allow,
+			fullname: allow,
+			birthDate: allow,
+			phone: allow,
+			tgUsername: allow,
+			gender: allow,
+			profilePicture: allow,
+			isActive: allow,
+			isDeleted: allow,
+			createdAt: allow,
+		},
+		DashboardStats: {
+			// Allow all dashboard stats fields to be accessible
+			totalStudents: allow,
+			totalTeachers: allow,
+			totalAdmins: allow,
+			activeStudents: allow,
+			activeTeachers: allow,
+			activeAdmins: allow,
+			totalUsers: allow,
+			activeUsers: allow,
+			averageStudentAge: allow,
+			averageTeacherAge: allow,
+			averageAdminAge: allow,
+			studentGenderDistribution: allow,
+			teacherGenderDistribution: allow,
+		},
+		GenderDistribution: {
+			// Allow all gender distribution fields to be accessible
+			male: allow,
+			female: allow,
+			child: allow,
+		},
+		AddCourseResponse: {
+			// Allow all AddCourseResponse fields to be accessible
+			success: allow,
+			message: allow,
+			course: allow,
+			errors: allow,
+			timestamp: allow,
 		},
 		// LoginResponse fields - allow all fields for login mutation
 		LoginResponse: {
@@ -387,6 +546,46 @@ export const permissions = shield(
 			success: allow,
 			message: allow,
 			teacher: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// DeleteTeacherResponse fields - allow all fields for deleteTeacher mutation
+		DeleteTeacherResponse: {
+			success: allow,
+			message: allow,
+			teacher: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// AddStudentResponse fields - allow all fields for addStudent mutation
+		AddStudentResponse: {
+			success: allow,
+			message: allow,
+			student: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// UpdateStudentResponse fields - allow all fields for updateStudent mutations
+		UpdateStudentResponse: {
+			success: allow,
+			message: allow,
+			student: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// ChangeStudentActiveResponse fields - allow all fields for changeStudentActive mutation
+		ChangeStudentActiveResponse: {
+			success: allow,
+			message: allow,
+			student: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		// DeleteStudentResponse fields - allow all fields for deleteStudent mutation
+		DeleteStudentResponse: {
+			success: allow,
+			message: allow,
+			student: allow,
 			errors: allow,
 			timestamp: allow,
 		},

@@ -33,14 +33,18 @@ export const PERMISSIONS = {
 		// User Management
 		"create_admin",
 		"create_teacher",
+		"create_student",
 		"update_admin",
 		"update_teacher",
+		"update_student",
 		"delete_admin",
 		"view_all_users",
 		"view_admins",
 		"view_teachers",
+		"view_students",
 		"manage_admin_status",
 		"manage_teacher_status",
+		"manage_student_status",
 
 		// System Management
 		"manage_system",
@@ -60,15 +64,20 @@ export const PERMISSIONS = {
 	[ROLES.ADMIN]: [
 		// User Management
 		"create_teacher",
+		"create_student",
 		"update_teacher",
+		"update_student",
 		"manage_teacher_status",
+		"manage_student_status",
 		"view_admins",
 		"view_teachers",
+		"view_students",
 		"view_own_profile",
 
 		// Data Access
 		"view_teacher_data",
 		"view_admin_data",
+		"view_student_data",
 
 		// Profile Management
 		"update_own_profile",
