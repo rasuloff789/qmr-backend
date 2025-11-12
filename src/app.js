@@ -8,14 +8,11 @@ import config from "./config/env.js";
 
 const app = express();
 
-// CORS Configuration
+// CORS Configuration - Open for everyone
 app.use(
 	cors({
-		origin:
-			config.NODE_ENV === "development"
-				? [config.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173"]
-				: config.CORS_ORIGIN,
-		credentials: true,
+		origin: "*",
+		credentials: false,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
 		optionsSuccessStatus: 200,
