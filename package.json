@@ -28,6 +28,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "seed:root": "node scripts/seed-root.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

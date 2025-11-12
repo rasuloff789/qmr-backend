@@ -1,35 +1,54 @@
-# Authentication Mutations
-# Login and authentication operations
-
+"""Response payload returned after updating the current user's profile."""
 type UpdateProfileResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable message describing the outcome."""
     message: String!
+    """Updated user data when the operation succeeds."""
     user: UserData
+    """List of validation or domain errors."""
     errors: [String!]
+    """ISO timestamp when the operation completed."""
     timestamp: String
 }
 
+"""Response payload returned after changing a password."""
 type ChangePasswordResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable message describing the outcome."""
     message: String!
+    """List of validation or domain errors."""
     errors: [String!]
+    """ISO timestamp when the operation completed."""
     timestamp: String
 }
 
+"""Authentication and self-service mutations."""
 type Mutation {
+    """Authenticate a user and retrieve a JWT session token."""
     login(
+        """Username credential."""
         username: String!
+        """Plain-text password credential."""
         password: String!
+        """Target account type (`root`, `admin`, or `teacher`)."""
         userType: String!
     ): LoginResponse!
     
+    """Update the authenticated user's contact details."""
     updateProfile(
+        """New Telegram username for the current user."""
         tgUsername: String
+        """New phone number for the current user."""
         phone: Phone
     ): UpdateProfileResponse!
     
+    """Change the authenticated user's password."""
     changePassword(
+        """Existing password for verification."""
         currentPassword: String!
+        """Replacement password to set."""
         newPassword: String!
     ): ChangePasswordResponse!
 }

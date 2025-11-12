@@ -1,31 +1,47 @@
-# User Types
-# Base user types and authentication
-
+"""Root-level account."""
 type Root {
+    """Unique identifier."""
     id: ID!
+    """Unique username used for login."""
     username: String!
+    """Full display name."""
     fullname: String!
+    """Creation timestamp."""
     createdAt: Date!
 }
 
+"""Generic user payload returned by authentication operations."""
 type UserData {
+    """Unique identifier."""
     id: ID!
+    """Unique username used for login."""
     username: String!
+    """Full display name."""
     fullname: String!
+    """Role of the authenticated user."""
     role: String!
+    """Creation timestamp."""
     createdAt: Date!
-    # Admin/Teacher specific fields
+    """Birth date (admins and teachers only)."""
     birthDate: Date
+    """Phone number (admins and teachers only)."""
     phone: String
+    """Telegram username (admins and teachers only)."""
     tgUsername: String
+    """Active flag (admins and teachers only)."""
     isActive: Boolean
-    # Teacher specific fields
+    """Department information (teachers only)."""
     department: String
 }
 
+"""Response payload returned by the login mutation."""
 type LoginResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """JWT token issued for the session."""
     token: String
+    """Authenticated user data."""
     user: UserData
 }

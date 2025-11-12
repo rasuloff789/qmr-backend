@@ -1,16 +1,25 @@
-# Teacher Types
-# Teacher-specific types and operations
-
+"""Teacher profile with degree associations."""
 type Teacher {
+    """Unique identifier."""
     id: ID!
+    """Unique username used for login."""
     username: String!
+    """Full display name."""
     fullname: String!
+    """Date of birth."""
     birthDate: Date!
+    """Primary phone number."""
     phone: String!
+    """Telegram username used for contact."""
     tgUsername: String!
+    """Gender classification, used for course assignment."""
     gender: Gender!
+    """Optional profile picture path."""
     profilePicture: String
+    """Degrees the teacher is qualified to teach."""
     degrees: [Degree!]!
+    """Indicates whether the teacher account is active."""
     isActive: Boolean!
+    """Creation timestamp."""
     createdAt: Date!
 }

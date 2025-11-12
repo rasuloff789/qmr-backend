@@ -1,8 +1,7 @@
-# Course Queries
-# Course-related queries
-
+"""Course catalogue queries."""
 extend type Query {
+    """Fetch all courses with their related teacher, degrees, and enrollments."""
     getCourses: [Course!]!
+    """Fetch a single course by unique identifier."""
     getCourse(id: ID!): Course
 }
-

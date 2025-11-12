@@ -1,26 +1,40 @@
-# Course Mutations
-# Course-related mutations
-
+"""Response payload returned when creating a course."""
 type AddCourseResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Course record produced by the operation."""
     course: Course
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Course management mutations."""
 extend type Mutation {
+    """Create a new course with scheduling, teacher, and degree associations."""
     addCourse(
+        """Unique course name."""
         name: String!
+        """Optional textual description."""
         description: String
+        """Days of the week when the course meets."""
         daysOfWeek: [DaysOfWeek!]!
+        """Gender restriction for enrollment."""
         gender: Gender!
+        """Course start date."""
         startAt: Date!
+        """Optional end date."""
         endAt: Date
+        """Daily start time."""
         startTime: Date!
+        """Daily end time."""
         endTime: Date!
+        """Primary teacher identifier."""
         teacherId: ID!
+        """Degrees the course is associated with."""
         degreeIds: [ID!]!
     ): AddCourseResponse!
 }
-

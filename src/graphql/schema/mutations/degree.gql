@@ -1,33 +1,50 @@
-# Degree Mutations
-# Degree-related mutations
-
+"""Response payload for creating a degree."""
 type AddDegreeResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the result."""
     message: String!
+    """Degree record returned when successful."""
     degree: Degree
+    """List of validation or domain errors."""
     errors: [String!]
+    """ISO timestamp describing when the operation completed."""
     timestamp: String
 }
 
+"""Response payload for updating or deleting a degree."""
 type UpdateDegreeResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the result."""
     message: String!
+    """Degree record returned when successful."""
     degree: Degree
+    """List of validation or domain errors."""
     errors: [String!]
+    """ISO timestamp describing when the operation completed."""
     timestamp: String
 }
 
+"""Degree management mutations."""
 extend type Mutation {
+    """Create a new degree record."""
     addDegree(
+        """Display name of the degree."""
         name: String!
     ): AddDegreeResponse!
     
+    """Update an existing degree."""
     updateDegree(
+        """Unique identifier of the target degree."""
         id: ID!
+        """New name to assign to the degree."""
         name: String
     ): UpdateDegreeResponse!
     
+    """Soft delete an existing degree."""
     deleteDegree(
+        """Unique identifier of the target degree."""
         id: ID!
     ): UpdateDegreeResponse!
 }

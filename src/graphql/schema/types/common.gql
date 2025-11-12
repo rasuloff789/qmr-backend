@@ -1,48 +1,71 @@
-# Common Types
-# Shared types used across the application
-
+"""ISO-8601 calendar dates (YYYY-MM-DD)."""
 scalar Date
+
+"""Validated phone numbers."""
 scalar Phone
+
+"""File upload scalar backed by multipart requests."""
 scalar Upload
 
-# Common response types
+"""Generic success payload containing a message."""
 type SuccessResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable message describing the outcome."""
     message: String!
+    """ISO timestamp when the operation completed."""
     timestamp: String
 }
 
+"""Generic error payload containing validation details."""
 type ErrorResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable message describing the failure."""
     message: String!
+    """List of validation or domain errors."""
     errors: [String!]
+    """ISO timestamp when the operation completed."""
     timestamp: String
 }
 
-# Typed error response
+"""Structured error payload including a classification type."""
 type TypedErrorResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error category."""
     type: String!
+    """Human-readable message describing the failure."""
     message: String!
+    """Detailed error messages."""
     details: [String!]
+    """ISO timestamp when the operation completed."""
     timestamp: String
 }
 
-# Union type for responses that can be either success or error
+"""Union representing either a success or error response."""
 union MutationResponse = SuccessResponse | ErrorResponse
 
-# Degree type
+"""Academic degree that can be assigned to teachers and courses."""
 type Degree {
+    """Unique identifier for the degree."""
     id: ID!
+    """Display name of the degree."""
     name: String!
+    """Teachers associated with this degree."""
     teachers: [Teacher!]!
+    """Courses aligned to this degree."""
     courses: [Course!]!
+    """Creation timestamp."""
     createdAt: Date!
 }
 
-# Gender enum
+"""Supported gender classifications."""
 enum Gender {
+    """Male gender classification."""
     MALE
+    """Female gender classification."""
     FEMALE
+    """Child gender classification."""
     CHILD
 }

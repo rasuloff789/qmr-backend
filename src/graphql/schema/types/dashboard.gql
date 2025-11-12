@@ -1,25 +1,40 @@
-# Dashboard Types
-# Dashboard statistics and overview types
-
+"""Aggregated statistics for the admin dashboard."""
 type DashboardStats {
+    """Total number of student records."""
     totalStudents: Int!
+    """Total number of teacher records."""
     totalTeachers: Int!
+    """Total number of admin records."""
     totalAdmins: Int!
+    """Number of students marked as active."""
     activeStudents: Int!
+    """Number of teachers marked as active."""
     activeTeachers: Int!
+    """Number of admins marked as active."""
     activeAdmins: Int!
+    """Total number of users across all roles."""
     totalUsers: Int!
+    """Total number of active users across all roles."""
     activeUsers: Int!
+    """Average age of active students."""
     averageStudentAge: Float
+    """Average age of active teachers."""
     averageTeacherAge: Float
+    """Average age of active admins."""
     averageAdminAge: Float
+    """Gender breakdown for students."""
     studentGenderDistribution: GenderDistribution!
+    """Gender breakdown for teachers."""
     teacherGenderDistribution: GenderDistribution!
 }
 
+"""Numeric distribution of entities across gender values."""
 type GenderDistribution {
+    """Number of male records."""
     male: Int!
+    """Number of female records."""
     female: Int!
+    """Number of child records."""
     child: Int!
 }
 

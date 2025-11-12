@@ -1,6 +1,5 @@
-# User Queries
-# User-related queries
-
+"""User-related queries."""
 type Query {
+    """Return profile data for the currently authenticated user."""
     me: UserData
 }

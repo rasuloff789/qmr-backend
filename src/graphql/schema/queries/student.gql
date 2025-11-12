@@ -1,8 +1,7 @@
-# Student Queries
-# Student-related queries
-
+"""Student directory queries."""
 extend type Query {
+    """Fetch all non-deleted students."""
     getStudents: [Student!]!
+    """Fetch a specific student by unique identifier."""
     getStudent(id: ID!): Student
 }
-

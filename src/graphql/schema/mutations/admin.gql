@@ -1,57 +1,94 @@
-# Admin Mutations
-# Admin-related mutations
-
+"""Response payload returned when creating an administrator."""
 type AddAdminResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Administrator record produced by the operation."""
     admin: Admin
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when updating an administrator."""
 type UpdateAdminResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Administrator record produced by the operation."""
     admin: Admin
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when deleting an administrator."""
 type DeleteAdminResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Administrator record impacted by the operation."""
     admin: Admin
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Administrator management mutations."""
 extend type Mutation {
+    """Create a new administrator account."""
     addAdmin(
+        """Unique username for login."""
         username: String!
+        """Plain-text password to hash and store."""
         password: String!
+        """Full display name."""
         fullname: String!
+        """Telegram username for contact."""
         tgUsername: String!
+        """Date of birth."""
         birthDate: Date!
+        """Primary phone number."""
         phone: Phone!
     ): AddAdminResponse!
     
+    """Update a specific administrator profile."""
     changeAdmin(
+        """Unique identifier of the administrator."""
         id: ID!
+        """Optional new username."""
         username: String
+        """Optional new full name."""
         fullname: String
+        """Optional updated birth date."""
         birthDate: Date
+        """Optional updated phone number."""
         phone: Phone
+        """Optional updated Telegram handle."""
         tgUsername: String
+        """Optional replacement password."""
         password: String
+        """Optional active status toggle."""
         isActive: Boolean
     ): UpdateAdminResponse!
     
+    """Change the active status of an administrator (root only)."""
     changeAdminActive(
+        """Administrator identifier."""
         adminId: ID!
+        """Flag indicating whether the admin should be active."""
         isActive: Boolean!
     ): UpdateAdminResponse!
     
+    """Soft delete an administrator account."""
     deleteAdmin(
+        """Administrator identifier."""
         adminId: ID!
     ): DeleteAdminResponse!
 }

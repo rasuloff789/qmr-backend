@@ -1,74 +1,120 @@
-# Teacher Mutations
-# Teacher-related mutations
-
+"""Response payload returned when creating a teacher."""
 type AddTeacherResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Teacher record produced by the operation."""
     teacher: Teacher
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when updating a teacher."""
 type UpdateTeacherResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Teacher record produced by the operation."""
     teacher: Teacher
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when toggling a teacher's active state."""
 type ChangeTeacherActiveResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Teacher record produced by the operation."""
     teacher: Teacher
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when deleting a teacher."""
 type DeleteTeacherResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Teacher record impacted by the operation."""
     teacher: Teacher
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
- 
-
+"""Teacher management mutations."""
 extend type Mutation {
+    """Create a new teacher account."""
     addTeacher(
+        """Unique username for login."""
         username: String!
+        """Plain-text password to hash and store."""
         password: String!
+        """Full display name."""
         fullname: String!
+        """Telegram username for contact."""
         tgUsername: String!
+        """Date of birth."""
         birthDate: Date!
+        """Primary phone number."""
         phone: Phone!
+        """Gender that determines course compatibility."""
         gender: Gender!
+        """Optional profile picture upload."""
         profilePicture: Upload
+        """Degree identifiers the teacher is associated with."""
         degreeIds: [ID!]
     ): AddTeacherResponse!
     
+    """Update an existing teacher profile."""
     changeTeacher(
+        """Unique identifier of the teacher."""
         id: ID!
+        """Optional new username."""
         username: String
+        """Optional new full name."""
         fullname: String
+        """Optional updated birth date."""
         birthDate: Date
+        """Optional updated phone number."""
         phone: Phone
+        """Optional updated Telegram handle."""
         tgUsername: String
+        """Optional replacement password."""
         password: String
+        """Optional gender update."""
         gender: Gender
+        """Optional new profile picture upload."""
         profilePicture: Upload
+        """Optional list of degree ids to replace associations."""
         degreeIds: [ID!]
+        """Optional active status toggle."""
         isActive: Boolean
     ): UpdateTeacherResponse!
     
+    """Toggle whether a teacher account is active."""
     changeTeacherActive(
+        """Teacher identifier."""
         id: ID!
+        """Flag indicating whether the teacher should be active."""
         isActive: Boolean!
     ): ChangeTeacherActiveResponse!
     
+    """Soft delete a teacher account."""
     deleteTeacher(
+        """Teacher identifier."""
         id: ID!
     ): DeleteTeacherResponse!
-    
 }

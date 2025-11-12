@@ -1,13 +1,19 @@
-# Admin Types
-# Admin-specific types and operations
-
+"""Administrator profile."""
 type Admin {
+    """Unique identifier."""
     id: ID!
+    """Unique username used for login."""
     username: String!
+    """Full display name."""
     fullname: String!
+    """Date of birth."""
     birthDate: Date!
+    """Primary phone number."""
     phone: String!
+    """Telegram username used for contact."""
     tgUsername: String!
+    """Indicates whether the admin account is active."""
     isActive: Boolean!
+    """Creation timestamp."""
     createdAt: Date!
 }

@@ -1,7 +1,7 @@
-# Teacher Queries
-# Teacher-related queries
-
+"""Teacher directory queries."""
 extend type Query {
+    """Retrieve every active teacher along with core profile data."""
     getTeachers: [Teacher!]!
+    """Fetch a single teacher profile by unique identifier."""
     getTeacher(id: ID!): Teacher
 }

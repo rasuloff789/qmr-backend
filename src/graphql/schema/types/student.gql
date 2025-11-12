@@ -1,17 +1,26 @@
-# Student Types
-# Student-specific types and operations
-
+"""Student profile."""
 type Student {
+    """Unique identifier."""
     id: ID!
+    """Unique username used for login (if enabled)."""
     username: String!
+    """Full display name."""
     fullname: String!
+    """Date of birth."""
     birthDate: Date!
+    """Optional phone number (international format)."""
     phone: String
+    """Telegram username used for contact."""
     tgUsername: String!
+    """Gender classification."""
     gender: Gender!
+    """Optional profile picture path."""
     profilePicture: String
+    """Indicates whether the student is currently active."""
     isActive: Boolean!
+    """Soft delete flag."""
     isDeleted: Boolean
+    """Creation timestamp."""
     createdAt: Date!
 }
 

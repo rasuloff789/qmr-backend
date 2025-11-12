@@ -1,70 +1,116 @@
-# Student Mutations
-# Student-related mutations
-
+"""Response payload returned when creating a student."""
 type AddStudentResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Student record produced by the operation."""
     student: Student
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when updating a student."""
 type UpdateStudentResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Student record produced by the operation."""
     student: Student
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when toggling a student's active state."""
 type ChangeStudentActiveResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Student record produced by the operation."""
     student: Student
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Response payload returned when deleting a student."""
 type DeleteStudentResponse {
+    """Operation success flag."""
     success: Boolean!
+    """Human-readable summary of the outcome."""
     message: String!
+    """Student record impacted by the operation."""
     student: Student
+    """Validation or domain errors, if any."""
     errors: [String!]
+    """ISO timestamp when the operation finished."""
     timestamp: String
 }
 
+"""Student management mutations."""
 extend type Mutation {
+    """Create a new student profile."""
     addStudent(
+        """Unique username for login."""
         username: String!
+        """Plain-text password to hash and store."""
         password: String!
+        """Full display name."""
         fullname: String!
+        """Telegram username for contact."""
         tgUsername: String!
+        """Date of birth (used for age stats)."""
         birthDate: Date!
+        """Optional international phone number."""
         phone: Phone
+        """Gender designation."""
         gender: Gender!
+        """Optional profile picture upload."""
         profilePicture: Upload
     ): AddStudentResponse!
     
+    """Update an existing student profile."""
     changeStudent(
+        """Unique identifier of the student."""
         id: ID!
+        """Optional new username."""
         username: String
+        """Optional new full name."""
         fullname: String
+        """Optional updated birth date."""
         birthDate: Date
+        """Optional updated phone number."""
         phone: Phone
+        """Optional updated Telegram handle."""
         tgUsername: String
+        """Optional replacement password."""
         password: String
+        """Optional gender update."""
         gender: Gender
+        """Optional new profile picture upload."""
         profilePicture: Upload
+        """Optional active status toggle."""
         isActive: Boolean
     ): UpdateStudentResponse!
     
+    """Toggle whether a student profile is active."""
     changeStudentActive(
+        """Student identifier."""
         id: ID!
+        """Flag indicating whether the student should be active."""
         isActive: Boolean!
     ): ChangeStudentActiveResponse!
     
+    """Soft delete a student profile."""
     deleteStudent(
+        """Student identifier."""
         id: ID!
     ): DeleteStudentResponse!
 }
-

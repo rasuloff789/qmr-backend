@@ -1,50 +1,85 @@
-# Course Types
-# Course-specific types and operations
-
+"""Course definition with scheduling and relationships."""
 type Course {
+    """Unique identifier."""
     id: ID!
+    """Unique course name."""
     name: String!
+    """Optional textual description."""
     description: String
+    """Days of the week when the course meets."""
     daysOfWeek: [DaysOfWeek!]!
+    """Gender restriction for enrollment."""
     gender: Gender!
+    """Date when the course starts."""
     startAt: Date!
+    """Optional date when the course ends."""
     endAt: Date
+    """Daily start time."""
     startTime: Date!
+    """Daily end time."""
     endTime: Date!
+    """Enrollments associated with this course."""
     students: [CourseStudent!]!
+    """Primary teacher responsible for the course."""
     teacher: Teacher!
+    """Substitute teacher assignments for the course."""
     substituteTeachers: [SubstituteTeacher!]!
+    """Degrees aligned to the course."""
     degrees: [Degree!]!
+    """Creation timestamp."""
     createdAt: Date!
 }
 
+"""Enrollment join between a course and a student."""
 type CourseStudent {
+    """Unique identifier."""
     id: ID!
+    """Course referenced by the enrollment."""
     course: Course!
+    """Student referenced by the enrollment."""
     student: Student!
+    """Date the student joined the course."""
     joinedAt: Date!
+    """Monthly payment amount for the enrollment."""
     monthlyPayment: Int!
+    """Indicates whether the enrollment is currently active."""
     isActive: Boolean!
+    """Creation timestamp."""
     createdAt: Date!
 }
 
+"""Temporary substitute teacher assignment."""
 type SubstituteTeacher {
+    """Unique identifier."""
     id: ID!
+    """Course receiving the substitution."""
     course: Course!
+    """Teacher assigned as the substitute."""
     teacher: Teacher!
+    """Date when the substitution starts."""
     startDate: Date!
+    """Date when the substitution ends."""
     endDate: Date!
+    """Optional reason for the substitution."""
     reason: String
+    """Creation timestamp."""
     createdAt: Date!
 }
 
+"""Supported days of the week."""
 enum DaysOfWeek {
+    """Monday."""
     MONDAY
+    """Tuesday."""
     TUESDAY
+    """Wednesday."""
     WEDNESDAY
+    """Thursday."""
     THURSDAY
+    """Friday."""
     FRIDAY
+    """Saturday."""
     SATURDAY
+    """Sunday."""
     SUNDAY
 }
-
