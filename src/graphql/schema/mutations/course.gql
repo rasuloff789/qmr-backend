@@ -12,7 +12,7 @@ type AddCourseResponse {
     timestamp: String
 }
 
-"""Course management mutations."""
+# Course management mutations
 extend type Mutation {
     """Create a new course with scheduling, teacher, and degree associations."""
     addCourse(

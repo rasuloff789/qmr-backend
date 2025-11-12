@@ -1,4 +1,4 @@
-"""Academic degree queries."""
+# Academic degree queries
 extend type Query {
     """List every degree that can be assigned to teachers or courses."""
     getDegrees: [Degree!]!

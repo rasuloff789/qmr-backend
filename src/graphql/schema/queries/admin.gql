@@ -1,4 +1,4 @@
-"""Administrative user queries."""
+# Administrative user queries
 extend type Query {
     """List all administrator accounts that are not soft-deleted."""
     getAdmins: [Admin!]!

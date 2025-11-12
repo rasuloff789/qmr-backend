@@ -1,4 +1,4 @@
-"""Dashboard reporting queries."""
+# Dashboard reporting queries
 extend type Query {
     """Return aggregate counts, averages, and gender distribution for key entities."""
     getDashboardStats: DashboardStats!

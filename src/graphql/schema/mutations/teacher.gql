@@ -54,7 +54,7 @@ type DeleteTeacherResponse {
     timestamp: String
 }
 
-"""Teacher management mutations."""
+# Teacher management mutations
 extend type Mutation {
     """Create a new teacher account."""
     addTeacher(

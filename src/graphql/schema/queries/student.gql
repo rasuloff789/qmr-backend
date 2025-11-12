@@ -1,4 +1,4 @@
-"""Student directory queries."""
+# Student directory queries
 extend type Query {
     """Fetch all non-deleted students."""
     getStudents: [Student!]!

@@ -1,4 +1,4 @@
-"""Course catalogue queries."""
+# Course catalogue queries
 extend type Query {
     """Fetch all courses with their related teacher, degrees, and enrollments."""
     getCourses: [Course!]!

@@ -26,7 +26,7 @@ type UpdateDegreeResponse {
     timestamp: String
 }
 
-"""Degree management mutations."""
+# Degree management mutations
 extend type Mutation {
     """Create a new degree record."""
     addDegree(

@@ -40,7 +40,7 @@ type DeleteAdminResponse {
     timestamp: String
 }
 
-"""Administrator management mutations."""
+# Administrator management mutations
 extend type Mutation {
     """Create a new administrator account."""
     addAdmin(

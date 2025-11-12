@@ -1,4 +1,4 @@
-"""Teacher directory queries."""
+# Teacher directory queries
 extend type Query {
     """Retrieve every active teacher along with core profile data."""
     getTeachers: [Teacher!]!
