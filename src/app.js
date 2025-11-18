@@ -1,10 +1,11 @@
 import express from "express";
 import cors from "cors";
-import { graphqlHTTP } from "express-graphql";
+import { createHandler } from "graphql-http/lib/use/express";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
+import { verifyToken } from "./utils/auth/jwt.js";
 
 const app = express();
 
@@ -54,27 +55,27 @@ app.use(
 );
 
 // GraphQL Endpoint
-app.use(
+app.all(
 	"/graphql",
-	graphqlHTTP(async (req) => {
-		const authHeader = req.headers?.authorization;
-		let user = null;
+	createHandler({
+		schema: schema,
+		context: async (req, params) => {
+			const authHeader =
+				req.headers?.authorization || req.headers?.Authorization;
+			let user = null;
 
-		if (authHeader && authHeader.startsWith("Bearer ")) {
-			const token = authHeader.split(" ")[1];
-			try {
-				const { verifyToken } = await import("./utils/auth/jwt.js");
-				user = verifyToken(token);
-			} catch (error) {
-				console.warn("❌ Invalid token:", error.message);
+			if (authHeader && authHeader.startsWith("Bearer ")) {
+				const token = authHeader.split(" ")[1];
+				try {
+					user = verifyToken(token);
+				} catch (error) {
+					console.warn("❌ Invalid token:", error.message);
+				}
 			}
-		}
 
-		return {
-			schema: schema,
-			context: { user },
-			graphiql: config.NODE_ENV === "development",
-		};
+			return { user };
+		},
+		graphiql: config.NODE_ENV === "development",
 	})
 );
 
