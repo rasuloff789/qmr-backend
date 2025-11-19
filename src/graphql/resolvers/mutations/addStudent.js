@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 import {
 	hashPassword,
 	isPasswordSecure,
@@ -25,6 +26,7 @@ const addStudent = async (
 		phone,
 		gender,
 		profilePicture,
+		possibleDegrees,
 	}
 ) => {
 	try {
@@ -135,20 +137,11 @@ const addStudent = async (
 				gender,
 				profilePicture: profilePictureUrl,
 				password: await hashPassword(password),
+				possibleDegrees: {
+					connect: possibleDegrees.map((id) => ({ id: parseInt(id) })),
+				},
 			},
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				isDeleted: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 		});
 
 		return {

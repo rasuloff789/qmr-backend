@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 
 /**
  * Change Student Active Status Resolver
@@ -12,12 +13,7 @@ export const changeStudentActive = async (parent, args, context) => {
 		// Check if student exists
 		const existingStudent = await prisma.student.findUnique({
 			where: { id: parseInt(id) },
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				isActive: true,
-			},
+			select: studentSelectFields,
 		});
 
 		if (!existingStudent) {
@@ -45,19 +41,7 @@ export const changeStudentActive = async (parent, args, context) => {
 		const updatedStudent = await prisma.student.update({
 			where: { id: parseInt(id) },
 			data: { isActive },
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				isDeleted: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 		});
 
 		return {
