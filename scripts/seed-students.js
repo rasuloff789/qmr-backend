@@ -97,6 +97,24 @@ const LAST_NAMES = [
 
 const GENDERS = ["MALE", "FEMALE", "CHILD"];
 
+const DEGREE_NAMES = [
+	"Computer Science",
+	"Mathematics",
+	"Physics",
+	"Chemistry",
+	"Biology",
+	"English Literature",
+	"History",
+	"Economics",
+	"Philosophy",
+	"Electrical Engineering",
+	"Mechanical Engineering",
+	"Business Administration",
+	"Graphic Design",
+	"International Relations",
+	"Data Science",
+];
+
 // Country phone number generators with various lengths
 const COUNTRY_CODES = {
 	US: "1",
@@ -177,7 +195,46 @@ function pick(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
-async function seedStudents() {
+function pickDegreeIds(degrees) {
+	if (!degrees.length) {
+		return [];
+	}
+
+	const maxCount = Math.min(3, degrees.length);
+	const count = Math.floor(Math.random() * maxCount) + 1; // 1..maxCount
+	const shuffled = [...degrees].sort(() => Math.random() - 0.5);
+	return shuffled.slice(0, count).map((d) => d.id);
+}
+
+async function ensureDegrees() {
+	for (const name of DEGREE_NAMES) {
+		await prisma.degree.upsert({
+			where: { name },
+			update: {},
+			create: { name },
+		});
+	}
+
+	const degrees = await prisma.degree.findMany({
+		select: { id: true, name: true },
+		orderBy: { name: "asc" },
+	});
+
+	if (!degrees.length) {
+		throw new Error("❌ Unable to seed students because no degrees exist.");
+	}
+
+	console.log(
+		`🎓 Ensured ${degrees.length} degrees: ${degrees
+			.map((d) => d.name)
+			.slice(0, 5)
+			.join(", ")}${degrees.length > 5 ? ", ..." : ""}`
+	);
+
+	return degrees;
+}
+
+async function seedStudents(degrees) {
 	const targets = [];
 	const createdStudents = [];
 
@@ -259,6 +316,8 @@ async function seedStudents() {
 			profilePicture = null;
 		}
 
+		const degreeIds = pickDegreeIds(degrees);
+
 		targets.push({
 			username,
 			fullname,
@@ -267,6 +326,7 @@ async function seedStudents() {
 			tgUsername: validTgUsername,
 			birthDate,
 			profilePicture,
+			degreeIds,
 		});
 	}
 
@@ -302,6 +362,10 @@ async function seedStudents() {
 					tgUsername: s.tgUsername,
 					gender: s.gender,
 					profilePicture: s.profilePicture,
+					possibleDegrees:
+						s.degreeIds.length > 0
+							? { connect: s.degreeIds.map((id) => ({ id })) }
+							: undefined,
 					password:
 						"$2b$12$u1X36kqIYV0KpJzX5bqE8u9s1QyH0q2l0e1Dk7nW3k9CqKJrGz6pK", // bcrypt for "Str0ngPass!"
 				},
@@ -314,6 +378,11 @@ async function seedStudents() {
 					profilePicture: true,
 					isActive: true,
 					isDeleted: true,
+					possibleDegrees: {
+						select: {
+							name: true,
+						},
+					},
 				},
 			});
 			createdStudents.push(student);
@@ -339,17 +408,21 @@ async function main() {
 		}
 
 		await ensureDirs();
-		const students = await seedStudents();
+		const degrees = await ensureDegrees();
+		const students = await seedStudents(degrees);
 		console.log(`\n✅ Successfully created ${students.length} students!`);
 		console.log(`📊 Sample of created students:`);
 
 		// Show sample of created students
 		const sample = students.slice(0, 5);
 		for (const student of sample) {
+			const degreeNames = student.possibleDegrees?.length
+				? student.possibleDegrees.map((d) => d.name).join(", ")
+				: "No degrees";
 			console.log(
 				`  • ${student.fullname} (@${student.tgUsername}) - ${
 					student.phone || "No phone"
-				}${student.profilePicture ? " [🖼️]" : ""}`
+				}${student.profilePicture ? " [🖼️]" : ""} | Degrees: ${degreeNames}`
 			);
 		}
 

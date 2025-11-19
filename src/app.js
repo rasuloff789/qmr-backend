@@ -5,9 +5,10 @@ import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
-import { verifyToken } from "./utils/auth/jwt.js";
+import { authenticate } from "./middleware/auth.js";
 
 const app = express();
+const GRAPHQL_PATH = "/graphql";
 
 // CORS Configuration - Open for everyone
 app.use(
@@ -50,32 +51,28 @@ app.get("/health", (req, res) => {
 
 // GraphQL Upload Middleware (single instance)
 app.use(
-	"/graphql",
+	GRAPHQL_PATH,
 	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
 );
 
 // GraphQL Endpoint
 app.all(
-	"/graphql",
+	GRAPHQL_PATH,
 	createHandler({
 		schema: schema,
 		context: async (req, params) => {
-			const authHeader =
-				req.headers?.authorization || req.headers?.Authorization;
 			let user = null;
-
-			if (authHeader && authHeader.startsWith("Bearer ")) {
-				const token = authHeader.split(" ")[1];
-				try {
-					user = verifyToken(token);
-				} catch (error) {
-					console.warn("❌ Invalid token:", error.message);
-				}
+			try {
+				user = await authenticate(req);
+			} catch (error) {
+				// You may want to log or handle authentication errors, but do not expose details to context
+				user = null;
 			}
-
-			return { user };
+			return {
+				user,
+				req,
+			};
 		},
-		graphiql: config.NODE_ENV === "development",
 	})
 );
 

@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 import {
 	hashPassword,
 	isPasswordSecure,
@@ -208,19 +209,7 @@ const changeStudent = async (
 		const updatedStudent = await prisma.student.update({
 			where: { id: parseInt(id) },
 			data: updateData,
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				isDeleted: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 		});
 
 		return {

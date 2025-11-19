@@ -14,6 +14,8 @@ type Student {
     tgUsername: String!
     """Gender classification."""
     gender: Gender!
+    """Possible degrees."""
+    possibleDegrees: [Degree!]!
     """Optional profile picture path."""
     profilePicture: String
     """Indicates whether the student is currently active."""

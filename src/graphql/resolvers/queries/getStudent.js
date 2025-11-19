@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 
 /**
  * Get a single student by ID
@@ -13,19 +14,7 @@ export default async function (_, { id }, context) {
 	try {
 		const student = await prisma.student.findUnique({
 			where: { id: parseInt(id) },
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				isDeleted: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 		});
 
 		if (!student) return null;

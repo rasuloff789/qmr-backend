@@ -446,6 +446,7 @@ export const permissions = shield(
 			phone: allow,
 			tgUsername: allow,
 			gender: allow,
+			possibleDegrees: allow,
 			profilePicture: allow,
 			isActive: allow,
 			isDeleted: allow,

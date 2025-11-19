@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 
 /**
  * Get all student users
@@ -10,19 +11,7 @@ import { prisma } from "../../../database/index.js";
 export default async function (_, args, context) {
 	try {
 		const students = await prisma.student.findMany({
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				isDeleted: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 			orderBy: {
 				createdAt: "desc",
 			},
