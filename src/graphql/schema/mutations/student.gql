@@ -64,6 +64,8 @@ extend type Mutation {
         password: String!
         """Full display name."""
         fullname: String!
+        """Possible degrees."""
+        possibleDegrees: [ID!]!
         """Telegram username for contact."""
         tgUsername: String!
         """Date of birth (used for age stats)."""
