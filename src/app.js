@@ -11,8 +11,13 @@ const app = express();
 // CORS Configuration - Open for everyone
 app.use(
 	cors({
-		origin: "*",
-		credentials: false,
+		origin: [
+			"https://admin.elli.uz",
+			"https://root.elli.uz",
+			"https://teacher.elli.uz",
+			"https://qomar.elli.uz",
+		],
+		credentials: true,
 		methods: ["GET", "POST", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
 		optionsSuccessStatus: 200,
