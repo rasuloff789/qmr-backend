@@ -6,8 +6,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
-    "graphql-http": "^1.22.4",
     "graphql": "^16.11.0",
+    "graphql-http": "^1.22.4",
     "graphql-middleware": "^6.1.35",
     "graphql-shield": "^7.6.5",
     "graphql-upload": "^17.0.0",
@@ -30,7 +30,8 @@
     "db:studio": "prisma studio",
     "seed:root": "node scripts/seed-root.js",
     "seed:users": "node scripts/seed-users.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:password-hash": "node scripts/test-password-hash-validation.js"
   },
   "repository": {
     "type": "git",

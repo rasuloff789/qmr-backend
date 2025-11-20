@@ -5,7 +5,7 @@ index 70530da..7dca047 100644
 @@ -1,6 +1,7 @@
  import * as Yup from 'yup';
  import { isLogicRule } from './utils.js';
--import { isUndefined } from 'util';
+-import { isUndefined } from './utils';
 +// import { isUndefined } from 'util';
 +const isUndefined = (val) => val == undefined;
  export class Rule {
