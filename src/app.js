@@ -1,12 +1,14 @@
 import express from "express";
 import cors from "cors";
-import { graphqlHTTP } from "express-graphql";
+import { createHandler } from "graphql-http/lib/use/express";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
+import { authenticate } from "./middleware/auth.js";
 
 const app = express();
+const GRAPHQL_PATH = "/graphql";
 
 // CORS Configuration - Open for everyone
 app.use(
@@ -54,32 +56,28 @@ app.get("/health", (req, res) => {
 
 // GraphQL Upload Middleware (single instance)
 app.use(
-	"/graphql",
+	GRAPHQL_PATH,
 	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
 );
 
 // GraphQL Endpoint
-app.use(
-	"/graphql",
-	graphqlHTTP(async (req) => {
-		const authHeader = req.headers?.authorization;
-		let user = null;
-
-		if (authHeader && authHeader.startsWith("Bearer ")) {
-			const token = authHeader.split(" ")[1];
+app.all(
+	GRAPHQL_PATH,
+	createHandler({
+		schema: schema,
+		context: async (req, params) => {
+			let user = null;
 			try {
-				const { verifyToken } = await import("./utils/auth/jwt.js");
-				user = verifyToken(token);
+				user = await authenticate(req);
 			} catch (error) {
-				console.warn("❌ Invalid token:", error.message);
+				// You may want to log or handle authentication errors, but do not expose details to context
+				user = null;
 			}
-		}
-
-		return {
-			schema: schema,
-			context: { user },
-			graphiql: config.NODE_ENV === "development",
-		};
+			return {
+				user,
+				req,
+			};
+		},
 	})
 );
 

@@ -51,6 +51,7 @@ model Degree {
   name      String   @unique
   teachers  Teacher[]
   courses   Course[]
+  students  Student[]
   createdAt DateTime @default(now())
 }
 
@@ -63,6 +64,7 @@ model Student {
   phone          String?   
   tgUsername     String  
   gender         Gender    @default(MALE)
+  possibleDegrees Degree[]
   courses        CourseStudent[]
   profilePicture String?
   isActive       Boolean   @default(true)
@@ -100,9 +102,9 @@ model SubstituteTeacher {
   courseId   Int
   teacher    Teacher  @relation(fields: [teacherId], references: [id])
   teacherId  Int
-  startDate  DateTime // qachondan
-  endDate    DateTime // qachongacha
-  reason     String?  // istasa sabab: "asosiy o‘qituvchi ta'tilda"
+  startDate  DateTime 
+  endDate    DateTime 
+  reason     String?  
   createdAt  DateTime @default(now())
 }
 
@@ -122,19 +124,10 @@ model CourseStudent {
   courseId  Int
   student   Student  @relation(fields: [studentId], references: [id])
   studentId Int
-  feeChanges FeeChanges[]
   joinedAt DateTime @default(now())
   monthlyPayment Int
   isActive Boolean @default(true)
   createdAt DateTime @default(now())
-}
-
-model FeeChanges {
-  id        Int      @id @default(autoincrement())
-  courseStudentId Int
-  CourseStudent CourseStudent @relation(fields: [courseStudentId], references: [id])
-  date DateTime
-  newFee Int
 }
 
 

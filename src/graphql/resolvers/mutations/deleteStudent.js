@@ -1,4 +1,5 @@
 import { prisma } from "../../../database/index.js";
+import { studentSelectFields } from "../helpers/studentSelect.js";
 
 /**
  * "Delete" a student user by setting isDeleted property to true.
@@ -40,18 +41,7 @@ const deleteStudent = async (_parent, { id }, context) => {
 		const updatedStudent = await prisma.student.update({
 			where: { id: studentId },
 			data: { isDeleted: true },
-			select: {
-				id: true,
-				username: true,
-				fullname: true,
-				birthDate: true,
-				phone: true,
-				tgUsername: true,
-				gender: true,
-				profilePicture: true,
-				isActive: true,
-				createdAt: true,
-			},
+			select: studentSelectFields,
 		});
 
 		return {

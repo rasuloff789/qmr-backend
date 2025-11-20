@@ -12,6 +12,11 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
+const parseBoolean = (value) => {
+	if (value === undefined) return undefined;
+	return ["true", "1", "yes", "on"].includes(String(value).toLowerCase());
+};
+
 /**
  * Environment Configuration
  */
@@ -29,6 +34,9 @@ const config = {
 
 	// CORS
 	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
+
+	// GraphiQL
+	GRAPHIQL_ENABLED: parseBoolean(process.env.GRAPHIQL_ENABLED),
 
 	// Telegram Bot
 	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
