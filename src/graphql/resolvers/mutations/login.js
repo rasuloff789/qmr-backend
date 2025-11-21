@@ -171,6 +171,7 @@ const login = async (_parent, { username, password, userType }) => {
 			id: user.id,
 			role: userType,
 			username: user.username,
+			passwordHash: user.password,
 		});
 
 		// Create user data object with role
