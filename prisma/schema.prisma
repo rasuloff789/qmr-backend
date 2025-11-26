@@ -9,7 +9,7 @@ datasource db {
 
 model Root {
   id        Int      @id @default(autoincrement())
-  fullname  String   
+  fullname  String
   username  String   @unique
   password  String
   createdAt DateTime @default(now())
@@ -17,59 +17,59 @@ model Root {
 
 model Admin {
   id         Int      @id @default(autoincrement())
-  fullname   String   
+  fullname   String
   username   String   @unique
   password   String
-  birthDate  DateTime 
-  phone      String   
-  tgUsername String   
+  birthDate  DateTime
+  phone      String
+  tgUsername String
   isActive   Boolean  @default(true)
-  isDeleted  Boolean? @default(false)
+  isDeleted  Boolean  @default(false)
   createdAt  DateTime @default(now())
 }
 
 model Teacher {
-  id             Int      @id @default(autoincrement())
-  fullname       String   
-  username       String   @unique
-  password       String
-  birthDate      DateTime 
-  phone          String   
-  tgUsername     String  
-  degrees        Degree[]
-  teacherCourses Course[]
+  id                Int                  @id @default(autoincrement())
+  fullname          String
+  username          String               @unique
+  password          String
+  birthDate         DateTime
+  phone             String
+  tgUsername        String
+  degrees           Degree[]             @relation("TeacherDegrees")
+  teacherCourses    Course[]             @relation("CourseTeachers")
   substituteTeachers SubstituteTeacher[]
-  gender         Gender   @default(MALE)
-  profilePicture String?
-  isDeleted      Boolean? @default(false)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
+  gender            Gender               @default(MALE)
+  profilePicture    String?
+  isDeleted         Boolean              @default(false)
+  isActive          Boolean              @default(true)
+  createdAt         DateTime             @default(now())
 }
 
 model Degree {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  teachers  Teacher[]
-  courses   Course[]
-  students  Student[]
-  createdAt DateTime @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  teachers  Teacher[] @relation("TeacherDegrees")
+  courses   Course[]  @relation("DegreeCourses")
+  students  Student[] @relation("StudentDegrees")
+  createdAt DateTime  @default(now())
 }
 
 model Student {
-  id             Int       @id @default(autoincrement())
-  fullname       String   
-  username       String    @unique
-  password       String
-  birthDate      DateTime 
-  phone          String?   
-  tgUsername     String  
-  gender         Gender    @default(MALE)
-  possibleDegrees Degree[]
-  courses        CourseStudent[]
-  profilePicture String?
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean?  @default(false)
-  createdAt      DateTime  @default(now())
+  id              Int            @id @default(autoincrement())
+  fullname        String
+  username        String         @unique
+  password        String
+  birthDate       DateTime
+  phone           String?
+  tgUsername      String
+  gender          Gender         @default(MALE)
+  possibleDegrees Degree[]       @relation("StudentDegrees")
+  courses         CourseStudent[]
+  profilePicture  String?
+  isActive        Boolean        @default(true)
+  isDeleted       Boolean        @default(false)
+  createdAt       DateTime       @default(now())
 }
 
 enum Gender {
@@ -78,22 +78,22 @@ enum Gender {
   CHILD
 }
 
-model Course{
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  description String?
-  daysOfWeek DaysOfWeek[]
-  gender Gender
-  startAt DateTime
-  endAt DateTime?
-  startTime DateTime
-  endTime DateTime
-  students  CourseStudent[]
-  teacher     Teacher        @relation(fields: [teacherId], references: [id])
-  teacherId   Int
-  substituteTeacher SubstituteTeacher[]
-  degrees   Degree[]
-  createdAt DateTime  @default(now())
+model Course {
+  id                 Int                @id @default(autoincrement())
+  name               String             @unique
+  description        String?
+  daysOfWeek         DaysOfWeek[]
+  gender             Gender
+  startAt            DateTime
+  endAt              DateTime?
+  startTime          DateTime
+  endTime            DateTime
+  students           CourseStudent[]
+  teacher            Teacher            @relation("CourseTeachers", fields: [teacherId], references: [id])
+  teacherId          Int
+  substituteTeachers SubstituteTeacher[]
+  degrees            Degree[]           @relation("DegreeCourses")
+  createdAt          DateTime           @default(now())
 }
 
 model SubstituteTeacher {
@@ -102,9 +102,9 @@ model SubstituteTeacher {
   courseId   Int
   teacher    Teacher  @relation(fields: [teacherId], references: [id])
   teacherId  Int
-  startDate  DateTime 
-  endDate    DateTime 
-  reason     String?  
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
   createdAt  DateTime @default(now())
 }
 
@@ -119,16 +119,17 @@ enum DaysOfWeek {
 }
 
 model CourseStudent {
-  id        Int      @id @default(autoincrement())
-  course    Course   @relation(fields: [courseId], references: [id])
-  courseId  Int
-  student   Student  @relation(fields: [studentId], references: [id])
-  studentId Int
-  joinedAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  course        Course   @relation(fields: [courseId], references: [id])
+  courseId      Int
+  student       Student  @relation(fields: [studentId], references: [id])
+  studentId     Int
+  joinedAt      DateTime @default(now())
   monthlyPayment Int
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
+  isActive      Boolean  @default(true)
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@unique([courseId, studentId])
 }
-
-
 

@@ -363,6 +363,10 @@ export const permissions = shield(
 				// Only root and admin can create courses
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
+			addStudentToCourse: rule()(async (_parent, _args, { user }) => {
+				// Only root and admin can add students to courses
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+			}),
 
 			// (removed) testFileUpload
 		},
@@ -479,6 +483,14 @@ export const permissions = shield(
 			success: allow,
 			message: allow,
 			course: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+		AddStudentToCourseResponse: {
+			// Allow all AddStudentToCourseResponse fields to be accessible
+			success: allow,
+			message: allow,
+			courseStudent: allow,
 			errors: allow,
 			timestamp: allow,
 		},

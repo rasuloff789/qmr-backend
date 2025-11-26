@@ -12,6 +12,20 @@ type AddCourseResponse {
     timestamp: String
 }
 
+"""Response payload returned when adding a student to a course."""
+type AddStudentToCourseResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Human-readable summary of the outcome."""
+    message: String!
+    """CourseStudent enrollment record produced by the operation."""
+    courseStudent: CourseStudent
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 # Course management mutations
 extend type Mutation {
     """Create a new course with scheduling, teacher, and degree associations."""
@@ -37,4 +51,14 @@ extend type Mutation {
         """Degrees the course is associated with."""
         degreeIds: [ID!]!
     ): AddCourseResponse!
+
+    """Add a student to a course enrollment."""
+    addStudentToCourse(
+        """Course identifier."""
+        courseId: ID!
+        """Student identifier."""
+        studentId: ID!
+        """Monthly payment amount for the enrollment."""
+        monthlyPayment: Int!
+    ): AddStudentToCourseResponse!
 }
