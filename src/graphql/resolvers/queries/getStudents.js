@@ -11,6 +11,9 @@ import { studentSelectFields } from "../helpers/studentSelect.js";
 export default async function (_, args, context) {
 	try {
 		const students = await prisma.student.findMany({
+			where: {
+				isDeleted: false,
+			},
 			select: studentSelectFields,
 			orderBy: {
 				createdAt: "desc",
