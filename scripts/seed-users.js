@@ -102,18 +102,53 @@ async function upsertTeachers(passwordHash) {
 }
 
 async function upsertStudents(passwordHash) {
+	// Get all available degrees
+	const degrees = await prisma.degree.findMany({
+		select: { id: true, name: true },
+	});
+
+	if (degrees.length === 0) {
+		console.log(
+			"⚠️  No degrees found. Students will be created without degrees."
+		);
+		console.log("   Run 'npm run seed:teachers' first to create degrees.");
+	}
+
+	// Assign random degrees to each student (1-3 degrees per student)
+	function pickRandomDegrees(availableDegrees) {
+		if (availableDegrees.length === 0) return [];
+		const numDegrees = Math.max(1, Math.floor(Math.random() * 3) + 1);
+		const shuffled = [...availableDegrees].sort(() => Math.random() - 0.5);
+		return shuffled.slice(0, Math.min(numDegrees, availableDegrees.length));
+	}
+
 	for (const student of STUDENT_SEED) {
+		const selectedDegrees = pickRandomDegrees(degrees);
+		const degreeIds = selectedDegrees.map((d) => d.id);
+
 		await prisma.student.upsert({
 			where: { username: student.username },
-			update: {},
+			update: {
+				// Update degrees if student exists
+				possibleDegrees: {
+					set: [],
+					connect: degreeIds.map((id) => ({ id })),
+				},
+			},
 			create: {
 				...student,
 				birthDate: new Date(student.birthDate),
 				password: passwordHash,
+				possibleDegrees: {
+					connect: degreeIds.map((id) => ({ id })),
+				},
 			},
 		});
+
+		const degreeNames = selectedDegrees.map((d) => d.name).join(", ");
+		console.log(`  • ${student.fullname}: ${degreeNames || "No degrees"}`);
 	}
-	console.log(`✅ Seeded ${STUDENT_SEED.length} students.`);
+	console.log(`✅ Seeded ${STUDENT_SEED.length} students with degrees.`);
 }
 
 async function main() {

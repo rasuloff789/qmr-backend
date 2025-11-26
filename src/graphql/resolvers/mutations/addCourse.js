@@ -83,26 +83,76 @@ const addCourse = async (
 		const teacher = await prisma.teacher.findUnique({
 			where: {
 				id: parseInt(teacherId),
-				isActive: true,
-				isDeleted: false, // Teacher must not be deleted
-				degrees: { some: { id: { in: degreeIds.map((id) => parseInt(id)) } } }, // Teacher must have at least one matching degree
-				gender: gender, // Teacher gender must match course gender
+			},
+			include: {
+				degrees: {
+					select: {
+						id: true,
+					},
+				},
 			},
 		});
 
 		if (!teacher) {
 			return {
 				success: false,
-				message: "Teacher not found or invalid",
+				message: "Teacher not found",
+				course: null,
+				errors: [`Teacher with ID ${teacherId} not found`],
+				timestamp: new Date().toISOString(),
+			};
+		}
+
+		// Validate teacher status
+		if (!teacher.isActive || teacher.isDeleted) {
+			return {
+				success: false,
+				message: "Teacher is not active",
+				course: null,
+				errors: [`Teacher with ID ${teacherId} is inactive or deleted`],
+				timestamp: new Date().toISOString(),
+			};
+		}
+
+		// Validate teacher gender matches course gender
+		if (teacher.gender !== gender) {
+			return {
+				success: false,
+				message: "Gender mismatch",
 				course: null,
 				errors: [
-					`Teacher with ID ${teacherId} not found, deleted, doesn't have matching degrees, or gender mismatch`,
+					`Teacher gender (${teacher.gender}) does not match course gender (${gender})`,
+				],
+				timestamp: new Date().toISOString(),
+			};
+		}
+
+		// Validate teacher has at least one matching degree
+		const teacherDegreeIds = teacher.degrees.map((d) => d.id);
+		const courseDegreeIds = degreeIds.map((id) => parseInt(id));
+		const hasMatchingDegree = teacherDegreeIds.some((id) =>
+			courseDegreeIds.includes(id)
+		);
+
+		if (!hasMatchingDegree) {
+			return {
+				success: false,
+				message: "Teacher degree mismatch",
+				course: null,
+				errors: [
+					`Teacher does not have any degrees matching the course requirements`,
 				],
 				timestamp: new Date().toISOString(),
 			};
 		}
 
 		// Create a new course in the database
+		console.log("Creating course with data:", {
+			name: name.trim(),
+			teacherId: parseInt(teacherId),
+			degreeIds: degreeIds.map((id) => parseInt(id)),
+		});
+
 		const newCourse = await prisma.course.create({
 			data: {
 				name: name.trim(),
@@ -118,19 +168,29 @@ const addCourse = async (
 					connect: degreeIds.map((id) => ({ id: parseInt(id) })),
 				},
 			},
-			select: {
-				id: true,
-				name: true,
-				description: true,
-				daysOfWeek: true,
-				gender: true,
-				startAt: true,
-				endAt: true,
-				startTime: true,
-				endTime: true,
-				createdAt: true,
+			include: {
+				teacher: {
+					select: {
+						id: true,
+						username: true,
+						fullname: true,
+						isActive: true,
+					},
+				},
+				degrees: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
 			},
 		});
+
+		console.log(
+			"✅ Course created successfully:",
+			newCourse.id,
+			newCourse.name
+		);
 
 		return {
 			success: true,
@@ -140,7 +200,12 @@ const addCourse = async (
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		console.error("Add course error:", error);
+		console.error("❌ Add course error:", error);
+		console.error("Error details:", {
+			message: error.message,
+			code: error.code,
+			meta: error.meta,
+		});
 		return {
 			success: false,
 			message: "Failed to create course",

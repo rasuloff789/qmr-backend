@@ -10,6 +10,43 @@ import { authenticate } from "./middleware/auth.js";
 const app = express();
 const GRAPHQL_PATH = "/graphql";
 
+/**
+ * Generate GraphiQL HTML page
+ * @param {string} endpoint - GraphQL endpoint path
+ * @returns {string} HTML string
+ */
+const getGraphiQLHtml = (endpoint) => {
+	return `<!DOCTYPE html>
+<html>
+<head>
+	<title>GraphiQL</title>
+	<link href="https://unpkg.com/graphiql@3/graphiql.min.css" rel="stylesheet" />
+</head>
+<body style="margin: 0;">
+	<div id="graphiql" style="height: 100vh;"></div>
+	<script
+		crossorigin
+		src="https://unpkg.com/react@18/umd/react.production.min.js"
+	></script>
+	<script
+		crossorigin
+		src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+	></script>
+	<script
+		crossorigin
+		src="https://unpkg.com/graphiql@3/graphiql.min.js"
+	></script>
+	<script>
+		const fetcher = GraphiQL.createFetcher({
+			url: '${endpoint}',
+		});
+		const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+		root.render(React.createElement(GraphiQL, { fetcher }));
+	</script>
+</body>
+</html>`;
+};
+
 // CORS Configuration - Open for everyone
 app.use(
 	cors({
@@ -58,14 +95,20 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// GraphQL Upload Middleware (single instance)
-app.use(
+// GraphiQL Playground (GET requests)
+app.get(GRAPHQL_PATH, (req, res) => {
+	res.setHeader("Content-Type", "text/html");
+	res.send(getGraphiQLHtml(GRAPHQL_PATH));
+});
+
+// GraphQL Upload Middleware (only for POST requests)
+app.post(
 	GRAPHQL_PATH,
 	graphqlUploadExpress({ maxFileSize: 10_000_000, maxFiles: 10 })
 );
 
-// GraphQL Endpoint
-app.all(
+// GraphQL Endpoint (POST requests)
+app.post(
 	GRAPHQL_PATH,
 	createHandler({
 		schema: schema,

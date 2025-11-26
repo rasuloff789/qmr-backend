@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import bcrypt from "bcrypt";
 import { prisma } from "../src/database/index.js";
+import config from "../src/config/env.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,6 +116,7 @@ async function seedDegrees() {
 		}
 	}
 	const all = await prisma.degree.findMany();
+	console.log(`✅ Seeded ${all.length} degrees (${created.length} new).`);
 	return all;
 }
 
@@ -144,9 +147,11 @@ async function seedTeachers(degrees) {
 		const phone = randomPhoneUZ();
 		const tgUsername = `${first.toLowerCase()}${last.toLowerCase()}`;
 		const birthDate = randomBirthdate();
+		// Ensure at least 1 degree, up to 3 degrees per teacher
+		const numDegrees = Math.max(1, Math.floor(Math.random() * 3) + 1);
 		const degreeSample = degrees
 			.sort(() => 0.5 - Math.random())
-			.slice(0, Math.floor(Math.random() * 3));
+			.slice(0, numDegrees);
 
 		// download or reuse images
 		const imgUrl = pick(baseUrls) + `?rand=${Math.random()}`;
@@ -171,10 +176,27 @@ async function seedTeachers(degrees) {
 		});
 	}
 
+	const DEFAULT_PASSWORD = process.env.SEED_USER_PASSWORD || "Str0ngPass!";
+	const passwordHash = await bcrypt.hash(
+		DEFAULT_PASSWORD,
+		config.BCRYPT_ROUNDS
+	);
+
+	let createdCount = 0;
+	let skippedCount = 0;
+
 	for (const t of targets) {
 		try {
-			await prisma.teacher.create({
-				data: {
+			await prisma.teacher.upsert({
+				where: { username: t.username },
+				update: {
+					// Update degrees if teacher exists
+					degrees: {
+						set: [],
+						connect: t.degreeIds.map((id) => ({ id })),
+					},
+				},
+				create: {
 					username: t.username,
 					fullname: t.fullname,
 					birthDate: new Date(t.birthDate).toISOString(),
@@ -183,13 +205,19 @@ async function seedTeachers(degrees) {
 					gender: t.gender,
 					profilePicture: t.profilePicture,
 					degrees: { connect: t.degreeIds.map((id) => ({ id })) },
-					password:
-						"$2b$12$u1X36kqIYV0KpJzX5bqE8u9s1QyH0q2l0e1Dk7nW3k9CqKJrGz6pK", // bcrypt for "Str0ngPass!" placeholder
+					password: passwordHash,
 				},
 			});
+			createdCount++;
 		} catch (e) {
-			console.log("Skip teacher (maybe exists):", t.username, e.message);
+			console.log("Skip teacher (error):", t.username, e.message);
+			skippedCount++;
 		}
+	}
+
+	console.log(`✅ Seeded ${createdCount} teachers with degrees.`);
+	if (skippedCount > 0) {
+		console.log(`⚠️  Skipped ${skippedCount} teachers.`);
 	}
 }
 
@@ -198,7 +226,10 @@ async function main() {
 		await ensureDirs();
 		const degrees = await seedDegrees();
 		await seedTeachers(degrees);
-		console.log("✅ Seed complete");
+		console.log("\n🎉 Mock teachers with degrees ready for testing.");
+		console.log(
+			`   Default password → ${process.env.SEED_USER_PASSWORD || "Str0ngPass!"}`
+		);
 	} catch (e) {
 		console.error("❌ Seed failed:", e);
 		process.exitCode = 1;

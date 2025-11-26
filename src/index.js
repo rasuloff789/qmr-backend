@@ -15,10 +15,10 @@ import { initializeBot, stopBot } from "./utils/telegram/bot.js";
 const PORT = config.PORT;
 
 // Initialize Telegram Bot
-const telegramBot = initializeBot();
-if (!telegramBot) {
-	console.warn("⚠️ Telegram bot initialization failed");
-}
+// const telegramBot = initializeBot();
+// if (!telegramBot) {
+// 	console.warn("⚠️ Telegram bot initialization failed");
+// }
 
 /**
  * Start Server

@@ -46,8 +46,12 @@ import {
 	updateDegree,
 	deleteDegree,
 	addCourse,
+	addStudentToCourse,
 	updateProfile,
 } from "./mutations/index.js";
+
+// Import type resolvers
+import { Course } from "./types/index.js";
 
 /**
  * Query resolvers
@@ -89,6 +93,7 @@ const Mutation = {
 	updateDegree,
 	deleteDegree,
 	addCourse,
+	addStudentToCourse,
 	updateProfile,
 };
 
@@ -99,6 +104,7 @@ export const resolvers = {
 	Upload: GraphQLUpload,
 	Query,
 	Mutation,
+	Course,
 };
 
 export default resolvers;

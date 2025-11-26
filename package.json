@@ -30,6 +30,8 @@
     "db:studio": "prisma studio",
     "seed:root": "node scripts/seed-root.js",
     "seed:users": "node scripts/seed-users.js",
+    "seed:teachers": "node scripts/seed-degrees-and-teachers.js",
+    "seed:students-degrees": "node scripts/add-degrees-to-students.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:password-hash": "node scripts/test-password-hash-validation.js"
   },

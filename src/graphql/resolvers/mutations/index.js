@@ -13,6 +13,7 @@ import { addTeacher } from "./addTeacher.js";
 import { addStudent } from "./addStudent.js";
 import { addDegree, updateDegree, deleteDegree } from "./addDegree.js";
 import { addCourse } from "./addCourse.js";
+import { addStudentToCourse } from "./addStudentToCourse.js";
 import { changeAdmin } from "./changeAdmin.js";
 import { changeAdminActive } from "./changeAdminActive.js";
 import { changePassword } from "./changePassword.js";
@@ -34,6 +35,7 @@ export {
 	updateDegree,
 	deleteDegree,
 	addCourse,
+	addStudentToCourse,
 	changeAdmin,
 	changeAdminActive,
 	changePassword,
