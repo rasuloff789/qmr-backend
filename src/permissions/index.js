@@ -10,6 +10,10 @@ import {
 } from "../utils/permissions.js";
 import { logPermission, logSecurity } from "../utils/audit.js";
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 /**
  * Optimized permission checking utilities using cached functions
  */
@@ -33,32 +37,44 @@ const checkOwnership = async (user, resourceId, resourceType) => {
 	return parseInt(user.id) === parseInt(resourceId);
 };
 
+// ============================================================================
+// BASIC AUTHENTICATION & ROLE RULES
+// ============================================================================
+
 /**
- * Optimized authentication and role rules
+ * Check if user is authenticated
  */
 const isAuth = rule()(async (_parent, _args, { user }) => {
 	if (!user) return false;
-
-	// Use cached permission check for user validation
 	const result = await checkPermission(user, "view_own_profile");
 	return result.allowed;
 });
 
+/**
+ * Check if user is ROOT
+ */
 const isRoot = rule()(async (_parent, _args, { user }) => {
 	return user?.role === ROLES.ROOT;
 });
 
+/**
+ * Check if user is ADMIN or ROOT
+ */
 const isAdminOrRoot = rule()(async (_parent, _args, { user }) => {
 	return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
 });
 
+/**
+ * Check if user is TEACHER, ADMIN, or ROOT
+ */
 const isTeacherAdminOrRoot = rule()(async (_parent, _args, { user }) => {
 	return [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
 });
 
-/**
- * Optimized permission-based rules using cached functions
- */
+// ============================================================================
+// PERMISSION-BASED RULES (Using Permission System)
+// ============================================================================
+
 const canViewAdmins = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "view_admins");
 });
@@ -131,211 +147,219 @@ const canExportData = rule()(async (_parent, _args, { user }) => {
 	return await checkUserPermission(user, "export_data");
 });
 
+// ============================================================================
+// RESOURCE OWNERSHIP RULES
+// ============================================================================
+
 /**
- * Optimized resource ownership rules
+ * Check if user can update their own admin profile
+ * - ROOT can update any admin
+ * - ADMIN can only update their own profile
  */
 const canUpdateOwnAdmin = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root can update any admin
 	if (user.role === ROLES.ROOT) return true;
-
-	// Admin can only update their own profile
 	if (user.role === ROLES.ADMIN) {
 		return parseInt(user.id) === parseInt(args.id);
 	}
-
-	return false;
-});
-
-const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-
-	// Root can update any teacher
-	if (user.role === ROLES.ROOT) return true;
-
-	// Admin can update any teacher
-	if (user.role === ROLES.ADMIN) return true;
-
-	// Teacher can only update their own profile
-	if (user.role === ROLES.TEACHER) {
-		return parseInt(user.id) === parseInt(args.id);
-	}
-
-	return false;
-});
-
-const canUpdateOwnStudent = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-
-	// Root can update any student
-	if (user.role === ROLES.ROOT) return true;
-
-	// Admin can update any student
-	if (user.role === ROLES.ADMIN) return true;
-
 	return false;
 });
 
 /**
- * Optimized advanced permission rules with context awareness
+ * Check if user can update their own teacher profile
+ * - ROOT can update any teacher
+ * - ADMIN can update any teacher
+ * - TEACHER can only update their own profile
+ */
+const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+	if (user.role === ROLES.ROOT) return true;
+	if (user.role === ROLES.ADMIN) return true;
+	if (user.role === ROLES.TEACHER) {
+		return parseInt(user.id) === parseInt(args.id);
+	}
+	return false;
+});
+
+/**
+ * Check if user can update their own student profile
+ * - ROOT can update any student
+ * - ADMIN can update any student
+ */
+const canUpdateOwnStudent = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+	if (user.role === ROLES.ROOT) return true;
+	if (user.role === ROLES.ADMIN) return true;
+	return false;
+});
+
+// ============================================================================
+// RESOURCE-SPECIFIC VIEW RULES
+// ============================================================================
+
+/**
+ * Check if user can view a specific admin
+ * - ROOT can view any admin
+ * - ADMIN can view their own profile
  */
 const canViewSpecificAdmin = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root can view any admin
 	if (user.role === ROLES.ROOT) return true;
-
-	// Admin can view their own profile
 	if (user.role === ROLES.ADMIN) {
 		return parseInt(user.id) === parseInt(args.id);
 	}
-
 	return false;
 });
 
+/**
+ * Check if user can view a specific teacher
+ * - ROOT and ADMIN can view any teacher
+ * - TEACHER can only view their own profile
+ */
 const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root and Admin can view any teacher
 	if ([ROLES.ROOT, ROLES.ADMIN].includes(user.role)) return true;
-
-	// Teacher can only view their own profile
 	if (user.role === ROLES.TEACHER) {
 		return parseInt(user.id) === parseInt(args.id);
 	}
-
 	return false;
 });
 
+/**
+ * Check if user can view a specific student
+ * - ROOT, ADMIN, and TEACHER can view any student
+ */
 const canViewSpecificStudent = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root, Admin, and Teacher can view any student
-	if ([ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role)) return true;
-
-	return false;
+	return [ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role);
 });
 
+// ============================================================================
+// STATUS CHANGE RULES
+// ============================================================================
+
+/**
+ * Check if user can change admin status
+ * - Only ROOT can change admin status
+ */
 const canChangeAdminStatus = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Only root can change admin status
 	return user.role === ROLES.ROOT;
 });
 
+/**
+ * Check if user can change teacher status
+ * - ROOT and ADMIN can change teacher status
+ */
 const canChangeTeacherStatus = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root and Admin can change teacher status
-	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-});
-
-const canChangeStudentStatus = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-
-	// Root, Admin, and Teacher can change student status
 	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 });
 
 /**
- * Optimized conditional permission rules
+ * Check if user can change student status
+ * - ROOT and ADMIN can change student status
  */
+const canChangeStudentStatus = rule()(async (_parent, args, { user }) => {
+	if (!user) return false;
+	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+});
+
+// ============================================================================
+// ADVANCED PERMISSION RULES
+// ============================================================================
+
 const canAccessSensitiveData = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
-	// Root always has access
 	if (user.role === ROLES.ROOT) return true;
-
-	// Admin needs additional verification
 	if (user.role === ROLES.ADMIN) {
 		// Check if user has verified their identity recently
 		// This would typically check a verification timestamp
 		return true; // Simplified for example
 	}
-
 	return false;
 });
 
 const canPerformBulkOperations = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-
 	// Only root can perform bulk operations
 	return user.role === ROLES.ROOT;
 });
 
-// GraphQL Shield permissions configuration - Only for operations that exist in schema
+// ============================================================================
+// GRAPHQL SHIELD PERMISSIONS CONFIGURATION
+// ============================================================================
+
 export const permissions = shield(
 	{
+		// ====================================================================
+		// QUERY PERMISSIONS
+		// ====================================================================
 		Query: {
 			// User profile queries
 			me: allow, // Allow me query without authentication
 
-			// Admin queries - Allow admins and root to access admin data
+			// Admin queries
 			getAdmins: canViewAdmins,
 			getAdmin: canViewSpecificAdmin,
 
 			// Teacher queries
 			getTeachers: canViewTeachers,
-			getTeacher: canViewSpecificTeacher, // Resource-specific permission
+			getTeacher: canViewSpecificTeacher,
 
 			// Student queries
 			getStudents: canViewStudents,
 			getStudent: canViewSpecificStudent,
 
-			// Degree queries - Allow authenticated users to view degrees
+			// Degree queries - Any authenticated user can view
 			getDegrees: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can view degrees
 				return !!user;
 			}),
 			getDegree: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can view a specific degree
 				return !!user;
 			}),
 
-			// Course queries - Allow authenticated users to view courses
+			// Course queries - Any authenticated user can view
 			getCourses: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can view courses
 				return !!user;
 			}),
 			getCourse: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can view a specific course
 				return !!user;
 			}),
 
-			// Dashboard queries - Allow authenticated users to view dashboard stats
+			// Dashboard queries - Any authenticated user can view
 			getDashboardStats: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can view dashboard stats
 				return !!user;
 			}),
 		},
+
+		// ====================================================================
+		// MUTATION PERMISSIONS
+		// ====================================================================
 		Mutation: {
 			// Public mutations
 			login: allow,
 
-			// Profile management
+			// Profile management - Any authenticated user
 			updateProfile: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can update their own profile
 				return !!user;
 			}),
 			changePassword: rule()(async (_parent, _args, { user }) => {
-				// Any authenticated user can change their own password
 				return !!user;
 			}),
 
 			// Admin management
 			addAdmin: canCreateAdmin,
-			changeAdmin: canUpdateOwnAdmin, // Can update own admin or root can update any
-			changeAdminActive: canChangeAdminStatus, // Only root can change admin status
+			changeAdmin: canUpdateOwnAdmin,
+			changeAdminActive: canChangeAdminStatus,
 			deleteAdmin: canDeleteAdmin,
 
 			// Teacher management
 			addTeacher: rule()(async (_parent, _args, { user }) => {
-				// Allow admin and root to add teachers
 				return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
 			}),
-			changeTeacher: canUpdateOwnTeacher, // Can update own teacher or root can update any
-			changeTeacherActive: canChangeTeacherStatus, // Only root can change teacher status
+			changeTeacher: canUpdateOwnTeacher,
+			changeTeacherActive: canChangeTeacherStatus,
 			deleteTeacher: canDeleteAdmin, // Root and Admin can delete teachers
 
 			// Student management
@@ -344,35 +368,55 @@ export const permissions = shield(
 			changeStudentActive: canChangeStudentStatus,
 			deleteStudent: canDeleteAdmin, // Root and Admin can delete students
 
-			// Degree management - Only root and admin can manage degrees
+			// Degree management - Only ROOT and ADMIN
 			addDegree: rule()(async (_parent, _args, { user }) => {
-				// Only root and admin can create degrees
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
 			updateDegree: rule()(async (_parent, _args, { user }) => {
-				// Only root and admin can update degrees
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
 			deleteDegree: rule()(async (_parent, _args, { user }) => {
-				// Only root and admin can delete degrees
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
 			}),
 
-			// Course management - Only root and admin can manage courses
+			// Course management - Only ROOT and ADMIN
+			/**
+			 * Add Course Mutation Permission
+			 * Allowed roles: ROOT, ADMIN
+			 * Teachers and other users cannot create courses
+			 */
 			addCourse: rule()(async (_parent, _args, { user }) => {
-				// Only root and admin can create courses
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
-			}),
-			addStudentToCourse: rule()(async (_parent, _args, { user }) => {
-				// Only root and admin can add students to courses
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 			}),
 
-			// (removed) testFileUpload
+			/**
+			 * Delete Course Mutation Permission
+			 * Allowed roles: ROOT, ADMIN
+			 * Teachers and other users cannot delete courses
+			 */
+			deleteCourse: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			}),
+
+			/**
+			 * Add Student to Course Mutation Permission
+			 * Allowed roles: ROOT, ADMIN
+			 * Teachers and other users cannot enroll students
+			 */
+			addStudentToCourse: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			}),
 		},
-		// Field-level permissions for existing fields only
+
+		// ====================================================================
+		// FIELD-LEVEL PERMISSIONS
+		// ====================================================================
+
+		// User Types
 		Admin: {
-			// Allow all admin fields to be accessible
 			id: allow,
 			username: allow,
 			fullname: allow,
@@ -382,8 +426,8 @@ export const permissions = shield(
 			isActive: allow,
 			createdAt: allow,
 		},
+
 		Teacher: {
-			// Allow all teacher fields to be accessible
 			id: allow,
 			username: allow,
 			fullname: allow,
@@ -396,16 +440,32 @@ export const permissions = shield(
 			isActive: allow,
 			createdAt: allow,
 		},
+
+		Student: {
+			id: allow,
+			username: allow,
+			fullname: allow,
+			birthDate: allow,
+			phone: allow,
+			tgUsername: allow,
+			gender: allow,
+			possibleDegrees: allow,
+			profilePicture: allow,
+			isActive: allow,
+			isDeleted: allow,
+			createdAt: allow,
+		},
+
+		// Course Types
 		Degree: {
-			// Allow all degree fields to be accessible
 			id: allow,
 			name: allow,
 			teachers: allow,
 			courses: allow,
 			createdAt: allow,
 		},
+
 		Course: {
-			// Allow all course fields to be accessible
 			id: allow,
 			name: allow,
 			description: allow,
@@ -421,8 +481,8 @@ export const permissions = shield(
 			degrees: allow,
 			createdAt: allow,
 		},
+
 		CourseStudent: {
-			// Allow all CourseStudent fields to be accessible
 			id: allow,
 			course: allow,
 			student: allow,
@@ -431,8 +491,8 @@ export const permissions = shield(
 			isActive: allow,
 			createdAt: allow,
 		},
+
 		SubstituteTeacher: {
-			// Allow all SubstituteTeacher fields to be accessible
 			id: allow,
 			course: allow,
 			teacher: allow,
@@ -441,23 +501,9 @@ export const permissions = shield(
 			reason: allow,
 			createdAt: allow,
 		},
-		Student: {
-			// Allow all student fields to be accessible
-			id: allow,
-			username: allow,
-			fullname: allow,
-			birthDate: allow,
-			phone: allow,
-			tgUsername: allow,
-			gender: allow,
-			possibleDegrees: allow,
-			profilePicture: allow,
-			isActive: allow,
-			isDeleted: allow,
-			createdAt: allow,
-		},
+
+		// Dashboard Types
 		DashboardStats: {
-			// Allow all dashboard stats fields to be accessible
 			totalStudents: allow,
 			totalTeachers: allow,
 			totalAdmins: allow,
@@ -472,36 +518,45 @@ export const permissions = shield(
 			studentGenderDistribution: allow,
 			teacherGenderDistribution: allow,
 		},
+
 		GenderDistribution: {
-			// Allow all gender distribution fields to be accessible
 			male: allow,
 			female: allow,
 			child: allow,
 		},
+
+		// Response Types - Course Mutations
 		AddCourseResponse: {
-			// Allow all AddCourseResponse fields to be accessible
 			success: allow,
 			message: allow,
 			course: allow,
 			errors: allow,
 			timestamp: allow,
 		},
+
+		DeleteCourseResponse: {
+			success: allow,
+			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+
 		AddStudentToCourseResponse: {
-			// Allow all AddStudentToCourseResponse fields to be accessible
 			success: allow,
 			message: allow,
 			courseStudent: allow,
 			errors: allow,
 			timestamp: allow,
 		},
-		// LoginResponse fields - allow all fields for login mutation
+
+		// Response Types - Auth
 		LoginResponse: {
 			success: allow,
 			message: allow,
 			token: allow,
 			user: allow,
 		},
-		// UserData fields - allow all fields for login response
+
 		UserData: {
 			id: allow,
 			username: allow,
@@ -514,7 +569,8 @@ export const permissions = shield(
 			isActive: allow,
 			department: allow,
 		},
-		// AddAdminResponse fields - allow all fields for addAdmin mutation
+
+		// Response Types - Admin Mutations
 		AddAdminResponse: {
 			success: allow,
 			message: allow,
@@ -522,7 +578,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// UpdateAdminResponse fields - allow all fields for updateAdmin mutations
+
 		UpdateAdminResponse: {
 			success: allow,
 			message: allow,
@@ -530,7 +586,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// DeleteAdminResponse fields - allow all fields for deleteAdmin mutation
+
 		DeleteAdminResponse: {
 			success: allow,
 			message: allow,
@@ -538,7 +594,8 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// AddTeacherResponse fields - allow all fields for addTeacher mutation
+
+		// Response Types - Teacher Mutations
 		AddTeacherResponse: {
 			success: allow,
 			message: allow,
@@ -546,7 +603,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// UpdateTeacherResponse fields - allow all fields for updateTeacher mutations
+
 		UpdateTeacherResponse: {
 			success: allow,
 			message: allow,
@@ -554,7 +611,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// ChangeTeacherActiveResponse fields - allow all fields for changeTeacherActive mutation
+
 		ChangeTeacherActiveResponse: {
 			success: allow,
 			message: allow,
@@ -562,7 +619,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// DeleteTeacherResponse fields - allow all fields for deleteTeacher mutation
+
 		DeleteTeacherResponse: {
 			success: allow,
 			message: allow,
@@ -570,7 +627,8 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// AddStudentResponse fields - allow all fields for addStudent mutation
+
+		// Response Types - Student Mutations
 		AddStudentResponse: {
 			success: allow,
 			message: allow,
@@ -578,7 +636,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// UpdateStudentResponse fields - allow all fields for updateStudent mutations
+
 		UpdateStudentResponse: {
 			success: allow,
 			message: allow,
@@ -586,7 +644,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// ChangeStudentActiveResponse fields - allow all fields for changeStudentActive mutation
+
 		ChangeStudentActiveResponse: {
 			success: allow,
 			message: allow,
@@ -594,7 +652,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// DeleteStudentResponse fields - allow all fields for deleteStudent mutation
+
 		DeleteStudentResponse: {
 			success: allow,
 			message: allow,
@@ -602,8 +660,8 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// (removed) TestFileUploadResponse
-		// UpdateProfileResponse fields - allow all fields for updateProfile mutation
+
+		// Response Types - Profile Mutations
 		UpdateProfileResponse: {
 			success: allow,
 			message: allow,
@@ -611,14 +669,15 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// ChangePasswordResponse fields - allow all fields for changePassword mutation
+
 		ChangePasswordResponse: {
 			success: allow,
 			message: allow,
 			errors: allow,
 			timestamp: allow,
 		},
-		// AddDegreeResponse fields - allow all fields for addDegree mutation
+
+		// Response Types - Degree Mutations
 		AddDegreeResponse: {
 			success: allow,
 			message: allow,
@@ -626,7 +685,7 @@ export const permissions = shield(
 			errors: allow,
 			timestamp: allow,
 		},
-		// UpdateDegreeResponse fields - allow all fields for updateDegree mutations
+
 		UpdateDegreeResponse: {
 			success: allow,
 			message: allow,
@@ -635,17 +694,16 @@ export const permissions = shield(
 			timestamp: allow,
 		},
 
-		// Upload scalar permissions - allow root, admin, and teacher users to upload files
+		// Upload scalar - All authenticated users can upload files
 		Upload: rule()(async (_parent, _args, { user }) => {
-			if (!user) return false;
-			return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			// Any authenticated user can upload files
+			return !!user;
 		}),
 	},
 	{
 		fallbackRule: deny, // Deny by default for security
 		allowExternalErrors: true,
 		debug: process.env.NODE_ENV === "development",
-		// Additional GraphQL Shield options
 		graphqlErrorHandler: (err, parent, args, context, info) => {
 			// Custom error handling for permission failures
 			if (err.message.includes("permission")) {
@@ -656,19 +714,30 @@ export const permissions = shield(
 	}
 );
 
+// ============================================================================
+// CACHE MANAGEMENT UTILITIES
+// ============================================================================
+
 /**
- * Cache invalidation utilities for permission system
+ * Invalidate permission cache for a specific user
  */
 export const invalidateUserCache = (userId) => {
 	clearUserPermissionCache(userId);
 };
 
+/**
+ * Invalidate all permission caches
+ */
 export const invalidateAllCache = () => {
 	clearPermissionCache();
 };
 
+// ============================================================================
+// PERFORMANCE MONITORING UTILITIES
+// ============================================================================
+
 /**
- * Performance monitoring utilities
+ * Get permission system statistics
  */
 export const getPermissionStats = () => {
 	return {
