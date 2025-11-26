@@ -26,6 +26,18 @@ type AddStudentToCourseResponse {
     timestamp: String
 }
 
+"""Response payload returned when removing a student from a course."""
+type RemoveStudentFromCourseResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 """Response payload returned when updating a course."""
 type UpdateCourseResponse {
     """Operation success flag."""
@@ -113,6 +125,14 @@ extend type Mutation {
         """Monthly payment amount for the enrollment."""
         monthlyPayment: Int!
     ): AddStudentToCourseResponse!
+
+    """Remove a student from a course enrollment."""
+    removeStudentFromCourse(
+        """Course identifier."""
+        courseId: ID!
+        """Student identifier."""
+        studentId: ID!
+    ): RemoveStudentFromCourseResponse!
 
     """Delete a course and all associated enrollments."""
     deleteCourse(

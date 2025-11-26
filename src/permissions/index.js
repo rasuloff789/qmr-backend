@@ -419,6 +419,16 @@ export const permissions = shield(
 				if (!user) return false;
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 			}),
+
+			/**
+			 * Remove Student from Course Mutation Permission
+			 * Allowed roles: ROOT, ADMIN
+			 * Teachers and other users cannot remove students
+			 */
+			removeStudentFromCourse: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			}),
 		},
 
 		// ====================================================================
@@ -563,6 +573,13 @@ export const permissions = shield(
 			success: allow,
 			message: allow,
 			courseStudent: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+
+		RemoveStudentFromCourseResponse: {
+			success: allow,
+			message: allow,
 			errors: allow,
 			timestamp: allow,
 		},

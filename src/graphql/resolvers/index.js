@@ -49,6 +49,7 @@ import {
 	updateCourse,
 	deleteCourse,
 	addStudentToCourse,
+	removeStudentFromCourse,
 	updateProfile,
 } from "./mutations/index.js";
 
@@ -98,6 +99,7 @@ const Mutation = {
 	updateCourse,
 	deleteCourse,
 	addStudentToCourse,
+	removeStudentFromCourse,
 	updateProfile,
 };
 
