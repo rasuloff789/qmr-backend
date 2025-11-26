@@ -9,6 +9,7 @@ This document contains example GraphQL mutations for testing the API.
 - `updateCourse` - Only available for **ROOT** and **ADMIN** users
 - `deleteCourse` - Only available for **ROOT** and **ADMIN** users
 - `addStudentToCourse` - Only available for **ROOT** and **ADMIN** users
+- `removeStudentFromCourse` - Only available for **ROOT** and **ADMIN** users
 
 To use these mutations, you must:
 1. First authenticate using the `login` mutation to get a JWT token
@@ -376,6 +377,42 @@ mutation AddStudentToCourse {
 }
 ```
 
+## Remove Student from Course Mutation
+
+**⚠️ Requires ROOT or ADMIN role**
+
+### Basic Example
+
+```graphql
+mutation RemoveStudentFromCourse {
+  removeStudentFromCourse(
+    courseId: "1"
+    studentId: "10"
+  ) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+### Example with Full Response
+
+```graphql
+mutation RemoveStudentFromCourse {
+  removeStudentFromCourse(
+    courseId: "3"
+    studentId: "106"
+  ) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
 ## Notes
 
 ### Days of Week Options
@@ -450,6 +487,10 @@ query GetDegrees {
 8. **Course not found**: Make sure the `courseId` exists
 
 9. **Invalid course ID**: The course ID must be a valid number
+
+10. **Enrollment not found**: When removing a student, make sure the student is actually enrolled in the course
+
+11. **Student already removed**: You cannot remove a student that has already been removed from the course
 
 ### Update Course Specific Notes
 

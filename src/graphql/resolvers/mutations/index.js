@@ -16,6 +16,7 @@ import { addCourse } from "./addCourse.js";
 import { updateCourse } from "./updateCourse.js";
 import { deleteCourse } from "./deleteCourse.js";
 import { addStudentToCourse } from "./addStudentToCourse.js";
+import { removeStudentFromCourse } from "./removeStudentFromCourse.js";
 import { changeAdmin } from "./changeAdmin.js";
 import { changeAdminActive } from "./changeAdminActive.js";
 import { changePassword } from "./changePassword.js";
@@ -40,6 +41,7 @@ export {
 	updateCourse,
 	deleteCourse,
 	addStudentToCourse,
+	removeStudentFromCourse,
 	changeAdmin,
 	changeAdminActive,
 	changePassword,
