@@ -46,6 +46,7 @@ import {
 	updateDegree,
 	deleteDegree,
 	addCourse,
+	deleteCourse,
 	addStudentToCourse,
 	updateProfile,
 } from "./mutations/index.js";
@@ -93,6 +94,7 @@ const Mutation = {
 	updateDegree,
 	deleteDegree,
 	addCourse,
+	deleteCourse,
 	addStudentToCourse,
 	updateProfile,
 };

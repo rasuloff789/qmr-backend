@@ -26,6 +26,18 @@ type AddStudentToCourseResponse {
     timestamp: String
 }
 
+"""Response payload returned when deleting a course."""
+type DeleteCourseResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 # Course management mutations
 extend type Mutation {
     """Create a new course with scheduling, teacher, and degree associations."""
@@ -61,4 +73,10 @@ extend type Mutation {
         """Monthly payment amount for the enrollment."""
         monthlyPayment: Int!
     ): AddStudentToCourseResponse!
+
+    """Delete a course and all associated enrollments."""
+    deleteCourse(
+        """Course identifier."""
+        courseId: ID!
+    ): DeleteCourseResponse!
 }
