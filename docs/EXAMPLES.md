@@ -6,6 +6,7 @@ This document contains example GraphQL mutations for testing the API.
 
 **Important:** The following mutations require authentication and specific roles:
 - `addCourse` - Only available for **ROOT** and **ADMIN** users
+- `updateCourse` - Only available for **ROOT** and **ADMIN** users
 - `deleteCourse` - Only available for **ROOT** and **ADMIN** users
 - `addStudentToCourse` - Only available for **ROOT** and **ADMIN** users
 
@@ -166,6 +167,149 @@ mutation AddChildCourse {
 }
 ```
 
+## Update Course Mutation
+
+**⚠️ Requires ROOT or ADMIN role**
+
+### Basic Example - Update Name and Description
+
+```graphql
+mutation UpdateCourse {
+  updateCourse(
+    courseId: "1"
+    name: "Advanced Computer Science"
+    description: "Updated description for the course"
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Update Course Days of Week
+
+```graphql
+mutation UpdateCourseDays {
+  updateCourse(
+    courseId: "1"
+    daysOfWeek: [TUESDAY, THURSDAY, SATURDAY]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      daysOfWeek
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Update Course Teacher and Degrees
+
+```graphql
+mutation UpdateCourseTeacher {
+  updateCourse(
+    courseId: "1"
+    teacherId: "2"
+    degreeIds: ["3", "4"]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Update Multiple Fields
+
+```graphql
+mutation UpdateCourseMultiple {
+  updateCourse(
+    courseId: "1"
+    name: "Introduction to Data Science"
+    description: "Learn data science fundamentals"
+    daysOfWeek: [MONDAY, WEDNESDAY]
+    startAt: "2024-02-01T00:00:00Z"
+    endAt: "2024-12-31T00:00:00Z"
+    startTime: "2024-01-01T10:00:00Z"
+    endTime: "2024-01-01T12:00:00Z"
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      startAt
+      endAt
+      startTime
+      endTime
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Update Course Gender
+
+```graphql
+mutation UpdateCourseGender {
+  updateCourse(
+    courseId: "1"
+    gender: FEMALE
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      gender
+    }
+    errors
+    timestamp
+  }
+}
+```
+
 ## Delete Course Mutation
 
 **⚠️ Requires ROOT or ADMIN role**
@@ -300,6 +444,23 @@ query GetDegrees {
 5. **Teacher doesn't have required degrees**: The teacher must have at least one of the degrees specified in `degreeIds`
 
 6. **Course name already exists**: Course names must be unique
+
+7. **No fields provided to update**: At least one field must be provided when updating a course
+
+8. **Course not found**: Make sure the `courseId` exists
+
+9. **Invalid course ID**: The course ID must be a valid number
+
+### Update Course Specific Notes
+
+- All fields in `updateCourse` are optional - you can update just the fields you want to change
+- If updating `teacherId`, the teacher must:
+  - Exist and be active
+  - Have a gender matching the course gender (or the gender you're setting)
+  - Have at least one degree matching the `degreeIds` (if `degreeIds` is also being updated)
+- If updating `degreeIds`, all provided degree IDs must exist
+- Course name must be unique (cannot match another existing course name)
+- At least one field must be provided for the update to succeed
 
 ### Using Mutations in GraphQL Playground
 

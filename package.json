@@ -36,7 +36,8 @@
     "test:password-hash": "node scripts/test-password-hash-validation.js",
     "test:add-student-to-course": "node src/graphql/resolvers/mutations/__tests__/addStudentToCourse.test.js",
     "test:delete-course": "node src/graphql/resolvers/mutations/__tests__/deleteCourse.test.js",
-    "test:add-delete-course": "node scripts/test-add-and-delete-course.js"
+    "test:add-delete-course": "node scripts/test-add-and-delete-course.js",
+    "test:update-course-fetch": "node scripts/test-update-course-fetch.js"
   },
   "repository": {
     "type": "git",

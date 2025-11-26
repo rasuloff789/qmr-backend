@@ -391,6 +391,16 @@ export const permissions = shield(
 			}),
 
 			/**
+			 * Update Course Mutation Permission
+			 * Allowed roles: ROOT, ADMIN
+			 * Teachers and other users cannot update courses
+			 */
+			updateCourse: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+			}),
+
+			/**
 			 * Delete Course Mutation Permission
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot delete courses
@@ -527,6 +537,14 @@ export const permissions = shield(
 
 		// Response Types - Course Mutations
 		AddCourseResponse: {
+			success: allow,
+			message: allow,
+			course: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+
+		UpdateCourseResponse: {
 			success: allow,
 			message: allow,
 			course: allow,
