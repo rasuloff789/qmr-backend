@@ -85,6 +85,7 @@ const login = async (_parent, { username, password, userType }) => {
 					username: true,
 					fullname: true,
 					password: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -116,6 +117,7 @@ const login = async (_parent, { username, password, userType }) => {
 					birthDate: true,
 					phone: true,
 					tgUsername: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -171,6 +173,7 @@ const login = async (_parent, { username, password, userType }) => {
 			role: userType,
 			username: user.username,
 			passwordHash: user.password,
+			gender: user.gender
 		});
 
 		// Create user data object with role
@@ -185,12 +188,14 @@ const login = async (_parent, { username, password, userType }) => {
 				phone: user.phone,
 				tgUsername: user.tgUsername,
 				isActive: user.isActive,
+				gender: user.gender,
 			}),
 			...(userType === "teacher" && {
 				birthDate: user.birthDate,
 				phone: user.phone,
 				tgUsername: user.tgUsername,
 				isActive: user.isActive,
+				gender: user.gender,
 			}),
 		};
 
@@ -212,6 +217,7 @@ const login = async (_parent, { username, password, userType }) => {
 				username: userData.username,
 				fullname: userData.fullname,
 				role: userData.role,
+				gender: userData.gender,
 				createdAt: userData.createdAt,
 			},
 		});

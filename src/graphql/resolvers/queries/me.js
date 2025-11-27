@@ -52,6 +52,7 @@ export default async function (_, par, { user }) {
 					birthDate: true,
 					phone: true,
 					tgUsername: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},

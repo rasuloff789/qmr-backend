@@ -34,7 +34,7 @@ import {
  */
 const addAdmin = async (
 	_parent,
-	{ username, fullname, birthDate, phone, tgUsername, password }
+{ username, fullname, birthDate, phone, tgUsername, password, gender }
 ) => {
 	try {
 		// Input validation
@@ -126,6 +126,7 @@ const addAdmin = async (
 				phone: normalizedPhone,
 				tgUsername: normalizedTgUsername,
 				password: await hashPassword(password),
+				gender,
 			},
 			select: {
 				id: true,

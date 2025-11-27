@@ -11,6 +11,7 @@
 import { verifyToken } from "../utils/auth/jwt.js";
 import { ERROR_MESSAGES } from "../constants/messages.js";
 import { prisma } from "../database/index.js";
+import { Gender } from "@prisma/client";
 
 /**
  * Authentication Middleware
@@ -35,7 +36,7 @@ export const authenticate = async (req) => {
 
 	// Validate password hash from token against database
 	// This ensures old tokens expire when password is changed
-	if (!decoded.id || !decoded.role || !decoded.passwordHash) {
+	if (!decoded.id || !decoded.role || !decoded.passwordHash ) {
 		return null;
 	}
 
@@ -69,7 +70,7 @@ export const authenticate = async (req) => {
 			});
 		} else if (decoded.role === "teacher") {
 			user = await prisma.teacher.findUnique({
-				where: { id: userId },
+				where: { id: userId, isActive: true, isDeleted: false },
 				select: {
 					id: true,
 					username: true,
@@ -79,11 +80,6 @@ export const authenticate = async (req) => {
 					createdAt: true,
 				},
 			});
-
-			// Check if teacher is active
-			if (user && !user.isActive) {
-				return null;
-			}
 		}
 
 		// User not found
@@ -104,6 +100,7 @@ export const authenticate = async (req) => {
 			role: decoded.role,
 			username: decoded.username,
 			passwordHash: decoded.passwordHash,
+			gender: decoded.gender 	
 		};
 
 		req.user = userData;

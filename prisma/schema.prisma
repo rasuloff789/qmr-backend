@@ -23,6 +23,7 @@ model Admin {
   birthDate  DateTime
   phone      String
   tgUsername String
+  gender     Gender   @default(MALE)
   isActive   Boolean  @default(true)
   isDeleted  Boolean  @default(false)
   createdAt  DateTime @default(now())

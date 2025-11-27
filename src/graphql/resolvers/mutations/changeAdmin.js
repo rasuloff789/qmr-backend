@@ -28,7 +28,7 @@ import {
  */
 const changeAdmin = async (
 	_parent,
-	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive }
+	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive, gender }
 ) => {
 	console.log(
 		id,
@@ -38,7 +38,8 @@ const changeAdmin = async (
 		phone,
 		tgUsername,
 		password,
-		isActive
+		isActive,
+		gender
 	);
 	try {
 		// Check if admin exists
@@ -128,6 +129,11 @@ const changeAdmin = async (
 		// Add isActive if provided
 		if (isActive !== undefined) {
 			updateData.isActive = isActive;
+		}
+
+		// --Gender update
+		if (gender !== undefined) {
+			updateData.gender = gender;
 		}
 
 		// Check if there are any fields to update
