@@ -116,7 +116,6 @@ const login = async (_parent, { username, password, userType }) => {
 					birthDate: true,
 					phone: true,
 					tgUsername: true,
-					department: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -191,7 +190,6 @@ const login = async (_parent, { username, password, userType }) => {
 				birthDate: user.birthDate,
 				phone: user.phone,
 				tgUsername: user.tgUsername,
-				department: user.department,
 				isActive: user.isActive,
 			}),
 		};
