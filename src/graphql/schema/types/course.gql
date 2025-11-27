@@ -66,6 +66,24 @@ type SubstituteTeacher {
     createdAt: Date!
 }
 
+"""Student attendance record for a course session."""
+type Attendance {
+    """Unique identifier."""
+    id: ID!
+    """Course for which attendance is recorded."""
+    course: Course!
+    """Student whose attendance is recorded."""
+    student: Student!
+    """Date of the attendance record."""
+    date: Date!
+    """Whether the student was present."""
+    isPresent: Boolean!
+    """Optional notes about the attendance."""
+    notes: String
+    """Creation timestamp."""
+    createdAt: Date!
+}
+
 """Supported days of the week."""
 enum DaysOfWeek {
     """Monday."""

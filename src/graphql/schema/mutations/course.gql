@@ -64,6 +64,20 @@ type DeleteCourseResponse {
     timestamp: String
 }
 
+"""Response payload returned when setting attendance."""
+type SetAttendanceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Attendance record produced by the operation."""
+    attendance: Attendance
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 # Course management mutations
 extend type Mutation {
     """Create a new course with scheduling, teacher, and degree associations."""
@@ -139,4 +153,18 @@ extend type Mutation {
         """Course identifier."""
         courseId: ID!
     ): DeleteCourseResponse!
+
+    """Set attendance for a student in a course on a specific date."""
+    setAttendance(
+        """Course identifier."""
+        courseId: ID!
+        """Student identifier."""
+        studentId: ID!
+        """Date of the attendance record."""
+        date: Date!
+        """Whether the student was present."""
+        isPresent: Boolean!
+        """Optional notes about the attendance."""
+        notes: String
+    ): SetAttendanceResponse!
 }

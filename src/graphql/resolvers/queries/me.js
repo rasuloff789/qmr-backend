@@ -75,6 +75,14 @@ export default async function (_, par, { user }) {
 					phone: true,
 					tgUsername: true,
 					gender: true,
+					profilePicture: true,
+					degrees: {
+						select: {
+							id: true,
+							name: true,
+							createdAt: true,
+						},
+					},
 					isActive: true,
 					createdAt: true,
 				},
@@ -84,6 +92,7 @@ export default async function (_, par, { user }) {
 				userData = {
 					...teacherUser,
 					role: "teacher",
+					degrees: teacherUser.degrees || [],
 				};
 			}
 		}

@@ -32,6 +32,7 @@ type UserData {
     isActive: Boolean
     """Gender classification (admins and teachers only)."""
     gender: Gender
+
 }
 
 """Response payload returned by the login mutation."""

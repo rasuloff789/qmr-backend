@@ -52,6 +52,62 @@ const addDegree = async (_parent, { name }) => {
 			select: {
 				id: true,
 				name: true,
+				teachers: {
+					select: {
+						id: true,
+						username: true,
+						fullname: true,
+						birthDate: true,
+						phone: true,
+						tgUsername: true,
+						gender: true,
+						profilePicture: true,
+						degrees: {
+							select: {
+								id: true,
+								name: true,
+								createdAt: true,
+							},
+						},
+						isActive: true,
+						createdAt: true,
+					},
+				},
+				courses: {
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						daysOfWeek: true,
+						gender: true,
+						startAt: true,
+						endAt: true,
+						startTime: true,
+						endTime: true,
+						teacher: {
+							select: {
+								id: true,
+								username: true,
+								fullname: true,
+								birthDate: true,
+								phone: true,
+								tgUsername: true,
+								gender: true,
+								profilePicture: true,
+								degrees: {
+									select: {
+										id: true,
+										name: true,
+										createdAt: true,
+									},
+								},
+								isActive: true,
+								createdAt: true,
+							},
+						},
+						createdAt: true,
+					},
+				},
 				createdAt: true,
 			},
 		});
@@ -154,6 +210,62 @@ const updateDegree = async (_parent, { id, name }) => {
 			select: {
 				id: true,
 				name: true,
+				teachers: {
+					select: {
+						id: true,
+						username: true,
+						fullname: true,
+						birthDate: true,
+						phone: true,
+						tgUsername: true,
+						gender: true,
+						profilePicture: true,
+						degrees: {
+							select: {
+								id: true,
+								name: true,
+								createdAt: true,
+							},
+						},
+						isActive: true,
+						createdAt: true,
+					},
+				},
+				courses: {
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						daysOfWeek: true,
+						gender: true,
+						startAt: true,
+						endAt: true,
+						startTime: true,
+						endTime: true,
+						teacher: {
+							select: {
+								id: true,
+								username: true,
+								fullname: true,
+								birthDate: true,
+								phone: true,
+								tgUsername: true,
+								gender: true,
+								profilePicture: true,
+								degrees: {
+									select: {
+										id: true,
+										name: true,
+										createdAt: true,
+									},
+								},
+								isActive: true,
+								createdAt: true,
+							},
+						},
+						createdAt: true,
+					},
+				},
 				createdAt: true,
 			},
 		});

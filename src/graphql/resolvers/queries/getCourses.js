@@ -25,7 +25,20 @@ export const getCourses = async (_, args, context) => {
 						id: true,
 						username: true,
 						fullname: true,
+						birthDate: true,
+						phone: true,
+						tgUsername: true,
+						gender: true,
+						profilePicture: true,
+						degrees: {
+							select: {
+								id: true,
+								name: true,
+								createdAt: true,
+							},
+						},
 						isActive: true,
+						createdAt: true,
 					},
 				},
 				degrees: {
@@ -75,7 +88,20 @@ export const getCourse = async (_, { id }, context) => {
 						id: true,
 						username: true,
 						fullname: true,
+						birthDate: true,
+						phone: true,
+						tgUsername: true,
+						gender: true,
+						profilePicture: true,
+						degrees: {
+							select: {
+								id: true,
+								name: true,
+								createdAt: true,
+							},
+						},
 						isActive: true,
+						createdAt: true,
 					},
 				},
 				degrees: {

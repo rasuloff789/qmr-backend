@@ -507,6 +507,18 @@ export const permissions = shield(
 				if (!user) return false;
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
 			}),
+
+			/**
+			 * Set Attendance Mutation Permission
+			 * Allowed roles: ROOT, TEACHER
+			 * Teachers can only set attendance for courses they are assigned to teach
+			 * Root users can set attendance for any course
+			 * Additional authorization check is performed in the resolver
+			 */
+			setAttendance: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				return [ROLES.ROOT, ROLES.TEACHER].includes(user.role);
+			}),
 		},
 
 		// ====================================================================
@@ -600,6 +612,16 @@ export const permissions = shield(
 			createdAt: allow,
 		},
 
+		Attendance: {
+			id: allow,
+			course: allow,
+			student: allow,
+			date: allow,
+			isPresent: allow,
+			notes: allow,
+			createdAt: allow,
+		},
+
 		// Dashboard Types
 		DashboardStats: {
 			totalStudents: allow,
@@ -658,6 +680,14 @@ export const permissions = shield(
 		RemoveStudentFromCourseResponse: {
 			success: allow,
 			message: allow,
+			errors: allow,
+			timestamp: allow,
+		},
+
+		SetAttendanceResponse: {
+			success: allow,
+			message: allow,
+			attendance: allow,
 			errors: allow,
 			timestamp: allow,
 		},
