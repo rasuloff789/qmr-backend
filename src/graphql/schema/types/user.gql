@@ -30,8 +30,6 @@ type UserData {
     tgUsername: String
     """Active flag (admins and teachers only)."""
     isActive: Boolean
-    """Department information (teachers only)."""
-    department: String
 }
 
 """Response payload returned by the login mutation."""

@@ -41,6 +41,13 @@ export const Course = {
 						tgUsername: true,
 						gender: true,
 						profilePicture: true,
+						degrees: {
+							select: {
+								id: true,
+								name: true,
+								createdAt: true,
+							},
+						},
 						isActive: true,
 						createdAt: true,
 					},
@@ -78,6 +85,13 @@ export const Course = {
 								tgUsername: true,
 								gender: true,
 								profilePicture: true,
+								degrees: {
+									select: {
+										id: true,
+										name: true,
+										createdAt: true,
+									},
+								},
 								isActive: true,
 								createdAt: true,
 							},

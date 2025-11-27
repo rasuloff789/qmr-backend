@@ -66,6 +66,7 @@ model Student {
   gender          Gender         @default(MALE)
   possibleDegrees Degree[]       @relation("StudentDegrees")
   courses         CourseStudent[]
+  attendances     Attendance[]
   profilePicture  String?
   isActive        Boolean        @default(true)
   isDeleted       Boolean        @default(false)
@@ -93,6 +94,7 @@ model Course {
   teacherId          Int
   substituteTeachers SubstituteTeacher[]
   degrees            Degree[]           @relation("DegreeCourses")
+  attendances        Attendance[]
   createdAt          DateTime           @default(now())
 }
 
@@ -131,5 +133,19 @@ model CourseStudent {
   createdAt     DateTime @default(now())
 
   @@unique([courseId, studentId])
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId Int
+  date      DateTime
+  isPresent Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, studentId, date])
 }
 
