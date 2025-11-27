@@ -55,6 +55,7 @@ app.use(
 			"https://root.elli.uz",
 			"https://teacher.elli.uz",
 			"https://qomar.elli.uz",
+			"https://studio.apollographql.com",
 			"http://localhost:5173",
 			"localhost:5173",
 			"http://localhost:5174",

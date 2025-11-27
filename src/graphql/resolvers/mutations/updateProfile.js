@@ -138,7 +138,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 					birthDate: true,
 					phone: true,
 					tgUsername: true,
-					department: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -162,7 +162,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 				birthDate: updatedUser.birthDate,
 				phone: updatedUser.phone,
 				tgUsername: updatedUser.tgUsername,
-				department: updatedUser.department,
+				gender: updatedUser.gender,
 				isActive: updatedUser.isActive,
 			}),
 		};

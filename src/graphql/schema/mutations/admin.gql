@@ -56,6 +56,8 @@ extend type Mutation {
         birthDate: Date!
         """Primary phone number."""
         phone: Phone!
+        """--Gender of the Admistrator."""
+        gender: Gender!
     ): AddAdminResponse!
     
     """Update a specific administrator profile."""
@@ -76,6 +78,8 @@ extend type Mutation {
         password: String
         """Optional active status toggle."""
         isActive: Boolean
+        """ Optional gender update."""
+        gender: Gender
     ): UpdateAdminResponse!
     
     """Change the active status of an administrator (root only)."""
