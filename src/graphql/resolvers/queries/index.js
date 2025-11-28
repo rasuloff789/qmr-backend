@@ -16,6 +16,7 @@ import getStudents from "./getStudents.js";
 import getStudent from "./getStudent.js";
 import { getDegrees, getDegree } from "./getDegrees.js";
 import { getCourses, getCourse } from "./getCourses.js";
+import getAttendances from "./getAttendances.js";
 import me from "./me.js";
 import getDashboardStats from "./getDashboardStats.js";
 
@@ -30,6 +31,7 @@ export {
 	getDegree,
 	getCourses,
 	getCourse,
+	getAttendances,
 	me,
 	getDashboardStats,
 };

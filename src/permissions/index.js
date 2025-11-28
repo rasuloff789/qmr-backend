@@ -152,103 +152,107 @@ const canExportData = rule()(async (_parent, _args, { user }) => {
 // ============================================================================
 
 async function resolveTargetGender(args, info, prisma) {
-  // If gender exists in args (add mutations), use it directly
-  if (args?.gender) return args.gender;
+	// If gender exists in args (add mutations), use it directly
+	if (args?.gender) return args.gender;
 
-  const mutation = info?.fieldName || "";
+	const mutation = info?.fieldName || "";
 
-  // Teacher update
-  if (mutation.includes("Teacher") && args?.id) {
-    const teacher = await prisma.teacher.findUnique({
-      where: { id: parseInt(args.id) },
-      select: { gender: true },
-    });
-    return teacher?.gender;
-  }
+	// Teacher update
+	if (mutation.includes("Teacher") && args?.id) {
+		const teacher = await prisma.teacher.findUnique({
+			where: { id: parseInt(args.id) },
+			select: { gender: true },
+		});
+		return teacher?.gender;
+	}
 
-  // Student update
-  if (mutation.includes("Student") && args?.id) {
-    const student = await prisma.student.findUnique({
-      where: { id: parseInt(args.id) },
-      select: { gender: true },
-    });
-    return student?.gender;
-  }
+	// Student update
+	if (mutation.includes("Student") && args?.id) {
+		const student = await prisma.student.findUnique({
+			where: { id: parseInt(args.id) },
+			select: { gender: true },
+		});
+		return student?.gender;
+	}
 
-  // Course update (course has gender)
-  if (mutation.includes("Course") && args?.id) {
-    const course = await prisma.course.findUnique({
-      where: { id: parseInt(args.id) },
-      select: { gender: true },
-    });
-    return course?.gender;
-  }
+	// Course update (course has gender)
+	if (mutation.includes("Course") && args?.id) {
+		const course = await prisma.course.findUnique({
+			where: { id: parseInt(args.id) },
+			select: { gender: true },
+		});
+		return course?.gender;
+	}
 
-  return null;
+	return null;
 }
 
-const canManageByGender = rule()(async (_parent, args, { user, prisma }, info) => {
+const canManageByGender = rule()(
+	async (_parent, args, { user, prisma }, info) => {
+		const targetGender = await resolveTargetGender(args, info, prisma);
+		console.log(targetGender, "<<<<<<<<<<<<<<<<< its me"); //why
 
-  const targetGender = await resolveTargetGender(args, info, prisma);
-  console.log(targetGender, "<<<<<<<<<<<<<<<<< its me"); //why
-  
+		console.log("🧐 user.gender:", user?.gender, "targetGender:", targetGender); //why
 
-  console.log("🧐 user.gender:", user?.gender, "targetGender:", targetGender); //why
+		if (!user) throw new Error("Authentication required");
+		if (user.role === ROLES.ROOT) return true;
 
-  if (!user) throw new Error("Authentication required");
-  if (user.role === ROLES.ROOT) return true;
+		// ADMIN RULES
+		if (user.role === ROLES.ADMIN) {
+			if (!user.gender) {
+				throw new Error("Your account does not have a gender assigned.");
+			}
 
-  // ADMIN RULES
-  if (user.role === ROLES.ADMIN) {
-    if (!user.gender) {
-      throw new Error("Your account does not have a gender assigned.");
-    }
+			// Allow only same-gender or students (students allowed)
+			if (targetGender && user.gender === targetGender) {
+				return true;
+			}
 
-    // Allow only same-gender or students (students allowed)
-    if (targetGender && user.gender === targetGender) {
-      return true;
-    }
+			const mutationName = info?.fieldName || "resource";
+			const resourceType = mutationName.includes("Teacher")
+				? "teacher"
+				: mutationName.includes("Student")
+				? "student"
+				: mutationName.includes("Course")
+				? "course"
+				: "resource";
 
-    const mutationName = info?.fieldName || "resource";
-    const resourceType =
-      mutationName.includes("Teacher") ? "teacher"
-      : mutationName.includes("Student") ? "student"
-      : mutationName.includes("Course") ? "course"
-      : "resource";
+			const action = mutationName.startsWith("add") ? "create" : "update";
 
-    const action = mutationName.startsWith("add") ? "create" : "update";
+			throw new Error(
+				`You cannot ${action} a ${targetGender} ${resourceType}. Your gender (${user.gender}) does not match.`
+			);
+		}
 
-    throw new Error(
-      `You cannot ${action} a ${targetGender} ${resourceType}. Your gender (${user.gender}) does not match.`
-    );
-  }
+		// TEACHER RULES
+		if (user.role === ROLES.TEACHER) {
+			if (!user.gender) {
+				throw new Error("Your account does not have a gender assigned.");
+			}
 
-  // TEACHER RULES
-  if (user.role === ROLES.TEACHER) {
-    if (!user.gender) {
-      throw new Error("Your account does not have a gender assigned.");
-    }
+			if (!targetGender) return true; // some mutations do not have gender
 
-    if (!targetGender) return true; // some mutations do not have gender
+			if (user.gender === targetGender) return true;
 
-    if (user.gender === targetGender) return true;
+			const mutationName = info?.fieldName || "resource";
+			const resourceType = mutationName.includes("Teacher")
+				? "teacher"
+				: mutationName.includes("Student")
+				? "student"
+				: mutationName.includes("Course")
+				? "course"
+				: "resource";
 
-    const mutationName = info?.fieldName || "resource";
-    const resourceType =
-      mutationName.includes("Teacher") ? "teacher"
-      : mutationName.includes("Student") ? "student"
-      : mutationName.includes("Course") ? "course"
-      : "resource";
+			const action = mutationName.startsWith("add") ? "create" : "update";
 
-    const action = mutationName.startsWith("add") ? "create" : "update";
+			throw new Error(
+				`You cannot ${action} a ${targetGender} ${resourceType}. Teachers can only manage their own gender (${user.gender}) resources.`
+			);
+		}
 
-    throw new Error(
-      `You cannot ${action} a ${targetGender} ${resourceType}. Teachers can only manage their own gender (${user.gender}) resources.`
-    );
-  }
-
-  throw new Error("Insufficient permissions");
-});
+		throw new Error("Insufficient permissions");
+	}
+);
 
 // ============================================================================
 // RESOURCE OWNERSHIP RULES
@@ -429,6 +433,9 @@ export const permissions = shield(
 			getCourse: rule()(async (_parent, _args, { user }) => {
 				return !!user;
 			}),
+			getAttendances: rule()(async (_parent, _args, { user }) => {
+				return !!user;
+			}),
 
 			// Dashboard queries - Any authenticated user can view
 			getDashboardStats: rule()(async (_parent, _args, { user }) => {
@@ -458,9 +465,12 @@ export const permissions = shield(
 			deleteAdmin: canDeleteAdmin, //why
 
 			// Teacher management
-			addTeacher: and( rule()(async (_parent, _args, { user }) => {
-				return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
-			}), canManageByGender),
+			addTeacher: and(
+				rule()(async (_parent, _args, { user }) => {
+					return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
+				}),
+				canManageByGender
+			),
 			changeTeacher: and(canUpdateOwnTeacher, canManageByGender),
 			changeTeacherActive: and(canChangeTeacherStatus, canManageByGender),
 			deleteTeacher: and(canDeleteAdmin, canManageByGender), // Root and Admin can delete teachers
@@ -488,30 +498,39 @@ export const permissions = shield(
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot create courses
 			 */
-			addCourse: and(rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}), canManageByGender),
+			addCourse: and(
+				rule()(async (_parent, _args, { user }) => {
+					if (!user) return false;
+					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+				}),
+				canManageByGender
+			),
 
 			/**
 			 * Update Course Mutation Permission
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot update courses
 			 */
-			updateCourse: and(rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}), canManageByGender),
+			updateCourse: and(
+				rule()(async (_parent, _args, { user }) => {
+					if (!user) return false;
+					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+				}),
+				canManageByGender
+			),
 
 			/**
 			 * Delete Course Mutation Permission
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot delete courses
 			 */
-			deleteCourse: and(rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}), canManageByGender),
+			deleteCourse: and(
+				rule()(async (_parent, _args, { user }) => {
+					if (!user) return false;
+					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+				}),
+				canManageByGender
+			),
 
 			/**
 			 * Add Student to Course Mutation Permission

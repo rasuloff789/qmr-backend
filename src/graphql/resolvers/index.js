@@ -22,6 +22,7 @@ import {
 	getDegree,
 	getCourses,
 	getCourse,
+	getAttendances,
 	me,
 	getDashboardStats,
 } from "./queries/index.js";
@@ -72,6 +73,7 @@ const Query = {
 	getDegree,
 	getCourses,
 	getCourse,
+	getAttendances,
 	getDashboardStats,
 };
 

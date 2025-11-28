@@ -170,6 +170,90 @@ const validateAttendanceDate = (attendanceDate, course) => {
 };
 
 /**
+ * Ensure all enrolled students have attendance records for the given date
+ * Creates missing records with isPresent = false
+ * @param {number} courseId - Course ID
+ * @param {Date} attendanceDate - Date of attendance
+ * @param {number} currentStudentId - ID of student whose attendance was just set (to skip)
+ * @returns {Promise<{created: number, missing: Array}>} - Number of records created and list of missing student IDs
+ */
+const ensureAllStudentsHaveAttendance = async (
+	courseId,
+	attendanceDate,
+	currentStudentId
+) => {
+	// Get all active enrolled students for the course
+	const enrollments = await prisma.courseStudent.findMany({
+		where: {
+			courseId: courseId,
+			isActive: true,
+			isDeleted: false,
+		},
+		select: {
+			studentId: true,
+		},
+	});
+
+	if (enrollments.length === 0) {
+		return { created: 0, missing: [] };
+	}
+
+	// Get all existing attendance records for this date
+	const existingAttendances = await prisma.attendance.findMany({
+		where: {
+			courseId: courseId,
+			date: attendanceDate,
+		},
+		select: {
+			studentId: true,
+		},
+	});
+
+	const existingStudentIds = new Set(
+		existingAttendances.map((a) => a.studentId)
+	);
+
+	// Find students without attendance records
+	const missingStudentIds = enrollments
+		.map((e) => e.studentId)
+		.filter((studentId) => !existingStudentIds.has(studentId));
+
+	if (missingStudentIds.length === 0) {
+		return { created: 0, missing: [] };
+	}
+
+	// Create missing attendance records with isPresent = false
+	const attendanceRecords = missingStudentIds.map((studentId) => ({
+		courseId: courseId,
+		studentId: studentId,
+		date: attendanceDate,
+		isPresent: false,
+		notes: null,
+	}));
+
+	try {
+		await prisma.attendance.createMany({
+			data: attendanceRecords,
+			skipDuplicates: true,
+		});
+
+		return {
+			created: attendanceRecords.length,
+			missing: missingStudentIds,
+		};
+	} catch (error) {
+		console.error("Error creating missing attendance records:", error);
+		// Don't fail the main operation if we can't create missing records
+		// Just log it and return what we could create
+		return {
+			created: 0,
+			missing: missingStudentIds,
+			error: error.message,
+		};
+	}
+};
+
+/**
  * Set attendance for a student in a course
  * @param {Object} _parent - Parent object (unused)
  * @param {Object} args - Mutation arguments
@@ -194,7 +278,7 @@ const setAttendance = async (
 
 		const parsedCourseId = parseInt(courseId);
 		const parsedStudentId = parseInt(studentId);
-		const attendanceDate = new Date(date);
+		const attendanceDate = normalizeDate(new Date(date));
 
 		// Fetch course and validate authorization in parallel with input validation
 		const course = await prisma.course.findUnique({
@@ -290,11 +374,26 @@ const setAttendance = async (
 					include: ATTENDANCE_INCLUDE,
 			  });
 
+		// Ensure all enrolled students have attendance records for this date
+		// This prevents any student from being left out
+		const missingRecords = await ensureAllStudentsHaveAttendance(
+			parsedCourseId,
+			attendanceDate,
+			parsedStudentId
+		);
+
+		// Build success message
+		let message = existingAttendance
+			? "Attendance updated successfully"
+			: "Attendance recorded successfully";
+
+		if (missingRecords.created > 0) {
+			message += `. Automatically created ${missingRecords.created} missing attendance record(s) for other students (marked as absent).`;
+		}
+
 		return {
 			success: true,
-			message: existingAttendance
-				? "Attendance updated successfully"
-				: "Attendance recorded successfully",
+			message,
 			attendance,
 			errors: [],
 			timestamp: new Date().toISOString(),
