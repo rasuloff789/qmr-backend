@@ -6,6 +6,7 @@ import { schema } from "./graphql/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import config from "./config/env.js";
 import { authenticate } from "./middleware/auth.js";
+import prisma from "./database/connection.js"
 
 const app = express();
 const GRAPHQL_PATH = "/graphql";
@@ -124,6 +125,7 @@ app.post(
 			return {
 				user,
 				req,
+				prisma,
 			};
 		},
 	})

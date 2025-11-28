@@ -150,79 +150,104 @@ const canExportData = rule()(async (_parent, _args, { user }) => {
 // ============================================================================
 // GENDER-BASED MANAGEMENT RULE
 // ============================================================================
-const canManageByGender = rule()(async (_parent, args, { user }, info) => {
-  console.log( "user.gender:", user?.gender, "args.gender:", args?.gender); // Tekshirish uchun
 
-  if (!user) {
-    throw new Error("Authentication required");
+async function resolveTargetGender(args, info, prisma) {
+  // If gender exists in args (add mutations), use it directly
+  if (args?.gender) return args.gender;
+
+  const mutation = info?.fieldName || "";
+
+  // Teacher update
+  if (mutation.includes("Teacher") && args?.id) {
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: parseInt(args.id) },
+      select: { gender: true },
+    });
+    return teacher?.gender;
   }
-  
-	if (user.role === ROLES.ROOT) return true;
 
-  // ADMIN can only manage their own gender or Students
+  // Student update
+  if (mutation.includes("Student") && args?.id) {
+    const student = await prisma.student.findUnique({
+      where: { id: parseInt(args.id) },
+      select: { gender: true },
+    });
+    return student?.gender;
+  }
+
+  // Course update (course has gender)
+  if (mutation.includes("Course") && args?.id) {
+    const course = await prisma.course.findUnique({
+      where: { id: parseInt(args.id) },
+      select: { gender: true },
+    });
+    return course?.gender;
+  }
+
+  return null;
+}
+
+const canManageByGender = rule()(async (_parent, args, { user, prisma }, info) => {
+
+  const targetGender = await resolveTargetGender(args, info, prisma);
+  console.log(targetGender, "<<<<<<<<<<<<<<<<< its me"); //why
+  
+
+  console.log("🧐 user.gender:", user?.gender, "targetGender:", targetGender); //why
+
+  if (!user) throw new Error("Authentication required");
+  if (user.role === ROLES.ROOT) return true;
+
+  // ADMIN RULES
   if (user.role === ROLES.ADMIN) {
     if (!user.gender) {
       throw new Error("Your account does not have a gender assigned.");
     }
-	if (user.gender === args.gender) {
+
+    // Allow only same-gender or students (students allowed)
+    if (targetGender && user.gender === targetGender) {
       return true;
     }
 
-    // Determine resource type from mutation name
     const mutationName = info?.fieldName || "resource";
-    let resourceType = "resource";
-    
-    if (mutationName.includes("Course")) {
-      resourceType = "course";
-    } else if (mutationName.includes("Student")) {
-      resourceType = "student";
-    } else if (mutationName.includes("Teacher")) {
-      resourceType = "teacher";
-    }
-    
+    const resourceType =
+      mutationName.includes("Teacher") ? "teacher"
+      : mutationName.includes("Student") ? "student"
+      : mutationName.includes("Course") ? "course"
+      : "resource";
+
     const action = mutationName.startsWith("add") ? "create" : "update";
-    const genderLabel = args.gender.toLowerCase();
-    
+
     throw new Error(
-      `You cannot ${action} a ${genderLabel} ${resourceType}. Your gender (${user.gender}) does not match. Only ROOT admins can manage ${resourceType}s with different genders.`
+      `You cannot ${action} a ${targetGender} ${resourceType}. Your gender (${user.gender}) does not match.`
     );
   }
 
-  // TEACHER can only manage resources matching their own gender
+  // TEACHER RULES
   if (user.role === ROLES.TEACHER) {
     if (!user.gender) {
       throw new Error("Your account does not have a gender assigned.");
     }
-    
-    // If no gender specified in args, allow (some mutations don't require gender)
-    if (!args?.gender) return true;
-    
-    // Teacher can manage their own gender
-    if (user.gender === args.gender) {
-      return true;
-    }
 
-    // Determine resource type from mutation name
+    if (!targetGender) return true; // some mutations do not have gender
+
+    if (user.gender === targetGender) return true;
+
     const mutationName = info?.fieldName || "resource";
-    let resourceType = "resource";
-    
-    if (mutationName.includes("Course")) {
-      resourceType = "course";
-    } else if (mutationName.includes("Student")) {
-      resourceType = "student";
-    } else if (mutationName.includes("Teacher")) {
-      resourceType = "teacher";
-    }
-    
+    const resourceType =
+      mutationName.includes("Teacher") ? "teacher"
+      : mutationName.includes("Student") ? "student"
+      : mutationName.includes("Course") ? "course"
+      : "resource";
+
     const action = mutationName.startsWith("add") ? "create" : "update";
-    const genderLabel = args.gender.toLowerCase();
-    
+
     throw new Error(
-      `You cannot ${action} a ${genderLabel} ${resourceType}. Your gender (${user.gender}) does not match. You can only manage ${resourceType}s with your own gender (${user.gender}) or children.`
+      `You cannot ${action} a ${targetGender} ${resourceType}. Teachers can only manage their own gender (${user.gender}) resources.`
     );
   }
 
-  throw new Error("Insufficient permissions to manage this resource");
+  throw new Error("Insufficient permissions");
 });
 
 // ============================================================================
@@ -430,20 +455,20 @@ export const permissions = shield(
 			addAdmin: canCreateAdmin,
 			changeAdmin: canUpdateOwnAdmin,
 			changeAdminActive: canChangeAdminStatus,
-			deleteAdmin: canDeleteAdmin,
+			deleteAdmin: canDeleteAdmin, //why
 
 			// Teacher management
 			addTeacher: and( rule()(async (_parent, _args, { user }) => {
 				return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
 			}), canManageByGender),
 			changeTeacher: and(canUpdateOwnTeacher, canManageByGender),
-			changeTeacherActive: canChangeTeacherStatus,
+			changeTeacherActive: and(canChangeTeacherStatus, canManageByGender),
 			deleteTeacher: and(canDeleteAdmin, canManageByGender), // Root and Admin can delete teachers
 
 			// Student management
 			addStudent: and(canCreateStudent, canManageByGender), // Root and Admin can create students
 			changeStudent: and(canUpdateOwnStudent, canManageByGender),
-			changeStudentActive: canChangeStudentStatus,
+			changeStudentActive: and(canChangeStudentStatus, canManageByGender),
 			deleteStudent: and(canDeleteAdmin, canManageByGender), // Root and Admin can delete students
 
 			// Degree management - Only ROOT and ADMIN
@@ -463,30 +488,30 @@ export const permissions = shield(
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot create courses
 			 */
-			addCourse: rule()(async (_parent, _args, { user }) => {
+			addCourse: and(rule()(async (_parent, _args, { user }) => {
 				if (!user) return false;
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}),
+			}), canManageByGender),
 
 			/**
 			 * Update Course Mutation Permission
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot update courses
 			 */
-			updateCourse: rule()(async (_parent, _args, { user }) => {
+			updateCourse: and(rule()(async (_parent, _args, { user }) => {
 				if (!user) return false;
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}),
+			}), canManageByGender),
 
 			/**
 			 * Delete Course Mutation Permission
 			 * Allowed roles: ROOT, ADMIN
 			 * Teachers and other users cannot delete courses
 			 */
-			deleteCourse: rule()(async (_parent, _args, { user }) => {
+			deleteCourse: and(rule()(async (_parent, _args, { user }) => {
 				if (!user) return false;
 				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}),
+			}), canManageByGender),
 
 			/**
 			 * Add Student to Course Mutation Permission
