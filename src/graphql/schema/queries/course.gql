@@ -4,4 +4,6 @@ extend type Query {
     getCourses: [Course!]!
     """Fetch a single course by unique identifier."""
     getCourse(id: ID!): Course
+    """Fetch attendance records with optional filters (courseId, studentId, startDate, endDate)."""
+    getAttendances(courseId: ID, studentId: ID, startDate: Date, endDate: Date): [Attendance!]!
 }

@@ -56,7 +56,7 @@ extend type Mutation {
         birthDate: Date!
         """Primary phone number."""
         phone: Phone!
-        """--Gender of the Admistrator."""
+        """Gender of the Administrator."""
         gender: Gender!
     ): AddAdminResponse!
     
