@@ -9,8 +9,8 @@ import { prisma } from "../../../database/index.js";
  * @param {Object} context - GraphQL context
  * @returns {Object} - Updated admin object
  */
-const changeAdminActive = async (_parent, { adminId, isActive }, context) => {
-	console.log("changeAdminActive", {
+const updateAdminActive = async (_parent, { adminId, isActive }, context) => {
+	console.log("updateAdminActive", {
 		adminId,
 		isActive,
 	});
@@ -83,4 +83,4 @@ const changeAdminActive = async (_parent, { adminId, isActive }, context) => {
 	}
 };
 
-export { changeAdminActive };
+export { updateAdminActive };

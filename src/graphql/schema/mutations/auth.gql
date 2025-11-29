@@ -13,7 +13,7 @@ type UpdateProfileResponse {
 }
 
 """Response payload returned after changing a password."""
-type ChangePasswordResponse {
+type UpdatePasswordResponse {
     """Operation success flag."""
     success: Boolean!
     """Human-readable message describing the outcome."""
@@ -45,10 +45,10 @@ type Mutation {
     ): UpdateProfileResponse!
     
     """Change the authenticated user's password."""
-    changePassword(
+    updatePassword(
         """Existing password for verification."""
         currentPassword: String!
         """Replacement password to set."""
         newPassword: String!
-    ): ChangePasswordResponse!
+    ): UpdatePasswordResponse!
 }

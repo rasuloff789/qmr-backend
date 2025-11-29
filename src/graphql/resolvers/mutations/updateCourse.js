@@ -25,7 +25,6 @@ const updateCourse = async (
 		name,
 		description,
 		daysOfWeek,
-		gender,
 		startAt,
 		endAt,
 		startTime,
@@ -128,11 +127,6 @@ const updateCourse = async (
 			updateData.daysOfWeek = daysOfWeek;
 		}
 
-		// Add gender if provided
-		if (gender !== undefined) {
-			updateData.gender = gender;
-		}
-
 		// Add dates if provided
 		if (startAt !== undefined) {
 			updateData.startAt = new Date(startAt);
@@ -183,21 +177,6 @@ const updateCourse = async (
 					course: null,
 					errors: [
 						`Teacher with ID ${teacherId} not found, inactive, or deleted`,
-					],
-					timestamp: new Date().toISOString(),
-				};
-			}
-
-			// Check gender match if gender is being updated or already set
-			const courseGender =
-				gender !== undefined ? gender : existingCourse.gender;
-			if (teacher.gender !== courseGender) {
-				return {
-					success: false,
-					message: "Gender mismatch",
-					course: null,
-					errors: [
-						`Teacher gender (${teacher.gender}) does not match course gender (${courseGender})`,
 					],
 					timestamp: new Date().toISOString(),
 				};
@@ -313,10 +292,6 @@ const updateCourse = async (
 			},
 		});
 
-		console.log(
-			`✅ Course updated successfully: ${updatedCourse.name} (ID: ${courseId})`
-		);
-
 		return {
 			success: true,
 			message: "Course updated successfully",
@@ -325,7 +300,6 @@ const updateCourse = async (
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		console.error("Update course error:", error);
 		return {
 			success: false,
 			message: "Failed to update course",

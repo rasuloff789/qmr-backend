@@ -47,6 +47,24 @@ export const getCourses = async (_, args, context) => {
 						name: true,
 					},
 				},
+				students: {
+					select: {
+						id: true,
+						studentId: true,
+						student: {
+							select: {
+								id: true,
+								username: true,
+								fullname: true,
+							},
+						},
+						isActive: true,
+					},
+					where: {
+						isActive: true,
+						isDeleted: false,
+					},
+				},
 				createdAt: true,
 			},
 			orderBy: {

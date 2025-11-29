@@ -5,7 +5,7 @@ import { studentSelectFields } from "../helpers/studentSelect.js";
  * Change Student Active Status Resolver
  * Toggles the isActive status of a student
  */
-export const changeStudentActive = async (parent, args, context) => {
+export const updateStudentActive = async (parent, args, context) => {
 	const { id, isActive } = args;
 	const { user } = context;
 

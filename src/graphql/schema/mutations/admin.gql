@@ -61,7 +61,7 @@ extend type Mutation {
     ): AddAdminResponse!
     
     """Update a specific administrator profile."""
-    changeAdmin(
+    updateAdmin(
         """Unique identifier of the administrator."""
         id: ID!
         """Optional new username."""
@@ -78,12 +78,10 @@ extend type Mutation {
         password: String
         """Optional active status toggle."""
         isActive: Boolean
-        """ Optional gender update."""
-        gender: Gender
     ): UpdateAdminResponse!
     
     """Change the active status of an administrator (root only)."""
-    changeAdminActive(
+    updateAdminActive(
         """Administrator identifier."""
         adminId: ID!
         """Flag indicating whether the admin should be active."""

@@ -29,6 +29,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "seed:root": "node scripts/seed-root.js",
+    "seed:admin": "node scripts/seed-mock-admin.js",
     "seed:users": "node scripts/seed-users.js",
     "seed:teachers": "node scripts/seed-degrees-and-teachers.js",
     "seed:students-degrees": "node scripts/add-degrees-to-students.js",
@@ -39,7 +40,9 @@
     "test:delete-course": "node src/graphql/resolvers/mutations/__tests__/deleteCourse.test.js",
     "test:add-delete-course": "node scripts/test-add-and-delete-course.js",
     "test:update-course-fetch": "node scripts/test-update-course-fetch.js",
-    "test:remove-student-fetch": "node scripts/test-remove-student-from-course-fetch.js"
+    "test:remove-student-fetch": "node scripts/test-remove-student-from-course-fetch.js",
+    "test:all-curl": "bash scripts/test-all-queries-mutations.sh",
+    "test:all": "node scripts/test-all-queries-mutations.js"
   },
   "repository": {
     "type": "git",

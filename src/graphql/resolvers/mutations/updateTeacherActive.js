@@ -4,7 +4,7 @@ import { prisma } from "../../../database/index.js";
  * Change Teacher Active Status Resolver
  * Toggles the isActive status of a teacher
  */
-export const changeTeacherActive = async (parent, args, context) => {
+export const updateTeacherActive = async (parent, args, context) => {
 	const { id, isActive } = args;
 	const { user } = context;
 

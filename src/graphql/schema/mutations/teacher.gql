@@ -27,7 +27,7 @@ type UpdateTeacherResponse {
 }
 
 """Response payload returned when toggling a teacher's active state."""
-type ChangeTeacherActiveResponse {
+type UpdateTeacherActiveResponse {
     """Operation success flag."""
     success: Boolean!
     """Human-readable summary of the outcome."""
@@ -79,7 +79,7 @@ extend type Mutation {
     ): AddTeacherResponse!
     
     """Update an existing teacher profile."""
-    changeTeacher(
+    updateTeacher(
         """Unique identifier of the teacher."""
         id: ID!
         """Optional new username."""
@@ -94,8 +94,6 @@ extend type Mutation {
         tgUsername: String
         """Optional replacement password."""
         password: String
-        """Optional gender update."""
-        gender: Gender
         """Optional new profile picture upload."""
         profilePicture: Upload
         """Optional list of degree ids to replace associations."""
@@ -105,12 +103,12 @@ extend type Mutation {
     ): UpdateTeacherResponse!
     
     """Toggle whether a teacher account is active."""
-    changeTeacherActive(
+    updateTeacherActive(
         """Teacher identifier."""
         id: ID!
         """Flag indicating whether the teacher should be active."""
         isActive: Boolean!
-    ): ChangeTeacherActiveResponse!
+    ): UpdateTeacherActiveResponse!
     
     """Soft delete a teacher account."""
     deleteTeacher(

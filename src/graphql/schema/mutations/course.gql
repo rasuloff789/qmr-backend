@@ -114,8 +114,6 @@ extend type Mutation {
         description: String
         """Days of the week when the course meets."""
         daysOfWeek: [DaysOfWeek!]
-        """Gender restriction for enrollment."""
-        gender: Gender
         """Course start date."""
         startAt: Date
         """Optional end date."""

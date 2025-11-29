@@ -13,9 +13,9 @@ import {
  * @param {string} args.newPassword - New password to set
  * @param {Object} context - GraphQL context
  * @param {Object} context.user - Authenticated user
- * @returns {Object} - ChangePasswordResponse with success status
+ * @returns {Object} - UpdatePasswordResponse with success status
  */
-const changePassword = async (
+const updatePassword = async (
 	_parent,
 	{ currentPassword, newPassword },
 	{ user }
@@ -135,4 +135,4 @@ const changePassword = async (
 	}
 };
 
-export { changePassword };
+export { updatePassword };
