@@ -40,7 +40,6 @@ const updateTeacher = async (
 		phone,
 		tgUsername,
 		password,
-		gender,
 		profilePicture,
 		degreeIds,
 		isActive,
@@ -170,11 +169,6 @@ const updateTeacher = async (
 				};
 			}
 			updateData.password = await hashPassword(password);
-		}
-
-		// Add gender if provided
-		if (gender !== undefined) {
-			updateData.gender = gender;
 		}
 
 		// Add profilePicture if provided

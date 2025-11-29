@@ -28,7 +28,6 @@ const updateStudent = async (
 		phone,
 		tgUsername,
 		password,
-		gender,
 		profilePicture,
 		isActive,
 	}
@@ -153,11 +152,6 @@ const updateStudent = async (
 			updateData.password = await hashPassword(password);
 		}
 
-		// Add gender if provided
-		if (gender !== undefined) {
-			updateData.gender = gender;
-		}
-
 		// Add profilePicture if provided
 		if (profilePicture !== undefined) {
 			if (profilePicture && profilePicture.createReadStream) {
@@ -220,7 +214,6 @@ const updateStudent = async (
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		console.error("Change student error:", error);
 		return {
 			success: false,
 			message: error.message || "Failed to update student",

@@ -28,25 +28,13 @@ import {
  */
 const updateAdmin = async (
 	_parent,
-	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive, gender }
+	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive }
 ) => {
-	console.log(
-		id,
-		username,
-		fullname,
-		birthDate,
-		phone,
-		tgUsername,
-		password,
-		isActive,
-		gender
-	);
 	try {
 		// Check if admin exists
 		const existingAdmin = await prisma.admin.findUnique({
 			where: { id: parseInt(id) },
 		});
-		console.log(existingAdmin);
 
 		if (!existingAdmin) {
 			throw new Error("Admin not found");
@@ -131,17 +119,10 @@ const updateAdmin = async (
 			updateData.isActive = isActive;
 		}
 
-		// --Gender update
-		if (gender !== undefined) {
-			updateData.gender = gender;
-		}
-
 		// Check if there are any fields to update
 		if (Object.keys(updateData).length === 0) {
 			throw new Error("No fields provided to update");
 		}
-
-		console.log(updateData);
 
 		// Update the admin
 		const updatedAdmin = await prisma.admin.update({
