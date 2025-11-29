@@ -11,6 +11,26 @@ import {
 import { logPermission, logSecurity } from "../utils/audit.js";
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const ROLE_SETS = {
+	ADMIN_OR_ROOT: [ROLES.ADMIN, ROLES.ROOT],
+	TEACHER_OR_HIGHER: [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT],
+	ALL_AUTHENTICATED: [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT],
+};
+
+const RESOURCE_TYPES = {
+	TEACHER: "teacher",
+	STUDENT: "student",
+	COURSE: "course",
+};
+
+const GENDER_VALUES = {
+	CHILD: "CHILD",
+};
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -27,223 +47,262 @@ const checkUserRole = async (user, allowedRoles) => {
 	return allowedRoles.includes(user.role);
 };
 
-const checkOwnership = async (user, resourceId, resourceType) => {
+const checkOwnership = async (user, resourceId) => {
 	if (!user) return false;
-
 	// Root can access everything
 	if (user.role === ROLES.ROOT) return true;
-
 	// Check if user is accessing their own resource
 	return parseInt(user.id) === parseInt(resourceId);
+};
+
+/**
+ * Check if user has a specific role
+ */
+const hasRole = (user, role) => user?.role === role;
+
+/**
+ * Check if user has any of the specified roles
+ */
+const hasAnyRole = (user, roles) => user && roles.includes(user.role);
+
+/**
+ * Create a rule that checks if user has a permission (with ROOT bypass)
+ */
+const createPermissionRule = (permission, allowRoot = false) =>
+	rule()(async (_parent, _args, { user }) => {
+		if (!user) return false;
+		if (allowRoot && hasRole(user, ROLES.ROOT)) return true;
+		return await checkUserPermission(user, permission);
+	});
+
+/**
+ * Create a rule that checks if user has any of the specified roles
+ */
+const createRoleRule = (allowedRoles) =>
+	rule()(async (_parent, _args, { user }) => hasAnyRole(user, allowedRoles));
+
+/**
+ * Create a simple authenticated user rule
+ */
+const isAuthenticated = rule()(async (_parent, _args, { user }) => !!user);
+
+/**
+ * Extract resource type from mutation name
+ */
+const getResourceType = (mutationName) => {
+	const name = mutationName || "";
+	if (name.includes("Teacher")) return RESOURCE_TYPES.TEACHER;
+	if (name.includes("Student")) return RESOURCE_TYPES.STUDENT;
+	if (name.includes("Course")) return RESOURCE_TYPES.COURSE;
+	return "resource";
+};
+
+/**
+ * Get action type (create/update/delete) from mutation name
+ */
+const getActionType = (mutationName) => {
+	const name = mutationName || "";
+	if (name.startsWith("add")) return "create";
+	if (name.startsWith("delete")) return "delete";
+	return "update";
 };
 
 // ============================================================================
 // BASIC AUTHENTICATION & ROLE RULES
 // ============================================================================
 
-/**
- * Check if user is authenticated
- */
 const isAuth = rule()(async (_parent, _args, { user }) => {
 	if (!user) return false;
 	const result = await checkPermission(user, "view_own_profile");
 	return result.allowed;
 });
 
-/**
- * Check if user is ROOT
- */
-const isRoot = rule()(async (_parent, _args, { user }) => {
-	return user?.role === ROLES.ROOT;
-});
+const isRoot = rule()(async (_parent, _args, { user }) =>
+	hasRole(user, ROLES.ROOT)
+);
 
-/**
- * Check if user is ADMIN or ROOT
- */
-const isAdminOrRoot = rule()(async (_parent, _args, { user }) => {
-	return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
-});
+const isAdminOrRoot = createRoleRule(ROLE_SETS.ADMIN_OR_ROOT);
 
-/**
- * Check if user is TEACHER, ADMIN, or ROOT
- */
-const isTeacherAdminOrRoot = rule()(async (_parent, _args, { user }) => {
-	return [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
-});
+const isTeacherAdminOrRoot = createRoleRule(ROLE_SETS.TEACHER_OR_HIGHER);
 
 // ============================================================================
 // PERMISSION-BASED RULES (Using Permission System)
 // ============================================================================
 
-const canViewAdmins = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "view_admins");
-});
+const canViewAdmins = createPermissionRule("view_admins");
+const canViewTeachers = createPermissionRule("view_teachers");
+const canViewStudents = createPermissionRule("view_students");
 
-const canViewTeachers = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "view_teachers");
-});
-
-const canViewStudents = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "view_students");
-});
-
+// Create/Update/Delete rules with ROOT bypass
+// Only ROOT can create admins
 const canCreateAdmin = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "create_admin");
+	return hasRole(user, ROLES.ROOT);
 });
+const canCreateTeacher = createPermissionRule("create_teacher", true);
+const canCreateStudent = createPermissionRule("create_student", true);
+const canUpdateAdmin = createPermissionRule("update_admin", true);
+const canUpdateTeacher = createPermissionRule("update_teacher", true);
+const canUpdateStudent = createPermissionRule("update_student", true);
+const canDeleteAdmin = createPermissionRule("delete_admin", true);
 
-const canCreateTeacher = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "create_teacher");
-});
-
-const canCreateStudent = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "create_student");
-});
-
-const canUpdateAdmin = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "update_admin");
-});
-
-const canUpdateTeacher = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "update_teacher");
-});
-
-const canUpdateStudent = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "update_student");
-});
-
-const canDeleteAdmin = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "delete_admin");
-});
-
-const canUpdateOwnProfile = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "update_own_profile");
-});
-
-const canManageAdminStatus = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "manage_admin_status");
-});
-
-const canManageTeacherStatus = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "manage_teacher_status");
-});
-
-const canManageStudentStatus = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "manage_student_status");
-});
-
-const canViewAllUsers = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "view_all_users");
-});
-
-const canManageSystem = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "manage_system");
-});
-
-const canViewAuditLogs = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "view_audit_logs");
-});
-
-const canExportData = rule()(async (_parent, _args, { user }) => {
-	return await checkUserPermission(user, "export_data");
-});
+// Other permission rules
+const canUpdateOwnProfile = createPermissionRule("update_own_profile");
+const canManageAdminStatus = createPermissionRule("manage_admin_status");
+const canManageTeacherStatus = createPermissionRule("manage_teacher_status");
+const canManageStudentStatus = createPermissionRule("manage_student_status");
+const canViewAllUsers = createPermissionRule("view_all_users");
+const canManageSystem = createPermissionRule("manage_system");
+const canViewAuditLogs = createPermissionRule("view_audit_logs");
+const canExportData = createPermissionRule("export_data");
 
 // ============================================================================
 // GENDER-BASED MANAGEMENT RULE
 // ============================================================================
 
+/**
+ * Resolve target gender from args or database lookup
+ */
 async function resolveTargetGender(args, info, prisma) {
 	// If gender exists in args (add mutations), use it directly
 	if (args?.gender) return args.gender;
 
 	const mutation = info?.fieldName || "";
+	const resourceId = args?.id;
 
-	// Teacher update
-	if (mutation.includes("Teacher") && args?.id) {
-		const teacher = await prisma.teacher.findUnique({
-			where: { id: parseInt(args.id) },
-			select: { gender: true },
-		});
-		return teacher?.gender;
+	if (!resourceId) return null;
+
+	// Cache resource type lookup
+	const resourceType = getResourceType(mutation);
+
+	try {
+		switch (resourceType) {
+			case RESOURCE_TYPES.TEACHER:
+				const teacher = await prisma.teacher.findUnique({
+					where: { id: parseInt(resourceId) },
+					select: { gender: true },
+				});
+				return teacher?.gender;
+			case RESOURCE_TYPES.STUDENT:
+				const student = await prisma.student.findUnique({
+					where: { id: parseInt(resourceId) },
+					select: { gender: true },
+				});
+				return student?.gender;
+			case RESOURCE_TYPES.COURSE:
+				const course = await prisma.course.findUnique({
+					where: { id: parseInt(resourceId) },
+					select: { gender: true },
+				});
+				return course?.gender;
+			default:
+				return null;
+		}
+	} catch (error) {
+		console.error("Error resolving target gender:", error);
+		return null;
 	}
-
-	// Student update
-	if (mutation.includes("Student") && args?.id) {
-		const student = await prisma.student.findUnique({
-			where: { id: parseInt(args.id) },
-			select: { gender: true },
-		});
-		return student?.gender;
-	}
-
-	// Course update (course has gender)
-	if (mutation.includes("Course") && args?.id) {
-		const course = await prisma.course.findUnique({
-			where: { id: parseInt(args.id) },
-			select: { gender: true },
-		});
-		return course?.gender;
-	}
-
-	return null;
 }
+
+/**
+ * Validate gender-based permissions for admin users
+ */
+const validateAdminGenderPermissions = (
+	userGender,
+	targetGender,
+	resourceType,
+	action
+) => {
+	// For teachers: STRICT - Only same gender allowed (no CHILD, no different gender)
+	// RULE: Admin can ONLY create/add/update/delete teachers of their own gender
+	//   - Male admin → can ONLY manage MALE teachers (create, update, delete)
+	//   - Female admin → can ONLY manage FEMALE teachers (create, update, delete)
+	//   - CHILD teachers are NOT allowed for anyone
+	if (resourceType === RESOURCE_TYPES.TEACHER) {
+		// Reject CHILD gender for teachers (no one can create CHILD teachers)
+		if (targetGender === GENDER_VALUES.CHILD) {
+			throw new Error(
+				`You cannot ${action} a CHILD ${resourceType}. You can only ${action} ${userGender} ${resourceType}s.`
+			);
+		}
+		// Strict gender matching - admin gender must match teacher gender exactly
+		if (userGender !== targetGender) {
+			throw new Error(
+				`You cannot ${action} a ${targetGender} ${resourceType}. You can only ${action} ${userGender} ${resourceType}s.`
+			);
+		}
+		// Only allow if admin gender matches teacher gender exactly
+		return true;
+	}
+
+	// For students and courses: Same gender OR CHILD allowed
+	// RULE: Admin can create/add/update/delete students/courses of their own gender OR CHILD
+	//   - Male admin → can manage MALE or CHILD students/courses (create, update, delete)
+	//   - Female admin → can manage FEMALE or CHILD students/courses (create, update, delete)
+	if (
+		resourceType === RESOURCE_TYPES.STUDENT ||
+		resourceType === RESOURCE_TYPES.COURSE
+	) {
+		// Allow if target is CHILD or if genders match
+		if (targetGender === GENDER_VALUES.CHILD || userGender === targetGender) {
+			return true;
+		}
+		// Reject if trying to create different gender (not CHILD and not same gender)
+		throw new Error(
+			`You cannot ${action} a ${targetGender} ${resourceType}. You can only ${action} ${userGender} or CHILD ${resourceType}s.`
+		);
+	}
+
+	// For other resources: Only same gender
+	if (userGender === targetGender) {
+		return true;
+	}
+
+	throw new Error(
+		`You cannot ${action} a ${targetGender} ${resourceType}. Your gender (${userGender}) does not match.`
+	);
+};
 
 const canManageByGender = rule()(
 	async (_parent, args, { user, prisma }, info) => {
-		const targetGender = await resolveTargetGender(args, info, prisma);
-		console.log(targetGender, "<<<<<<<<<<<<<<<<< its me"); //why
-
-		console.log("🧐 user.gender:", user?.gender, "targetGender:", targetGender); //why
-
 		if (!user) throw new Error("Authentication required");
-		if (user.role === ROLES.ROOT) return true;
+		if (hasRole(user, ROLES.ROOT)) return true;
+
+		const targetGender = await resolveTargetGender(args, info, prisma);
+
+		// Some mutations do not have gender
+		if (!targetGender) return true;
+
+		const mutationName = info?.fieldName || "resource";
+		const resourceType = getResourceType(mutationName);
+		const action = getActionType(mutationName);
 
 		// ADMIN RULES
-		if (user.role === ROLES.ADMIN) {
+		if (hasRole(user, ROLES.ADMIN)) {
 			if (!user.gender) {
 				throw new Error("Your account does not have a gender assigned.");
 			}
-
-			// Allow only same-gender or students (students allowed)
-			if (targetGender && user.gender === targetGender) {
-				return true;
-			}
-
-			const mutationName = info?.fieldName || "resource";
-			const resourceType = mutationName.includes("Teacher")
-				? "teacher"
-				: mutationName.includes("Student")
-				? "student"
-				: mutationName.includes("Course")
-				? "course"
-				: "resource";
-
-			const action = mutationName.startsWith("add") ? "create" : "update";
-
-			throw new Error(
-				`You cannot ${action} a ${targetGender} ${resourceType}. Your gender (${user.gender}) does not match.`
+			return validateAdminGenderPermissions(
+				user.gender,
+				targetGender,
+				resourceType,
+				action
 			);
 		}
 
 		// TEACHER RULES
-		if (user.role === ROLES.TEACHER) {
+		// Teachers cannot manage students - only ADMIN and ROOT can manage students
+		if (hasRole(user, ROLES.TEACHER)) {
+			// Block teachers from managing students
+			if (resourceType === RESOURCE_TYPES.STUDENT) {
+				throw new Error(
+					`Teachers cannot ${action} students. Only administrators can manage students.`
+				);
+			}
+
 			if (!user.gender) {
 				throw new Error("Your account does not have a gender assigned.");
 			}
-
-			if (!targetGender) return true; // some mutations do not have gender
-
 			if (user.gender === targetGender) return true;
-
-			const mutationName = info?.fieldName || "resource";
-			const resourceType = mutationName.includes("Teacher")
-				? "teacher"
-				: mutationName.includes("Student")
-				? "student"
-				: mutationName.includes("Course")
-				? "course"
-				: "resource";
-
-			const action = mutationName.startsWith("add") ? "create" : "update";
 
 			throw new Error(
 				`You cannot ${action} a ${targetGender} ${resourceType}. Teachers can only manage their own gender (${user.gender}) resources.`
@@ -265,9 +324,9 @@ const canManageByGender = rule()(
  */
 const canUpdateOwnAdmin = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if (user.role === ROLES.ROOT) return true;
-	if (user.role === ROLES.ADMIN) {
-		return parseInt(user.id) === parseInt(args.id);
+	if (hasRole(user, ROLES.ROOT)) return true;
+	if (hasRole(user, ROLES.ADMIN)) {
+		return checkOwnership(user, args.id);
 	}
 	return false;
 });
@@ -280,10 +339,10 @@ const canUpdateOwnAdmin = rule()(async (_parent, args, { user }) => {
  */
 const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if (user.role === ROLES.ROOT) return true;
-	if (user.role === ROLES.ADMIN) return true;
-	if (user.role === ROLES.TEACHER) {
-		return parseInt(user.id) === parseInt(args.id);
+	if (hasRole(user, ROLES.ROOT)) return true;
+	if (hasRole(user, ROLES.ADMIN)) return true;
+	if (hasRole(user, ROLES.TEACHER)) {
+		return checkOwnership(user, args.id);
 	}
 	return false;
 });
@@ -295,82 +354,47 @@ const canUpdateOwnTeacher = rule()(async (_parent, args, { user }) => {
  */
 const canUpdateOwnStudent = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if (user.role === ROLES.ROOT) return true;
-	if (user.role === ROLES.ADMIN) return true;
-	return false;
+	return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
 });
 
 // ============================================================================
 // RESOURCE-SPECIFIC VIEW RULES
 // ============================================================================
 
-/**
- * Check if user can view a specific admin
- * - ROOT can view any admin
- * - ADMIN can view their own profile
- */
 const canViewSpecificAdmin = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if (user.role === ROLES.ROOT) return true;
-	if (user.role === ROLES.ADMIN) {
-		return parseInt(user.id) === parseInt(args.id);
+	if (hasRole(user, ROLES.ROOT)) return true;
+	if (hasRole(user, ROLES.ADMIN)) {
+		return checkOwnership(user, args.id);
 	}
 	return false;
 });
 
-/**
- * Check if user can view a specific teacher
- * - ROOT and ADMIN can view any teacher
- * - TEACHER can only view their own profile
- */
 const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if ([ROLES.ROOT, ROLES.ADMIN].includes(user.role)) return true;
-	if (user.role === ROLES.TEACHER) {
-		return parseInt(user.id) === parseInt(args.id);
+	if (hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return true;
+	if (hasRole(user, ROLES.TEACHER)) {
+		return checkOwnership(user, args.id);
 	}
 	return false;
 });
 
-/**
- * Check if user can view a specific student
- * - ROOT, ADMIN, and TEACHER can view any student
- */
 const canViewSpecificStudent = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	return [ROLES.ROOT, ROLES.ADMIN, ROLES.TEACHER].includes(user.role);
+	return hasAnyRole(user, ROLE_SETS.TEACHER_OR_HIGHER);
 });
 
 // ============================================================================
 // STATUS CHANGE RULES
 // ============================================================================
 
-/**
- * Check if user can change admin status
- * - Only ROOT can change admin status
- */
 const canChangeAdminStatus = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-	return user.role === ROLES.ROOT;
+	return hasRole(user, ROLES.ROOT);
 });
 
-/**
- * Check if user can change teacher status
- * - ROOT and ADMIN can change teacher status
- */
-const canChangeTeacherStatus = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-});
+const canChangeTeacherStatus = createRoleRule(ROLE_SETS.ADMIN_OR_ROOT);
 
-/**
- * Check if user can change student status
- * - ROOT and ADMIN can change student status
- */
-const canChangeStudentStatus = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-	return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-});
+const canChangeStudentStatus = createRoleRule(ROLE_SETS.ADMIN_OR_ROOT);
 
 // ============================================================================
 // ADVANCED PERMISSION RULES
@@ -378,20 +402,23 @@ const canChangeStudentStatus = rule()(async (_parent, args, { user }) => {
 
 const canAccessSensitiveData = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	if (user.role === ROLES.ROOT) return true;
-	if (user.role === ROLES.ADMIN) {
-		// Check if user has verified their identity recently
-		// This would typically check a verification timestamp
-		return true; // Simplified for example
-	}
-	return false;
+	if (hasRole(user, ROLES.ROOT)) return true;
+	return hasRole(user, ROLES.ADMIN); // Simplified check
 });
 
 const canPerformBulkOperations = rule()(async (_parent, args, { user }) => {
-	if (!user) return false;
-	// Only root can perform bulk operations
-	return user.role === ROLES.ROOT;
+	return hasRole(user, ROLES.ROOT);
 });
+
+// ============================================================================
+// SHARED RULE HELPERS
+// ============================================================================
+
+// Reusable rule for admin/root only
+const isAdminOrRootRule = createRoleRule(ROLE_SETS.ADMIN_OR_ROOT);
+
+// Reusable rule for authenticated users only
+const isAuthenticatedRule = isAuthenticated;
 
 // ============================================================================
 // GRAPHQL SHIELD PERMISSIONS CONFIGURATION
@@ -403,496 +430,128 @@ export const permissions = shield(
 		// QUERY PERMISSIONS
 		// ====================================================================
 		Query: {
-			// User profile queries
 			me: allow, // Allow me query without authentication
-
-			// Admin queries
 			getAdmins: canViewAdmins,
 			getAdmin: canViewSpecificAdmin,
-
-			// Teacher queries
 			getTeachers: canViewTeachers,
 			getTeacher: canViewSpecificTeacher,
-
-			// Student queries
 			getStudents: canViewStudents,
 			getStudent: canViewSpecificStudent,
-
-			// Degree queries - Any authenticated user can view
-			getDegrees: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-			getDegree: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-
-			// Course queries - Any authenticated user can view
-			getCourses: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-			getCourse: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-			getAttendances: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-
-			// Dashboard queries - Any authenticated user can view
-			getDashboardStats: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
+			getDegrees: isAuthenticatedRule,
+			getDegree: isAuthenticatedRule,
+			getCourses: isAuthenticatedRule,
+			getCourse: isAuthenticatedRule,
+			getAttendances: isAuthenticatedRule,
+			getDashboardStats: isAuthenticatedRule,
 		},
 
 		// ====================================================================
 		// MUTATION PERMISSIONS
 		// ====================================================================
 		Mutation: {
-			// Public mutations
 			login: allow,
-
-			// Profile management - Any authenticated user
-			updateProfile: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
-			changePassword: rule()(async (_parent, _args, { user }) => {
-				return !!user;
-			}),
+			updateProfile: isAuthenticatedRule,
+			updatePassword: isAuthenticatedRule,
 
 			// Admin management
 			addAdmin: canCreateAdmin,
-			changeAdmin: canUpdateOwnAdmin,
-			changeAdminActive: canChangeAdminStatus,
-			deleteAdmin: canDeleteAdmin, //why
+			updateAdmin: canUpdateOwnAdmin,
+			updateAdminActive: canChangeAdminStatus,
+			deleteAdmin: canDeleteAdmin,
 
 			// Teacher management
-			addTeacher: and(
-				rule()(async (_parent, _args, { user }) => {
-					return [ROLES.ADMIN, ROLES.ROOT].includes(user?.role);
-				}),
-				canManageByGender
-			),
-			changeTeacher: and(canUpdateOwnTeacher, canManageByGender),
-			changeTeacherActive: and(canChangeTeacherStatus, canManageByGender),
-			deleteTeacher: and(canDeleteAdmin, canManageByGender), // Root and Admin can delete teachers
+			addTeacher: and(isAdminOrRootRule, canManageByGender),
+			updateTeacher: and(canUpdateOwnTeacher, canManageByGender),
+			updateTeacherActive: and(canChangeTeacherStatus, canManageByGender),
+			deleteTeacher: and(canDeleteAdmin, canManageByGender),
 
-			// Student management
-			addStudent: and(canCreateStudent, canManageByGender), // Root and Admin can create students
-			changeStudent: and(canUpdateOwnStudent, canManageByGender),
-			changeStudentActive: and(canChangeStudentStatus, canManageByGender),
-			deleteStudent: and(canDeleteAdmin, canManageByGender), // Root and Admin can delete students
-
-			// Degree management - Only ROOT and ADMIN
-			addDegree: rule()(async (_parent, _args, { user }) => {
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
-			}),
-			updateDegree: rule()(async (_parent, _args, { user }) => {
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
-			}),
-			deleteDegree: rule()(async (_parent, _args, { user }) => {
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user?.role);
-			}),
-
-			// Course management - Only ROOT and ADMIN
-			/**
-			 * Add Course Mutation Permission
-			 * Allowed roles: ROOT, ADMIN
-			 * Teachers and other users cannot create courses
-			 */
-			addCourse: and(
+			// Student management - Only ADMIN and ROOT can manage students (Teachers are NOT allowed)
+			addStudent: and(
 				rule()(async (_parent, _args, { user }) => {
 					if (!user) return false;
-					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+					// Only ADMIN and ROOT can create students, Teachers are explicitly blocked
+					return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
 				}),
 				canManageByGender
 			),
-
-			/**
-			 * Update Course Mutation Permission
-			 * Allowed roles: ROOT, ADMIN
-			 * Teachers and other users cannot update courses
-			 */
-			updateCourse: and(
+			updateStudent: and(canUpdateOwnStudent, canManageByGender),
+			updateStudentActive: and(
 				rule()(async (_parent, _args, { user }) => {
 					if (!user) return false;
-					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
+					// Only ADMIN and ROOT can change student status, Teachers are explicitly blocked
+					return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
 				}),
 				canManageByGender
 			),
+			deleteStudent: and(canDeleteAdmin, canManageByGender),
 
-			/**
-			 * Delete Course Mutation Permission
-			 * Allowed roles: ROOT, ADMIN
-			 * Teachers and other users cannot delete courses
-			 */
-			deleteCourse: and(
-				rule()(async (_parent, _args, { user }) => {
-					if (!user) return false;
-					return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-				}),
-				canManageByGender
-			),
+			// Degree management
+			addDegree: isAdminOrRootRule,
+			updateDegree: isAdminOrRootRule,
+			deleteDegree: isAdminOrRootRule,
 
-			/**
-			 * Add Student to Course Mutation Permission
-			 * Allowed roles: ROOT, ADMIN
-			 * Teachers and other users cannot enroll students
-			 */
-			addStudentToCourse: rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}),
-
-			/**
-			 * Remove Student from Course Mutation Permission
-			 * Allowed roles: ROOT, ADMIN
-			 * Teachers and other users cannot remove students
-			 */
-			removeStudentFromCourse: rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.ADMIN].includes(user.role);
-			}),
-
-			/**
-			 * Set Attendance Mutation Permission
-			 * Allowed roles: ROOT, TEACHER
-			 * Teachers can only set attendance for courses they are assigned to teach
-			 * Root users can set attendance for any course
-			 * Additional authorization check is performed in the resolver
-			 */
-			setAttendance: rule()(async (_parent, _args, { user }) => {
-				if (!user) return false;
-				return [ROLES.ROOT, ROLES.TEACHER].includes(user.role);
-			}),
+			// Course management
+			addCourse: and(isAdminOrRootRule, canManageByGender),
+			updateCourse: and(isAdminOrRootRule, canManageByGender),
+			deleteCourse: and(isAdminOrRootRule, canManageByGender),
+			addStudentToCourse: isAdminOrRootRule,
+			removeStudentFromCourse: isAdminOrRootRule,
+			setAttendance: createRoleRule([ROLES.ROOT, ROLES.TEACHER]),
 		},
 
 		// ====================================================================
 		// FIELD-LEVEL PERMISSIONS
 		// ====================================================================
 
-		// User Types
-		Admin: {
-			id: allow,
-			username: allow,
-			fullname: allow,
-			birthDate: allow,
-			phone: allow,
-			tgUsername: allow,
-			isActive: allow,
-			createdAt: allow,
-		},
+		// User Types - All fields allowed
+		Admin: allow,
+		Teacher: allow,
+		Student: allow,
 
-		Teacher: {
-			id: allow,
-			username: allow,
-			fullname: allow,
-			birthDate: allow,
-			phone: allow,
-			tgUsername: allow,
-			gender: allow,
-			profilePicture: allow,
-			degrees: allow,
-			isActive: allow,
-			createdAt: allow,
-		},
+		// Course Types - All fields allowed
+		Degree: allow,
+		Course: allow,
+		CourseStudent: allow,
+		SubstituteTeacher: allow,
+		Attendance: allow,
 
-		Student: {
-			id: allow,
-			username: allow,
-			fullname: allow,
-			birthDate: allow,
-			phone: allow,
-			tgUsername: allow,
-			gender: allow,
-			possibleDegrees: allow,
-			profilePicture: allow,
-			isActive: allow,
-			isDeleted: allow,
-			createdAt: allow,
-		},
+		// Dashboard Types - All fields allowed
+		DashboardStats: allow,
+		GenderDistribution: allow,
 
-		// Course Types
-		Degree: {
-			id: allow,
-			name: allow,
-			teachers: allow,
-			courses: allow,
-			createdAt: allow,
-		},
+		// Response Types - All fields allowed
+		AddCourseResponse: allow,
+		UpdateCourseResponse: allow,
+		DeleteCourseResponse: allow,
+		AddStudentToCourseResponse: allow,
+		RemoveStudentFromCourseResponse: allow,
+		SetAttendanceResponse: allow,
+		LoginResponse: allow,
+		UserData: allow,
+		AddAdminResponse: allow,
+		UpdateAdminResponse: allow,
+		DeleteAdminResponse: allow,
+		AddTeacherResponse: allow,
+		UpdateTeacherResponse: allow,
+		UpdateTeacherActiveResponse: allow,
+		DeleteTeacherResponse: allow,
+		AddStudentResponse: allow,
+		UpdateStudentResponse: allow,
+		UpdateStudentActiveResponse: allow,
+		DeleteStudentResponse: allow,
+		UpdateProfileResponse: allow,
+		UpdatePasswordResponse: allow,
+		AddDegreeResponse: allow,
+		UpdateDegreeResponse: allow,
 
-		Course: {
-			id: allow,
-			name: allow,
-			description: allow,
-			daysOfWeek: allow,
-			gender: allow,
-			startAt: allow,
-			endAt: allow,
-			startTime: allow,
-			endTime: allow,
-			students: allow,
-			teacher: allow,
-			substituteTeachers: allow,
-			degrees: allow,
-			createdAt: allow,
-		},
-
-		CourseStudent: {
-			id: allow,
-			course: allow,
-			student: allow,
-			joinedAt: allow,
-			monthlyPayment: allow,
-			isActive: allow,
-			createdAt: allow,
-		},
-
-		SubstituteTeacher: {
-			id: allow,
-			course: allow,
-			teacher: allow,
-			startDate: allow,
-			endDate: allow,
-			reason: allow,
-			createdAt: allow,
-		},
-
-		Attendance: {
-			id: allow,
-			course: allow,
-			student: allow,
-			date: allow,
-			isPresent: allow,
-			notes: allow,
-			createdAt: allow,
-		},
-
-		// Dashboard Types
-		DashboardStats: {
-			totalStudents: allow,
-			totalTeachers: allow,
-			totalAdmins: allow,
-			activeStudents: allow,
-			activeTeachers: allow,
-			activeAdmins: allow,
-			totalUsers: allow,
-			activeUsers: allow,
-			averageStudentAge: allow,
-			averageTeacherAge: allow,
-			averageAdminAge: allow,
-			studentGenderDistribution: allow,
-			teacherGenderDistribution: allow,
-		},
-
-		GenderDistribution: {
-			male: allow,
-			female: allow,
-			child: allow,
-		},
-
-		// Response Types - Course Mutations
-		AddCourseResponse: {
-			success: allow,
-			message: allow,
-			course: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		UpdateCourseResponse: {
-			success: allow,
-			message: allow,
-			course: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		DeleteCourseResponse: {
-			success: allow,
-			message: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		AddStudentToCourseResponse: {
-			success: allow,
-			message: allow,
-			courseStudent: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		RemoveStudentFromCourseResponse: {
-			success: allow,
-			message: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		SetAttendanceResponse: {
-			success: allow,
-			message: allow,
-			attendance: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Response Types - Auth
-		LoginResponse: {
-			success: allow,
-			message: allow,
-			token: allow,
-			user: allow,
-		},
-
-		UserData: {
-			id: allow,
-			username: allow,
-			fullname: allow,
-			role: allow,
-			createdAt: allow,
-			birthDate: allow,
-			phone: allow,
-			tgUsername: allow,
-			gender: allow,
-			isActive: allow,
-		},
-
-		// Response Types - Admin Mutations
-		AddAdminResponse: {
-			success: allow,
-			message: allow,
-			admin: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		UpdateAdminResponse: {
-			success: allow,
-			message: allow,
-			admin: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		DeleteAdminResponse: {
-			success: allow,
-			message: allow,
-			admin: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Response Types - Teacher Mutations
-		AddTeacherResponse: {
-			success: allow,
-			message: allow,
-			teacher: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		UpdateTeacherResponse: {
-			success: allow,
-			message: allow,
-			teacher: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		ChangeTeacherActiveResponse: {
-			success: allow,
-			message: allow,
-			teacher: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		DeleteTeacherResponse: {
-			success: allow,
-			message: allow,
-			teacher: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Response Types - Student Mutations
-		AddStudentResponse: {
-			success: allow,
-			message: allow,
-			student: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		UpdateStudentResponse: {
-			success: allow,
-			message: allow,
-			student: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		ChangeStudentActiveResponse: {
-			success: allow,
-			message: allow,
-			student: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		DeleteStudentResponse: {
-			success: allow,
-			message: allow,
-			student: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Response Types - Profile Mutations
-		UpdateProfileResponse: {
-			success: allow,
-			message: allow,
-			user: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		ChangePasswordResponse: {
-			success: allow,
-			message: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Response Types - Degree Mutations
-		AddDegreeResponse: {
-			success: allow,
-			message: allow,
-			degree: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		UpdateDegreeResponse: {
-			success: allow,
-			message: allow,
-			degree: allow,
-			errors: allow,
-			timestamp: allow,
-		},
-
-		// Upload scalar - All authenticated users can upload files
-		Upload: rule()(async (_parent, _args, { user }) => {
-			// Any authenticated user can upload files
-			return !!user;
-		}),
+		// Upload scalar
+		Upload: isAuthenticatedRule,
 	},
 	{
-		fallbackRule: deny, // Deny by default for security
+		fallbackRule: deny,
 		allowExternalErrors: true,
 		debug: process.env.NODE_ENV === "development",
 		graphqlErrorHandler: (err, parent, args, context, info) => {
-			// Custom error handling for permission failures
 			if (err.message.includes("permission")) {
 				return new Error("Access denied: Insufficient permissions");
 			}
@@ -905,16 +564,10 @@ export const permissions = shield(
 // CACHE MANAGEMENT UTILITIES
 // ============================================================================
 
-/**
- * Invalidate permission cache for a specific user
- */
 export const invalidateUserCache = (userId) => {
 	clearUserPermissionCache(userId);
 };
 
-/**
- * Invalidate all permission caches
- */
 export const invalidateAllCache = () => {
 	clearPermissionCache();
 };
@@ -923,9 +576,6 @@ export const invalidateAllCache = () => {
 // PERFORMANCE MONITORING UTILITIES
 // ============================================================================
 
-/**
- * Get permission system statistics
- */
 export const getPermissionStats = () => {
 	return {
 		cacheStats: getCacheStats(),

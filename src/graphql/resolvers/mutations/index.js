@@ -18,13 +18,13 @@ import { deleteCourse } from "./deleteCourse.js";
 import { addStudentToCourse } from "./addStudentToCourse.js";
 import { removeStudentFromCourse } from "./removeStudentFromCourse.js";
 import { setAttendance } from "./setAttendance.js";
-import { changeAdmin } from "./changeAdmin.js";
-import { changeAdminActive } from "./changeAdminActive.js";
-import { changePassword } from "./changePassword.js";
-import { changeTeacher } from "./changeTeacher.js";
-import { changeTeacherActive } from "./changeTeacherActive.js";
-import { changeStudent } from "./changeStudent.js";
-import { changeStudentActive } from "./changeStudentActive.js";
+import { updateAdmin } from "./updateAdmin.js";
+import { updateAdminActive } from "./updateAdminActive.js";
+import { updatePassword } from "./updatePassword.js";
+import { updateTeacher } from "./updateTeacher.js";
+import { updateTeacherActive } from "./updateTeacherActive.js";
+import { updateStudent } from "./updateStudent.js";
+import { updateStudentActive } from "./updateStudentActive.js";
 import { deleteAdmin } from "./deleteAdmin.js";
 import { deleteTeacher } from "./deleteTeacher.js";
 import { deleteStudent } from "./deleteStudent.js";
@@ -44,13 +44,13 @@ export {
 	addStudentToCourse,
 	removeStudentFromCourse,
 	setAttendance,
-	changeAdmin,
-	changeAdminActive,
-	changePassword,
-	changeTeacher,
-	changeTeacherActive,
-	changeStudent,
-	changeStudentActive,
+	updateAdmin,
+	updateAdminActive,
+	updatePassword,
+	updateTeacher,
+	updateTeacherActive,
+	updateStudent,
+	updateStudentActive,
 	deleteAdmin,
 	deleteTeacher,
 	deleteStudent,

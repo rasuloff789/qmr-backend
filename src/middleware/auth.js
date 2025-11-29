@@ -36,7 +36,7 @@ export const authenticate = async (req) => {
 
 	// Validate password hash from token against database
 	// This ensures old tokens expire when password is changed
-	if (!decoded.id || !decoded.role || !decoded.passwordHash ) {
+	if (!decoded.id || !decoded.role || !decoded.passwordHash) {
 		return null;
 	}
 
@@ -64,6 +64,7 @@ export const authenticate = async (req) => {
 					username: true,
 					fullname: true,
 					password: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -76,6 +77,7 @@ export const authenticate = async (req) => {
 					username: true,
 					fullname: true,
 					password: true,
+					gender: true,
 					isActive: true,
 					createdAt: true,
 				},
@@ -95,12 +97,13 @@ export const authenticate = async (req) => {
 
 		// Password hash matches - token is valid
 		// Return user object with role for context
+		// Use gender from database (source of truth) - database value takes precedence over token
 		const userData = {
 			id: decoded.id,
 			role: decoded.role,
 			username: decoded.username,
 			passwordHash: decoded.passwordHash,
-			gender: decoded.gender 	
+			gender: user.gender ?? decoded.gender ?? null, // Prefer database value, fallback to token, then null
 		};
 
 		req.user = userData;

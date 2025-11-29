@@ -27,7 +27,7 @@ type UpdateStudentResponse {
 }
 
 """Response payload returned when toggling a student's active state."""
-type ChangeStudentActiveResponse {
+type UpdateStudentActiveResponse {
     """Operation success flag."""
     success: Boolean!
     """Human-readable summary of the outcome."""
@@ -79,7 +79,7 @@ extend type Mutation {
     ): AddStudentResponse!
     
     """Update an existing student profile."""
-    changeStudent(
+    updateStudent(
         """Unique identifier of the student."""
         id: ID!
         """Optional new username."""
@@ -103,12 +103,12 @@ extend type Mutation {
     ): UpdateStudentResponse!
     
     """Toggle whether a student profile is active."""
-    changeStudentActive(
+    updateStudentActive(
         """Student identifier."""
         id: ID!
         """Flag indicating whether the student should be active."""
         isActive: Boolean!
-    ): ChangeStudentActiveResponse!
+    ): UpdateStudentActiveResponse!
     
     """Soft delete a student profile."""
     deleteStudent(

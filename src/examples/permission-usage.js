@@ -36,7 +36,7 @@ export const exampleGraphQLShieldRules = {
 	// Mutation rules:
 	// - login: allow (public access)
 	// - addAdmin: canCreateAdmin (only root)
-	// - changeAdmin: canUpdateOwnAdmin (own admin or root)
+	// - updateAdmin: canUpdateOwnAdmin (own admin or root)
 	// - deleteAdmin: canDeleteAdmin (only root)
 	// Field-level rules:
 	// - Admin.password: canManageSystem (only root)

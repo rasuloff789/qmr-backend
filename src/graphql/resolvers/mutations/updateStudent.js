@@ -18,7 +18,7 @@ import {
 /**
  * Change/Update student user information
  */
-const changeStudent = async (
+const updateStudent = async (
 	_parent,
 	{
 		id,
@@ -231,4 +231,4 @@ const changeStudent = async (
 	}
 };
 
-export { changeStudent };
+export { updateStudent };

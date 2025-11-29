@@ -26,7 +26,7 @@ import {
  * @param {Object} context - GraphQL context
  * @returns {Object} - Updated admin user
  */
-const changeAdmin = async (
+const updateAdmin = async (
 	_parent,
 	{ id, username, fullname, birthDate, phone, tgUsername, password, isActive, gender }
 ) => {
@@ -178,4 +178,4 @@ const changeAdmin = async (
 	}
 };
 
-export { changeAdmin };
+export { updateAdmin };

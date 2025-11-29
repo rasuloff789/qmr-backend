@@ -30,7 +30,7 @@ import {
  * @param {Object} context - GraphQL context
  * @returns {Object} - Updated teacher user
  */
-const changeTeacher = async (
+const updateTeacher = async (
 	_parent,
 	{
 		id,
@@ -279,4 +279,4 @@ const changeTeacher = async (
 	}
 };
 
-export { changeTeacher };
+export { updateTeacher };
