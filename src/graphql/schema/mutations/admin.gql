@@ -78,8 +78,6 @@ extend type Mutation {
         password: String
         """Optional active status toggle."""
         isActive: Boolean
-        """ Optional gender update."""
-        gender: Gender
     ): UpdateAdminResponse!
     
     """Change the active status of an administrator (root only)."""

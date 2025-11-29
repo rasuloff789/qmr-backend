@@ -94,8 +94,6 @@ extend type Mutation {
         tgUsername: String
         """Optional replacement password."""
         password: String
-        """Optional gender update."""
-        gender: Gender
         """Optional new profile picture upload."""
         profilePicture: Upload
         """Optional list of degree ids to replace associations."""
