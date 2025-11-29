@@ -58,7 +58,19 @@ const checkOwnership = async (user, resourceId) => {
 /**
  * Check if user has a specific role
  */
-const hasRole = (user, role) => user?.role === role;
+const hasRole = (user, role) => {
+	if (!user) return false;
+	return user.role === role;
+};
+
+/**
+ * Check if user is ROOT - explicit helper
+ */
+const isRootUser = (user) => {
+	if (!user) return false;
+	const userRole = String(user.role || "").toLowerCase();
+	return userRole === "root" || userRole === ROLES.ROOT.toLowerCase();
+};
 
 /**
  * Check if user has any of the specified roles
@@ -77,9 +89,15 @@ const createPermissionRule = (permission, allowRoot = false) =>
 
 /**
  * Create a rule that checks if user has any of the specified roles
+ * ROOT users always have access regardless of allowedRoles
  */
 const createRoleRule = (allowedRoles) =>
-	rule()(async (_parent, _args, { user }) => hasAnyRole(user, allowedRoles));
+	rule()(async (_parent, _args, { user }) => {
+		if (!user) return false;
+		// ROOT users always have access
+		if (isRootUser(user)) return true;
+		return hasAnyRole(user, allowedRoles);
+	});
 
 /**
  * Create a simple authenticated user rule
@@ -264,8 +282,9 @@ const validateAdminGenderPermissions = (
 
 const canManageByGender = rule()(
 	async (_parent, args, { user, prisma }, info) => {
-		if (!user) throw new Error("Authentication required");
-		if (hasRole(user, ROLES.ROOT)) return true;
+		if (!user) return false;
+		// ROOT users bypass all gender restrictions
+		if (isRootUser(user)) return true;
 
 		const targetGender = await resolveTargetGender(args, info, prisma);
 
@@ -381,7 +400,8 @@ const canViewSpecificTeacher = rule()(async (_parent, args, { user }) => {
 
 const canViewSpecificStudent = rule()(async (_parent, args, { user }) => {
 	if (!user) return false;
-	return hasAnyRole(user, ROLE_SETS.TEACHER_OR_HIGHER);
+	// Only ADMIN and ROOT can view students (teachers are explicitly blocked)
+	return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
 });
 
 // ============================================================================
@@ -460,10 +480,106 @@ export const permissions = shield(
 			deleteAdmin: canDeleteAdmin,
 
 			// Teacher management
-			addTeacher: and(isAdminOrRootRule, canManageByGender),
-			updateTeacher: and(canUpdateOwnTeacher, canManageByGender),
-			updateTeacherActive: and(canChangeTeacherStatus, canManageByGender),
-			deleteTeacher: and(canDeleteAdmin, canManageByGender),
+			// ROOT can add any teacher, ADMIN must follow gender rules
+			addTeacher: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+				// ROOT users can ALWAYS add any teacher - bypass all checks
+				const userRole = String(user.role || "").toLowerCase();
+				if (userRole === "root" || userRole === ROLES.ROOT.toLowerCase()) {
+					return true;
+				}
+				// For ADMIN users, check role first
+				if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+				// Check gender rules for ADMIN
+				const targetGender = args?.gender || null;
+				if (!targetGender) return true;
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						RESOURCE_TYPES.TEACHER,
+						"create"
+					);
+				}
+				return false;
+			}),
+			// ROOT can update any teacher, others must follow ownership and gender rules
+			updateTeacher: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+				// ROOT users can update any teacher
+				if (isRootUser(user)) return true;
+				// Check ownership for non-ROOT users
+				if (hasRole(user, ROLES.ADMIN)) {
+					// ADMIN can update any teacher, but must follow gender rules
+				} else if (hasRole(user, ROLES.TEACHER)) {
+					// TEACHER can only update their own profile
+					if (parseInt(user.id) !== parseInt(args.id)) return false;
+				} else {
+					return false;
+				}
+				// Check gender rules for non-ROOT users
+				const targetGender = await resolveTargetGender(args, info, prisma);
+				if (!targetGender) return true;
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					const resourceType = getResourceType(info?.fieldName || "");
+					const action = getActionType(info?.fieldName || "");
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						resourceType,
+						action
+					);
+				}
+				return true;
+			}),
+			updateTeacherActive: rule()(
+				async (_parent, args, { user, prisma }, info) => {
+					if (!user) return false;
+					// ROOT users can update any teacher status
+					if (isRootUser(user)) return true;
+					// Check permission for status change
+					if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+					// Check gender rules for ADMIN
+					const targetGender = await resolveTargetGender(args, info, prisma);
+					if (!targetGender) return true;
+					if (hasRole(user, ROLES.ADMIN)) {
+						if (!user.gender) return false;
+						const resourceType = getResourceType(info?.fieldName || "");
+						const action = getActionType(info?.fieldName || "");
+						return validateAdminGenderPermissions(
+							user.gender,
+							targetGender,
+							resourceType,
+							action
+						);
+					}
+					return true;
+				}
+			),
+			deleteTeacher: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+				// ROOT users can delete any teacher
+				if (isRootUser(user)) return true;
+				// Check delete permission
+				if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+				// Check gender rules for ADMIN
+				const targetGender = await resolveTargetGender(args, info, prisma);
+				if (!targetGender) return true;
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					const resourceType = getResourceType(info?.fieldName || "");
+					const action = getActionType(info?.fieldName || "");
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						resourceType,
+						action
+					);
+				}
+				return true;
+			}),
 
 			// Student management - Only ADMIN and ROOT can manage students (Teachers are NOT allowed)
 			addStudent: and(
@@ -483,17 +599,136 @@ export const permissions = shield(
 				}),
 				canManageByGender
 			),
-			deleteStudent: and(canDeleteAdmin, canManageByGender),
+			deleteStudent: and(
+				rule()(async (_parent, _args, { user }) => {
+					if (!user) return false;
+					// Only ADMIN and ROOT can delete students, Teachers are explicitly blocked
+					return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
+				}),
+				canManageByGender
+			),
 
-			// Degree management
-			addDegree: isAdminOrRootRule,
-			updateDegree: isAdminOrRootRule,
-			deleteDegree: isAdminOrRootRule,
+			// Degree management - ROOT can manage any degree
+			addDegree: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
 
-			// Course management
-			addCourse: and(isAdminOrRootRule, canManageByGender),
-			updateCourse: and(isAdminOrRootRule, canManageByGender),
-			deleteCourse: and(isAdminOrRootRule, canManageByGender),
+				// Explicit ROOT check - handle all possible formats
+				const userRole = String(user.role || "")
+					.trim()
+					.toLowerCase();
+				if (userRole === "root") {
+					return true;
+				}
+
+				// ADMIN users can also add degrees
+				if (hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) {
+					return true;
+				}
+
+				return false;
+			}),
+			updateDegree: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				// ROOT users can update any degree
+				if (isRootUser(user)) return true;
+				// ADMIN users can also update degrees
+				return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
+			}),
+			deleteDegree: rule()(async (_parent, _args, { user }) => {
+				if (!user) return false;
+				// ROOT users can delete any degree
+				if (isRootUser(user)) return true;
+				// ADMIN users can also delete degrees
+				return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
+			}),
+
+			// Course management - ROOT can manage any course, ADMIN must follow gender rules
+			addCourse: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+
+				// ROOT users can ALWAYS add any course - bypass all checks
+				const userRole = String(user.role || "")
+					.trim()
+					.toLowerCase();
+				if (userRole === "root") {
+					return true;
+				}
+
+				// For ADMIN users, check role first
+				if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+
+				// Check gender rules for ADMIN
+				const targetGender = args?.gender || null;
+				if (!targetGender) return true;
+
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						RESOURCE_TYPES.COURSE,
+						"create"
+					);
+				}
+				return false;
+			}),
+			updateCourse: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+
+				// ROOT users can ALWAYS update any course - bypass all checks
+				const userRole = String(user.role || "")
+					.trim()
+					.toLowerCase();
+				if (userRole === "root") {
+					return true;
+				}
+
+				// For ADMIN users, check role first
+				if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+				// Check gender rules for ADMIN
+				const targetGender = await resolveTargetGender(args, info, prisma);
+				if (!targetGender) return true;
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					const resourceType = getResourceType(info?.fieldName || "");
+					const action = getActionType(info?.fieldName || "");
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						resourceType,
+						action
+					);
+				}
+				return false;
+			}),
+			deleteCourse: rule()(async (_parent, args, { user, prisma }, info) => {
+				if (!user) return false;
+
+				// ROOT users can ALWAYS delete any course - bypass all checks
+				const userRole = String(user.role || "")
+					.trim()
+					.toLowerCase();
+				if (userRole === "root") {
+					return true;
+				}
+				// For ADMIN users, check role first
+				if (!hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT)) return false;
+				// Check gender rules for ADMIN
+				const targetGender = await resolveTargetGender(args, info, prisma);
+				if (!targetGender) return true;
+				if (hasRole(user, ROLES.ADMIN)) {
+					if (!user.gender) return false;
+					const resourceType = getResourceType(info?.fieldName || "");
+					const action = getActionType(info?.fieldName || "");
+					return validateAdminGenderPermissions(
+						user.gender,
+						targetGender,
+						resourceType,
+						action
+					);
+				}
+				return false;
+			}),
 			addStudentToCourse: isAdminOrRootRule,
 			removeStudentFromCourse: isAdminOrRootRule,
 			setAttendance: createRoleRule([ROLES.ROOT, ROLES.TEACHER]),
