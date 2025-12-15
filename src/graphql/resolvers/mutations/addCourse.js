@@ -114,14 +114,22 @@ const addCourse = async (
 			};
 		}
 
-		// Validate teacher gender matches course gender
-		if (teacher.gender !== gender) {
+		// Validate teacher can teach this course gender:
+		// - MALE teacher -> MALE + CHILD courses
+		// - FEMALE teacher -> FEMALE + CHILD courses
+		// (CHILD courses accept MALE/FEMALE teachers)
+		const teacherCanTeachCourseGender =
+			gender === "CHILD"
+				? teacher.gender === "MALE" || teacher.gender === "FEMALE"
+				: teacher.gender === gender;
+
+		if (!teacherCanTeachCourseGender) {
 			return {
 				success: false,
 				message: "Gender mismatch",
 				course: null,
 				errors: [
-					`Teacher gender (${teacher.gender}) does not match course gender (${gender})`,
+					`Teacher gender (${teacher.gender}) cannot teach course gender (${gender})`,
 				],
 				timestamp: new Date().toISOString(),
 			};
