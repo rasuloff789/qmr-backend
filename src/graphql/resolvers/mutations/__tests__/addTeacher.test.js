@@ -71,7 +71,7 @@ describe("addTeacher Mutation", () => {
 					phone: "998901234567",
 					tgUsername: "teacher",
 					gender: "MALE",
-					degreeIds: [],
+					degreeIds: [String(testData.degrees[0].id)],
 				},
 				context
 			);
@@ -92,7 +92,7 @@ describe("addTeacher Mutation", () => {
 					phone: "998901234567",
 					tgUsername: "teacher",
 					gender: "MALE",
-					degreeIds: [],
+					degreeIds: [String(testData.degrees[0].id)],
 				},
 				context
 			);
@@ -101,6 +101,28 @@ describe("addTeacher Mutation", () => {
 			expect(
 				result.errors.some((e) => e.includes("Password"))
 			).toBe(true);
+		});
+
+		it("Bo'sh degreeIds bilan xato qaytarishi kerak", async () => {
+			const context = createMockContext();
+			const uniqueId = `${Date.now()}${Math.random().toString(36).substring(2, 4)}`;
+			const result = await addTeacher(
+				null,
+				{
+					username: `tch${uniqueId.slice(-7)}`,
+					password: "Password123",
+					fullname: "Test",
+					birthDate: "1980-01-01",
+					phone: "998901234567",
+					tgUsername: "teacher",
+					gender: "MALE",
+					degreeIds: [],
+				},
+				context
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.errors?.join(" ").toLowerCase()).toContain("degree");
 		});
 	});
 
@@ -122,7 +144,7 @@ describe("addTeacher Mutation", () => {
 					phone: "998901234568",
 					tgUsername: "teacher2",
 					gender: "MALE",
-					degreeIds: [],
+					degreeIds: [String(testData.degrees[0].id)],
 				},
 				context
 			);
