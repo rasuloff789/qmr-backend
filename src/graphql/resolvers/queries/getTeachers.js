@@ -10,6 +10,9 @@ import { prisma } from "../../../database/index.js";
 export default async function (_, args, context) {
 	try {
 		const teachers = await prisma.teacher.findMany({
+			where: {
+				isDeleted: false,
+			},
 			select: {
 				id: true,
 				username: true,
