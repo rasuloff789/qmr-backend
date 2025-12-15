@@ -1,46 +1,56 @@
-## QMR Backend – Frontend Integration Guide
+# Frontend Integration Guide
 
-This document gives frontend developers everything needed to consume the QMR GraphQL API: environment setup, authentication flow, key operations, and permission boundaries.
+Complete guide for frontend developers integrating with the QMR Backend GraphQL API.
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Authentication Flow](#authentication-flow)
+3. [GraphQL Client Setup](#graphql-client-setup)
+4. [Common Operations](#common-operations)
+5. [File Uploads](#file-uploads)
+6. [Error Handling](#error-handling)
+7. [Best Practices](#best-practices)
 
 ---
 
-### 1. Environment & Access
-- **GraphQL endpoint (dev):** `http://localhost:4000/graphql`
-- **Health check:** `GET http://localhost:4000/health`
-- **Static assets:** `http://localhost:4000/uploads/...`
-- **CORS (dev):** allows `http://localhost:3000` and `http://localhost:5173` by default.
-- **Auth header:** `Authorization: Bearer <JWT>`
-- **Date scalar:** always send/receive ISO-8601 strings (`YYYY-MM-DD` for `Date`, ISO date-time for `DateTime`).
-- **File uploads:** multipart requests using the GraphQL `Upload` scalar (e.g. Apollo’s `createUploadLink`).
+## Getting Started
 
-#### Running the backend locally
-```bash
-cp .env.example .env          # fill DATABASE_URL, JWT_SECRET, etc.
-npm install
-npm run dev                   # starts on PORT (default 4000)
+### API Endpoints
+
+- **GraphQL Endpoint**: `http://localhost:4000/graphql`
+- **Health Check**: `http://localhost:4000/health`
+- **Static Assets**: `http://localhost:4000/uploads/...`
+
+### Environment Setup
+
+```env
+VITE_GRAPHQL_URL=http://localhost:4000/graphql
+VITE_API_URL=http://localhost:4000
 ```
-Useful scripts:
-- `npx prisma db push` – sync Prisma schema to the database
-- `node scripts/seed-students.js` – seed 100 demo students with profile pictures
-- `npx prisma studio` – inspect database data
+
+### CORS Configuration
+
+The backend allows requests from:
+- `http://localhost:3000`
+- `http://localhost:5173`
+- Configure additional origins in backend `.env` file
 
 ---
 
-### 2. Authentication & Session Handling
-1. Call the `login` mutation with `username`, `password`, and `userType` (`root`, `admin`, or `teacher`).
-2. On success you receive `token` (JWT) and basic `user` info.
-3. Store the token client-side and send it in the `Authorization` header for subsequent requests.
-4. The backend validates tokens for every request and injects the decoded payload into the GraphQL context.
+## Authentication Flow
 
-Example:
+### 1. Login
+
 ```graphql
-mutation Login($inputUsername: String!, $inputPassword: String!, $type: String!) {
-  login(username: $inputUsername, password: $inputPassword, userType: $type) {
+mutation Login($username: String!, $password: String!, $userType: String!) {
+  login(username: $username, password: $password, userType: $userType) {
     success
     message
     token
     user {
       id
+      username
       fullname
       role
     }
@@ -48,201 +58,613 @@ mutation Login($inputUsername: String!, $inputPassword: String!, $type: String!)
 }
 ```
 
-#### Token payload
-```json
-{
-  "id": "<numeric id>",
-  "role": "root|admin|teacher",
-  "username": "<username>",
-  "iat": ...,
-  "exp": ...
+### 2. Store Token
+
+```javascript
+// After successful login
+const token = response.data.login.token;
+localStorage.setItem('authToken', token);
+```
+
+### 3. Include Token in Requests
+
+```javascript
+// Apollo Client
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('authToken');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+```
+
+### 4. Handle Token Expiration
+
+```javascript
+// Check token expiration
+function isTokenExpired(token) {
+  try {
+    const decoded = jwt.decode(token);
+    return decoded.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
+// Refresh or redirect to login
+if (isTokenExpired(token)) {
+  localStorage.removeItem('authToken');
+  // Redirect to login
 }
 ```
 
 ---
 
-### 3. Roles & Permissions
-Role enforcement uses GraphQL Shield. The matrix below shows which roles can reach each resolver without custom logic on the frontend.
+## GraphQL Client Setup
 
-| Operation group | Root | Admin | Teacher | Notes |
-| --------------- | ---- | ----- | ------- | ----- |
-| `getAdmins`, `getAdmin` | ✅ | ✅ (only own profile for `getAdmin`) | ❌ | |
-| `getTeachers`, `getTeacher` | ✅ | ✅ | ✅ (`getTeacher` only self) | |
-| `getStudents`, `getStudent` | ✅ | ✅ | ✅ | Student self-access is pending (no student login yet). |
-| `getDegrees`, `getDegree` | ✅ | ✅ | ✅ | Any authenticated user. |
-| `getCourses`, `getCourse` | ✅ | ✅ | ✅ | Any authenticated user. |
-| `getDashboardStats` | ✅ | ✅ | ✅ | Any authenticated user. |
-| `addAdmin`, `changeAdmin`, `changeAdminActive`, `deleteAdmin` | ✅ | limited | ❌ | Admins can only mutate their own profile; status changes are Root-only. |
-| `addTeacher`, `changeTeacher`, `changeTeacherActive`, `deleteTeacher` | ✅ | ✅ | limited | Teachers can update only their own profile. |
-| `addStudent`, `changeStudent`, `changeStudentActive`, `deleteStudent` | ✅ | ✅ | ❌ | Teachers can toggle status but cannot create/update profiles directly. |
-| `addCourse` | ✅ | ✅ | ❌ | Only Root/Admin can create courses. |
+### Apollo Client (React)
 
-If a frontend action should be disabled for a role, hide the UI and avoid calling the mutation; the API will still enforce permissions.
+```javascript
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { createUploadLink } from 'apollo-upload-client';
 
----
+const httpLink = createUploadLink({
+  uri: 'http://localhost:4000/graphql',
+});
 
-### 4. Core GraphQL Types
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('authToken');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
 
-#### Student
-```graphql
-type Student {
-  id: ID!
-  username: String!
-  fullname: String!
-  birthDate: Date!
-  phone: String
-  tgUsername: String!
-  gender: Gender!
-  profilePicture: String
-  isActive: Boolean!
-  isDeleted: Boolean
-  createdAt: Date!
+const client = new ApolloClient({
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
+});
+```
+
+### Vue Apollo
+
+```javascript
+import { createApolloClient } from '@vue/apollo-option';
+import { createUploadLink } from 'apollo-upload-client';
+import { setContext } from '@apollo/client/link/context';
+
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('authToken');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
+const httpLink = createUploadLink({
+  uri: 'http://localhost:4000/graphql',
+});
+
+export const apolloClient = createApolloClient({
+  httpLink: authLink.concat(httpLink),
+});
+```
+
+### Fetch API
+
+```javascript
+async function graphqlRequest(query, variables = {}) {
+  const token = localStorage.getItem('authToken');
+  
+  const response = await fetch('http://localhost:4000/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+
+  return response.json();
 }
 ```
 
-#### Teacher
-Includes `degrees`, `gender`, and `profilePicture`.
-
-#### Course
-Courses reference a primary `teacher`, have `daysOfWeek`, optional `endAt`, and nested `CourseStudent` records. See `src/graphql/schema/types/course.gql` for full details.
-
-#### DashboardStats
-Aggregates totals, active counts, average ages, and gender distribution across students/teachers/admins.
-
-Common enums: `Gender` (`MALE`, `FEMALE`, `CHILD`) and `DaysOfWeek`.
-
 ---
 
-### 5. Key Queries & Mutations
+## Common Operations
 
-#### Fetch students
+### Fetch Students
+
 ```graphql
-query Students {
+query GetStudents {
   getStudents {
     id
     fullname
-    phone
+    username
     gender
     isActive
-    isDeleted
     profilePicture
   }
 }
 ```
-Currently returns every non-deleted student. Implement client-side filtering/pagination as needed.
 
-#### Fetch a student by id
+### Fetch Courses
+
 ```graphql
-query Student($id: ID!) {
-  getStudent(id: $id) {
+query GetCourses {
+  getCourses {
     id
-    fullname
-    birthDate
-    phone
-    tgUsername
-    gender
-    profilePicture
-    isActive
-    isDeleted
+    name
+    description
+    daysOfWeek
+    teacher {
+      id
+      fullname
+    }
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+    }
   }
 }
 ```
 
-#### Create a student
+### Create Student
+
 ```graphql
-mutation AddStudent($input: AddStudentInput!) {
+mutation AddStudent(
+  $username: String!
+  $password: String!
+  $fullname: String!
+  $tgUsername: String!
+  $birthDate: Date!
+  $gender: Gender!
+  $possibleDegrees: [ID!]!
+) {
   addStudent(
-    username: $input.username
-    password: $input.password
-    fullname: $input.fullname
-    tgUsername: $input.tgUsername
-    birthDate: $input.birthDate
-    phone: $input.phone
-    gender: $input.gender
-    profilePicture: $input.profilePicture
+    username: $username
+    password: $password
+    fullname: $fullname
+    tgUsername: $tgUsername
+    birthDate: $birthDate
+    gender: $gender
+    possibleDegrees: $possibleDegrees
   ) {
     success
     message
     student {
       id
-      profilePicture
+      fullname
     }
     errors
   }
 }
 ```
-- `phone` accepts any international format validated server-side.
-- `profilePicture` expects a file upload (`Upload` scalar). Provide a file object in your client; the API returns the hosted path (`/uploads/profile-pictures/...`).
 
-#### Update a student
-Use `changeStudent` (all fields optional except `id`). To toggle active state quickly, call `changeStudentActive(id, isActive)`. Use `deleteStudent` for soft-delete (`isDeleted: true`).
+### Update Student
 
-#### Course operations
-- `getCourses` returns basic course info plus nested `teacher`, `degrees`, and enrolled students.
-- `getCourse(id)` fetches a single course with the same structure.
-- `addCourse` requires:
-  - `name`, `daysOfWeek` (`[DaysOfWeek!]!`)
-  - `gender` (course gender restriction)
-  - `startAt`, `startTime`, `endTime`, optional `endAt`
-  - `teacherId`
-  - `degreeIds` (will be coerced to integers server-side)
-  - The resolver verifies that the teacher is active, not deleted, shares at least one degree, and matches the course gender.
-
-See `docs/COURSE_MUTATIONS.md` for field-by-field guidance and error scenarios.
-
-#### Dashboard stats
 ```graphql
-query Dashboard {
-  getDashboardStats {
-    totalStudents
-    activeStudents
-    averageStudentAge
-    studentGenderDistribution {
-      male
-      female
-      child
+mutation UpdateStudent($id: ID!, $fullname: String, $phone: Phone) {
+  updateStudent(id: $id, fullname: $fullname, phone: $phone) {
+    success
+    message
+    student {
+      id
+      fullname
     }
-    totalTeachers
-    activeTeachers
-    averageTeacherAge
-    teacherGenderDistribution {
-      male
-      female
-      child
-    }
-    totalAdmins
-    activeAdmins
-    averageAdminAge
-    totalUsers
-    activeUsers
+    errors
   }
 }
 ```
 
 ---
 
-### 6. Error Responses & Patterns
-- Mutations generally return a structured payload: `{ success, message, <resource>, errors?, timestamp? }`.
-- Validation failures populate `errors` with descriptive strings.
-- 400-level issues (e.g. Prisma validation) propagate as GraphQL errors. Handle them via the standard `errors` array in the response.
-- Auth failures return `null` data and a GraphQL error such as `Not Authorised`.
+## File Uploads
+
+### Apollo Client Upload
+
+```javascript
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+
+const UPLOAD_PROFILE_PICTURE = gql`
+  mutation UpdateStudent($id: ID!, $profilePicture: Upload) {
+    updateStudent(id: $id, profilePicture: $profilePicture) {
+      success
+      message
+      student {
+        id
+        profilePicture
+      }
+    }
+  }
+`;
+
+function ProfilePictureUpload({ studentId }) {
+  const [updateStudent] = useMutation(UPLOAD_PROFILE_PICTURE);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const result = await updateStudent({
+        variables: {
+          id: studentId,
+          profilePicture: file,
+        },
+      });
+
+      if (result.data.updateStudent.success) {
+        console.log('Upload successful');
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  return <input type="file" onChange={handleFileChange} />;
+}
+```
+
+### Fetch API Upload
+
+```javascript
+async function uploadProfilePicture(studentId, file) {
+  const token = localStorage.getItem('authToken');
+  const formData = new FormData();
+  
+  formData.append('operations', JSON.stringify({
+    query: `
+      mutation UpdateStudent($id: ID!, $profilePicture: Upload) {
+        updateStudent(id: $id, profilePicture: $profilePicture) {
+          success
+          student {
+            profilePicture
+          }
+        }
+      }
+    `,
+    variables: {
+      id: studentId,
+      profilePicture: null,
+    },
+  }));
+
+  formData.append('map', JSON.stringify({
+    '0': ['variables.profilePicture'],
+  }));
+
+  formData.append('0', file);
+
+  const response = await fetch('http://localhost:4000/graphql', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  return response.json();
+}
+```
 
 ---
 
-### 7. Data & Assets
-- Profile pictures are stored under `/uploads/profile-pictures`. The backend exposes them publicly with long-lived caching.
-- Seeded students include realistic international phone numbers and a mix of genders (`MALE`, `FEMALE`, `CHILD`).
-- Teachers and students support `isDeleted` for soft deletion; hide these entries on the frontend unless you need an archive view.
+## Error Handling
+
+### GraphQL Errors
+
+```javascript
+function handleGraphQLErrors(error) {
+  if (error.graphQLErrors) {
+    error.graphQLErrors.forEach(({ message, extensions }) => {
+      if (extensions?.code === 'UNAUTHENTICATED') {
+        // Handle authentication error
+        localStorage.removeItem('authToken');
+        // Redirect to login
+      } else {
+        // Handle other GraphQL errors
+        console.error('GraphQL Error:', message);
+      }
+    });
+  }
+
+  if (error.networkError) {
+    // Handle network errors
+    console.error('Network Error:', error.networkError);
+  }
+}
+```
+
+### Mutation Errors
+
+```javascript
+function handleMutationResponse(response) {
+  const { success, message, errors } = response.data.mutationName;
+
+  if (!success) {
+    // Handle mutation-level errors
+    errors.forEach(error => {
+      console.error('Error:', error);
+      // Show error to user
+    });
+    return false;
+  }
+
+  // Success
+  console.log('Success:', message);
+  return true;
+}
+```
+
+### Error Boundary (React)
+
+```javascript
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+```
 
 ---
 
-### 8. Development Tips
-- Use GraphiQL (`http://localhost:4000/graphql` in dev) to explore the schema interactively.
-- Wrap GraphQL calls with retry or token refresh logic if you add session expiration UX (tokens default to 7 days).
-- When integrating uploads, ensure your client includes `apollo-upload-client` or fetch-based multipart handling.
-- Keep role-based UI consistent with the permission matrix to avoid triggering authorization errors.
+## Best Practices
+
+### 1. Query Optimization
+
+- Request only needed fields
+- Use fragments for reusable field sets
+- Implement pagination when available
+
+```graphql
+fragment StudentBasic on Student {
+  id
+  fullname
+  username
+  isActive
+}
+
+query GetStudents {
+  getStudents {
+    ...StudentBasic
+  }
+}
+```
+
+### 2. Caching Strategy
+
+```javascript
+// Apollo Client cache configuration
+const cache = new InMemoryCache({
+  typePolicies: {
+    Student: {
+      fields: {
+        courses: {
+          merge(existing = [], incoming) {
+            return incoming;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+### 3. Loading States
+
+```javascript
+function StudentList() {
+  const { data, loading, error } = useQuery(GET_STUDENTS);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} />;
+
+  return <StudentTable students={data.getStudents} />;
+}
+```
+
+### 4. Optimistic Updates
+
+```javascript
+const [updateStudent] = useMutation(UPDATE_STUDENT, {
+  optimisticResponse: {
+    updateStudent: {
+      __typename: 'UpdateStudentResponse',
+      success: true,
+      student: {
+        ...currentStudent,
+        fullname: newFullname,
+      },
+    },
+  },
+  update(cache, { data }) {
+    // Update cache
+  },
+});
+```
+
+### 5. Date Handling
+
+```javascript
+// Format dates consistently
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+// Validate dates before sending
+function validateDate(dateString) {
+  const date = new Date(dateString);
+  return !isNaN(date.getTime()) && date <= new Date();
+}
+```
+
+### 6. Form Validation
+
+```javascript
+function validateStudentForm(data) {
+  const errors = {};
+
+  if (!data.username || data.username.length < 4) {
+    errors.username = 'Username must be at least 4 characters';
+  }
+
+  if (!data.password || data.password.length < 8) {
+    errors.password = 'Password must be at least 8 characters';
+  }
+
+  if (!data.fullname) {
+    errors.fullname = 'Full name is required';
+  }
+
+  return errors;
+}
+```
+
+### 7. Token Management
+
+```javascript
+// Token refresh logic
+async function refreshTokenIfNeeded() {
+  const token = localStorage.getItem('authToken');
+  if (!token) return null;
+
+  if (isTokenExpired(token)) {
+    // Attempt to refresh or redirect to login
+    localStorage.removeItem('authToken');
+    return null;
+  }
+
+  return token;
+}
+```
 
 ---
 
-Need anything else (e.g., additional sample queries or flow diagrams)? Reach out to the backend team or extend this guide in `docs/`.
+## TypeScript Support
 
+### Type Definitions
+
+```typescript
+interface Student {
+  id: string;
+  username: string;
+  fullname: string;
+  birthDate: string;
+  phone?: string;
+  tgUsername: string;
+  gender: 'MALE' | 'FEMALE' | 'CHILD';
+  profilePicture?: string;
+  isActive: boolean;
+  possibleDegrees: Degree[];
+}
+
+interface AddStudentResponse {
+  success: boolean;
+  message: string;
+  student?: Student;
+  errors?: string[];
+}
+```
+
+### GraphQL Code Generation
+
+```bash
+# Install GraphQL Code Generator
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript
+
+# Generate types
+npx graphql-codegen --config codegen.yml
+```
+
+---
+
+## Testing
+
+### Mock Apollo Client
+
+```javascript
+import { MockedProvider } from '@apollo/client/testing';
+
+const mocks = [
+  {
+    request: {
+      query: GET_STUDENTS,
+    },
+    result: {
+      data: {
+        getStudents: [
+          { id: '1', fullname: 'John Doe' },
+        ],
+      },
+    },
+  },
+];
+
+function TestComponent() {
+  return (
+    <MockedProvider mocks={mocks}>
+      <StudentList />
+    </MockedProvider>
+  );
+}
+```
+
+---
+
+## Related Documentation
+
+- **API Reference**: See `docs/GRAPHQL_API.md`
+- **Examples**: See `docs/EXAMPLES.md`
+- **Permissions**: See `docs/PERMISSIONS_REFERENCE.md`
+
+---
+
+## Summary
+
+Frontend integration with QMR Backend involves:
+
+1. ✅ Setting up GraphQL client with authentication
+2. ✅ Implementing login flow
+3. ✅ Handling file uploads
+4. ✅ Managing errors gracefully
+5. ✅ Optimizing queries and caching
+6. ✅ Following best practices
+
+Use the provided examples and patterns to build a robust frontend application.
