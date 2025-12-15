@@ -87,6 +87,48 @@ describe("updateCourse Mutation", () => {
 
 			expect(result.success).toBe(false);
 		});
+
+		it("Teacher gender course gender bilan mos kelmasa xato qaytarishi kerak", async () => {
+			// Existing course gender comes from createTestCourse default: MALE
+			const degree = testData.degrees[0];
+			const femaleTeacher = await createTestTeacher({
+				gender: "FEMALE",
+				degreeIds: [degree.id],
+			});
+			testData.teachers.push(femaleTeacher);
+
+			const context = createMockContext();
+			const result = await updateCourse(
+				null,
+				{
+					courseId: String(testData.courses[0].id),
+					teacherId: String(femaleTeacher.id),
+				},
+				context
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.errors?.join(" ").toLowerCase()).toContain("gender");
+		});
+
+		it("Teacher degreeIds bilan mos kelmasa (hech bo'lmasa bittasi mos bo'lmasa) xato qaytarishi kerak", async () => {
+			const context = createMockContext();
+			const otherDegree = await createTestDegree();
+			testData.degrees.push(otherDegree);
+
+			// Existing teacher has only the initial degree, so updating course degrees to otherDegree should fail
+			const result = await updateCourse(
+				null,
+				{
+					courseId: String(testData.courses[0].id),
+					degreeIds: [String(otherDegree.id)],
+				},
+				context
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.errors?.join(" ").toLowerCase()).toContain("degree");
+		});
 	});
 });
 
