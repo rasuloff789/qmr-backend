@@ -1,536 +1,72 @@
-# GraphQL Mutation Misollari
+# GraphQL API Misollari - To'liq Qo'llanma
 
-Ushbu hujjat API-ni sinash uchun GraphQL mutation misollarini o'z ichiga oladi.
+Ushbu hujjat QMR Backend GraphQL API'sining barcha mutation va query operatsiyalari uchun to'liq misollarni o'z ichiga oladi.
 
-## Autentifikatsiya va Ruxsatlar
+## Mundarija
 
-**Muhim:** Quyidagi mutation'lar autentifikatsiya va maxsus rollarni talab qiladi:
-- `addCourse` - Faqat **ROOT** va **ADMIN** foydalanuvchilar uchun mavjud
-- `updateCourse` - Faqat **ROOT** va **ADMIN** foydalanuvchilar uchun mavjud
-- `deleteCourse` - Faqat **ROOT** va **ADMIN** foydalanuvchilar uchun mavjud
-- `addStudentToCourse` - Faqat **ROOT** va **ADMIN** foydalanuvchilar uchun mavjud
-- `removeStudentFromCourse` - Faqat **ROOT** va **ADMIN** foydalanuvchilar uchun mavjud
+1. [Autentifikatsiya](#autentifikatsiya)
+2. [Profil Boshqaruvi](#profil-boshqaruvi)
+3. [Adminlar Boshqaruvi](#adminlar-boshqaruvi)
+4. [O'qituvchilar Boshqaruvi](#oqituvchilar-boshqaruvi)
+5. [Talabalar Boshqaruvi](#talabalar-boshqaruvi)
+6. [Darajalar Boshqaruvi](#darajalar-boshqaruvi)
+7. [Kurslar Boshqaruvi](#kurslar-boshqaruvi)
+8. [Davomat Boshqaruvi](#davomat-boshqaruvi)
+9. [Query Operatsiyalari](#query-operatsiyalari)
+10. [Umumiy Eslatmalar](#umumiy-eslatmalar)
 
-Ushbu mutation'lardan foydalanish uchun siz quyidagilarni bajarishingiz kerak:
-1. Avval JWT token olish uchun `login` mutation'idan foydalaning
-2. Token'ni `Authorization` header'iga qo'shing: `Bearer <your-token>`
+---
 
-### Login Misoli
+## Autentifikatsiya
+
+### Login Mutation
+
+**⚠️ Barcha autentifikatsiya talab qiladigan operatsiyalar uchun zarur**
 
 ```graphql
 mutation Login {
-  login(username: "admin.username", password: "your-password") {
+  login(
+    username: "admin.username"
+    password: "your-password"
+    userType: "admin"
+  ) {
+    success
+    message
     token
     user {
       id
       username
+      fullname
       role
-    }
-  }
-}
-```
-
-## Kurs Qo'shish Mutation'i
-
-**⚠️ ROOT yoki ADMIN roli talab qilinadi**
-
-### Asosiy Misol
-
-```graphql
-mutation AddCourse {
-  addCourse(
-    name: "Introduction to Computer Science"
-    description: "A comprehensive course covering fundamental computer science concepts"
-    daysOfWeek: [MONDAY, WEDNESDAY, FRIDAY]
-    gender: MALE
-    startAt: "2024-01-15T00:00:00Z"
-    endAt: "2024-12-20T00:00:00Z"
-    startTime: "2024-01-01T09:00:00Z"
-    endTime: "2024-01-01T11:00:00Z"
-    teacherId: "1"
-    degreeIds: ["1", "2"]
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      description
-      daysOfWeek
-      gender
-      startAt
-      endAt
-      startTime
-      endTime
-      teacher {
-        id
-        fullname
-        username
-      }
-      degrees {
-        id
-        name
-      }
       createdAt
     }
-    errors
-    timestamp
   }
 }
 ```
 
-### Barcha Maydonlar bilan Misol
+**Parametrlar:**
+- `username`: Foydalanuvchi nomi
+- `password`: Parol
+- `userType`: `"root"`, `"admin"` yoki `"teacher"` (talabalar uchun login hozircha mavjud emas)
 
-```graphql
-mutation AddCourseFull {
-  addCourse(
-    name: "Advanced Mathematics"
-    description: "Advanced mathematical concepts including calculus, linear algebra, and statistics"
-    daysOfWeek: [TUESDAY, THURSDAY]
-    gender: FEMALE
-    startAt: "2024-02-01T00:00:00Z"
-    endAt: "2024-11-30T00:00:00Z"
-    startTime: "2024-01-01T14:00:00Z"
-    endTime: "2024-01-01T16:00:00Z"
-    teacherId: "2"
-    degreeIds: ["3", "4", "5"]
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      description
-      daysOfWeek
-      gender
-      startAt
-      endAt
-      startTime
-      endTime
-      teacher {
-        id
-        fullname
-        username
-        isActive
-      }
-      degrees {
-        id
-        name
-      }
-      createdAt
-    }
-    errors
-    timestamp
-  }
-}
-```
+**Javob:**
+- `token`: JWT token (boshqa so'rovlarda `Authorization: Bearer <token>` header sifatida ishlatiladi)
+- `user`: Autentifikatsiya qilingan foydalanuvchi ma'lumotlari
 
-### CHILD Jinsidagi Kurs Misoli
-
-```graphql
-mutation AddChildCourse {
-  addCourse(
-    name: "Kids Programming Basics"
-    description: "Introduction to programming for children aged 8-12"
-    daysOfWeek: [SATURDAY, SUNDAY]
-    gender: CHILD
-    startAt: "2024-03-01T00:00:00Z"
-    endAt: "2024-12-31T00:00:00Z"
-    startTime: "2024-01-01T10:00:00Z"
-    endTime: "2024-01-01T12:00:00Z"
-    teacherId: "3"
-    degreeIds: ["1"]
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      description
-      daysOfWeek
-      gender
-      startAt
-      endAt
-      startTime
-      endTime
-      teacher {
-        id
-        fullname
-      }
-      degrees {
-        id
-        name
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-## Kurs Yangilash Mutation'i
-
-**⚠️ ROOT yoki ADMIN roli talab qilinadi**
-
-### Asosiy Misol - Nomi va Tavsifini Yangilash
-
-```graphql
-mutation UpdateCourse {
-  updateCourse(
-    courseId: "1"
-    name: "Advanced Computer Science"
-    description: "Updated description for the course"
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      description
-      daysOfWeek
-      gender
-      startAt
-      endAt
-      startTime
-      endTime
-      teacher {
-        id
-        fullname
-      }
-      degrees {
-        id
-        name
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-### Hafta Kunlarini Yangilash
-
-```graphql
-mutation UpdateCourseDays {
-  updateCourse(
-    courseId: "1"
-    daysOfWeek: [TUESDAY, THURSDAY, SATURDAY]
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      daysOfWeek
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-### Kurs O'qituvchisi va Darajalarini Yangilash
-
-```graphql
-mutation UpdateCourseTeacher {
-  updateCourse(
-    courseId: "1"
-    teacherId: "2"
-    degreeIds: ["3", "4"]
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      teacher {
-        id
-        fullname
-      }
-      degrees {
-        id
-        name
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-### Bir Nechta Maydonlarni Yangilash
-
-```graphql
-mutation UpdateCourseMultiple {
-  updateCourse(
-    courseId: "1"
-    name: "Introduction to Data Science"
-    description: "Learn data science fundamentals"
-    daysOfWeek: [MONDAY, WEDNESDAY]
-    startAt: "2024-02-01T00:00:00Z"
-    endAt: "2024-12-31T00:00:00Z"
-    startTime: "2024-01-01T10:00:00Z"
-    endTime: "2024-01-01T12:00:00Z"
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      description
-      daysOfWeek
-      startAt
-      endAt
-      startTime
-      endTime
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-### Kurs Jinsini Yangilash
-
-```graphql
-mutation UpdateCourseGender {
-  updateCourse(
-    courseId: "1"
-    gender: FEMALE
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      gender
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-## Kurs O'chirish Mutation'i
-
-**⚠️ ROOT yoki ADMIN roli talab qilinadi**
-
-### Asosiy Misol
-
-```graphql
-mutation DeleteCourse {
-  deleteCourse(courseId: "1") {
-    success
-    message
-    errors
-    timestamp
-  }
-}
-```
-
-### Xato Boshqaruvi bilan Misol
-
-```graphql
-mutation DeleteCourseSafe {
-  deleteCourse(courseId: "5") {
-    success
-    message
-    errors
-    timestamp
-  }
-}
-```
-
-## Talabani Kursga Qo'shish Mutation'i
-
-**⚠️ ROOT yoki ADMIN roli talab qilinadi**
-
-### Asosiy Misol
-
-```graphql
-mutation AddStudentToCourse {
-  addStudentToCourse(
-    courseId: "1"
-    studentId: "10"
-    monthlyPayment: 500000
-  ) {
-    success
-    message
-    courseStudent {
-      id
-      course {
-        id
-        name
-      }
-      student {
-        id
-        fullname
-        username
-      }
-      monthlyPayment
-      joinedAt
-      isActive
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-## Talabani Kurstdan Olib Tashlash Mutation'i
-
-**⚠️ ROOT yoki ADMIN roli talab qilinadi**
-
-### Asosiy Misol
-
-```graphql
-mutation RemoveStudentFromCourse {
-  removeStudentFromCourse(
-    courseId: "1"
-    studentId: "10"
-  ) {
-    success
-    message
-    errors
-    timestamp
-  }
-}
-```
-
-### To'liq Javob bilan Misol
-
-```graphql
-mutation RemoveStudentFromCourse {
-  removeStudentFromCourse(
-    courseId: "3"
-    studentId: "106"
-  ) {
-    success
-    message
-    errors
-    timestamp
-  }
-}
-```
-
-## Eslatmalar
-
-### Hafta Kunlari Variantlari
-- `MONDAY`
-- `TUESDAY`
-- `WEDNESDAY`
-- `THURSDAY`
-- `FRIDAY`
-- `SATURDAY`
-- `SUNDAY`
-
-### Jins Variantlari
-- `MALE`
-- `FEMALE`
-- `CHILD`
-
-### Sana Formati
-- ISO 8601 formatidan foydalaning: `"2024-01-15T00:00:00Z"`
-- Sanalar UTC vaqtida bo'lishi kerak
-
-### Vaqt Formati
-- ISO 8601 formatidan foydalaning: `"2024-01-01T09:00:00Z"`
-- Vaqt UTC bo'lishi kerak
-- Sana qismi muhim emas, faqat vaqt qismi ishlatiladi
-
-### O'qituvchi va Daraja ID'larini Olish
-
-Kurs yaratishdan oldin, siz mavjud o'qituvchilar va darajalarni so'rab olishingiz kerak bo'lishi mumkin:
-
-```graphql
-query GetTeachers {
-  getTeachers {
-    id
-    fullname
-    username
-    gender
-    isActive
-    degrees {
-      id
-      name
-    }
-  }
-}
-
-query GetDegrees {
-  getDegrees {
-    id
-    name
-  }
-}
-```
-
-### Umumiy Xatolar
-
-1. **Ruxsat berilmagan / Ruxsat rad etildi**: 
-   - ROOT yoki ADMIN hisobi bilan tizimga kirganingizga ishonch hosil qiling
-   - JWT token'ingiz Authorization header'ida ekanligini tekshiring
-   - Foydalanuvchi rol'ingiz ROOT yoki ADMIN ekanligini tekshiring
-
-2. **O'qituvchi topilmadi yoki faol emas**: `teacherId` mavjudligini va o'qituvchining faol ekanligini tekshiring
-
-3. **Jins mos kelmadi**: O'qituvchining jinsi kurs jinsi bilan mos kelishi kerak
-
-4. **Daraja topilmadi**: Barcha `degreeIds` mavjudligini tekshiring
-
-5. **O'qituvchida kerakli darajalar yo'q**: O'qituvchi `degreeIds`'da ko'rsatilgan kamida bitta darajaga ega bo'lishi kerak
-
-6. **Kurs nomi allaqachon mavjud**: Kurs nomlari noyob bo'lishi kerak
-
-7. **Yangilash uchun maydonlar berilmagan**: Kurs yangilanganda kamida bitta maydon ko'rsatilishi kerak
-
-8. **Kurs topilmadi**: `courseId` mavjudligini tekshiring
-
-9. **Noto'g'ri kurs ID**: Kurs ID haqiqiy raqam bo'lishi kerak
-
-10. **Yozilish topilmadi**: Talabani o'chirganda, talaba haqiqatan ham kursga yozilganligini tekshiring
-
-11. **Talaba allaqachon o'chirilgan**: Kursdan allaqachon o'chirilgan talabani o'chirib bo'lmaydi
-
-### Kurs Yangilashga Oid Maxsus Eslatmalar
-
-- `updateCourse`'dagi barcha maydonlar ixtiyoriy - siz faqat o'zgartirmoqchi bo'lgan maydonlarni yangilashingiz mumkin
-- Agar `teacherId` yangilansa, o'qituvchi quyidagilarga javob berishi kerak:
-  - Mavjud bo'lishi va faol bo'lishi
-  - Kurs jinsi (yoki siz belgilamoqchi bo'lgan jins) bilan mos keladigan jinsga ega bo'lishi
-  - `degreeIds` (agar `degreeIds` ham yangilansa) bilan mos keladigan kamida bitta darajaga ega bo'lishi
-- Agar `degreeIds` yangilansa, barcha ko'rsatilgan daraja ID'lari mavjud bo'lishi kerak
-- Kurs nomi noyob bo'lishi kerak (boshqa mavjud kurs nomi bilan mos kelmasligi kerak)
-- Yangilash muvaffaqiyatli bo'lishi uchun kamida bitta maydon ko'rsatilishi kerak
-
-### GraphQL Playground'da Mutation'lardan Foydalanish
-
-GraphQL Playground'da sinash uchun siz quyidagilarni bajarishingiz kerak:
-
-1. **Avval tizimga kiring** token olish uchun:
-```graphql
-mutation Login {
-  login(username: "admin.username", password: "your-password") {
-    token
-  }
-}
-```
-
-2. **Playground'da Authorization header'ini o'rnating**:
-   - Playground'ning pastki qismida "HTTP HEADERS"ni bosing
-   - Qo'shing: `{ "Authorization": "Bearer YOUR_TOKEN_HERE" }`
-
-3. **Keyin mutation'larni ishga tushiring** masalan `addCourse` yoki `deleteCourse`
+**GraphQL Playground'da ishlatish:**
+1. Avval `login` mutation'ini ishga tushiring
+2. Qaytgan `token`'ni nusxalang
+3. Playground'ning pastki qismida "HTTP HEADERS" bo'limiga o'ting
+4. Quyidagini qo'shing: `{ "Authorization": "Bearer YOUR_TOKEN_HERE" }`
+5. Endi boshqa mutation va query'larni ishlatishingiz mumkin
 
 ---
 
-# Qo'shimcha Mutation Misollari
+## Profil Boshqaruvi
 
-## Profil va Parol Boshqaruvi
+### Profilni Yangilash
 
-### Profilni Yangilash Mutation'i
-
-**⚠️ Autentifikatsiya talab qilinadi - O'z profilini yangilash**
+**⚠️ Autentifikatsiya talab qilinadi - Faqat o'z profilini yangilash**
 
 ```graphql
 mutation UpdateProfile {
@@ -554,7 +90,11 @@ mutation UpdateProfile {
 }
 ```
 
-### Parolni O'zgartirish Mutation'i
+**Parametrlar:**
+- `tgUsername`: (ixtiyoriy) Yangi Telegram username
+- `phone`: (ixtiyoriy) Yangi telefon raqami
+
+### Parolni O'zgartirish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -572,9 +112,15 @@ mutation UpdatePassword {
 }
 ```
 
+**Parametrlar:**
+- `currentPassword`: Joriy parol (tekshirish uchun)
+- `newPassword`: Yangi parol (kamida 8 belgi, katta va kichik harf, raqam)
+
+---
+
 ## Adminlar Boshqaruvi
 
-### Yangi Admin Qo'shish Mutation'i
+### Yangi Admin Qo'shish
 
 **⚠️ ROOT roli talab qilinadi**
 
@@ -607,7 +153,7 @@ mutation AddAdmin {
 }
 ```
 
-### Admin Profilini Yangilash Mutation'i
+### Admin Profilini Yangilash
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi (ADMIN faqat o'z profilini yangilashi mumkin)**
 
@@ -637,7 +183,11 @@ mutation UpdateAdmin {
 }
 ```
 
-### Admin Faollik Holatini Yangilash Mutation'i
+**Parametrlar:**
+- `id`: Admin ID (majburiy)
+- Qolgan barcha parametrlar ixtiyoriy
+
+### Admin Faollik Holatini Yangilash
 
 **⚠️ ROOT roli talab qilinadi**
 
@@ -660,7 +210,7 @@ mutation UpdateAdminActive {
 }
 ```
 
-### Adminni O'chirish Mutation'i
+### Adminni O'chirish
 
 **⚠️ ROOT roli talab qilinadi**
 
@@ -679,9 +229,11 @@ mutation DeleteAdmin {
 }
 ```
 
+---
+
 ## O'qituvchilar Boshqaruvi
 
-### Yangi O'qituvchi Qo'shish Mutation'i
+### Yangi O'qituvchi Qo'shish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -719,7 +271,9 @@ mutation AddTeacher {
 }
 ```
 
-### O'qituvchi Profilini Yangilash Mutation'i
+**Eslatma:** `profilePicture` maydoni `Upload` scalar tipida bo'lib, multipart/form-data orqali yuborilishi kerak.
+
+### O'qituvchi Profilini Yangilash
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi (TEACHER faqat o'z profilini yangilashi mumkin)**
 
@@ -751,7 +305,7 @@ mutation UpdateTeacher {
 }
 ```
 
-### O'qituvchi Faollik Holatini Yangilash Mutation'i
+### O'qituvchi Faollik Holatini Yangilash
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -774,7 +328,7 @@ mutation UpdateTeacherActive {
 }
 ```
 
-### O'qituvchini O'chirish Mutation'i
+### O'qituvchini O'chirish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -793,9 +347,11 @@ mutation DeleteTeacher {
 }
 ```
 
+---
+
 ## Talabalar Boshqaruvi
 
-### Yangi Talaba Qo'shish Mutation'i
+### Yangi Talaba Qo'shish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -834,7 +390,9 @@ mutation AddStudent {
 }
 ```
 
-### Talaba Profilini Yangilash Mutation'i
+**Eslatma:** `profilePicture` maydoni `Upload` scalar tipida bo'lib, multipart/form-data orqali yuborilishi kerak.
+
+### Talaba Profilini Yangilash
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -861,7 +419,7 @@ mutation UpdateStudent {
 }
 ```
 
-### Talaba Faollik Holatini Yangilash Mutation'i
+### Talaba Faollik Holatini Yangilash
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -884,7 +442,7 @@ mutation UpdateStudentActive {
 }
 ```
 
-### Talabani O'chirish Mutation'i
+### Talabani O'chirish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -903,9 +461,11 @@ mutation DeleteStudent {
 }
 ```
 
+---
+
 ## Darajalar Boshqaruvi
 
-### Yangi Daraja Qo'shish Mutation'i
+### Yangi Daraja Qo'shish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -925,7 +485,7 @@ mutation AddDegree {
 }
 ```
 
-### Darajani Yangilash Mutation'i
+### Darajani Yangilash
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -947,7 +507,7 @@ mutation UpdateDegree {
 }
 ```
 
-### Darajani O'chirish Mutation'i
+### Darajani O'chirish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -966,9 +526,319 @@ mutation DeleteDegree {
 }
 ```
 
+---
+
+## Kurslar Boshqaruvi
+
+### Yangi Kurs Qo'shish
+
+**⚠️ ROOT yoki ADMIN roli talab qilinadi**
+
+#### Asosiy Misol
+
+```graphql
+mutation AddCourse {
+  addCourse(
+    name: "Introduction to Computer Science"
+    description: "A comprehensive course covering fundamental computer science concepts"
+    daysOfWeek: [MONDAY, WEDNESDAY, FRIDAY]
+    gender: MALE
+    startAt: "2024-01-15"
+    endAt: "2024-12-20"
+    startTime: "2024-01-01T09:00:00Z"
+    endTime: "2024-01-01T11:00:00Z"
+    teacherId: "1"
+    degreeIds: ["1", "2"]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+        username
+      }
+      degrees {
+        id
+        name
+      }
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### CHILD Jinsidagi Kurs Misoli
+
+```graphql
+mutation AddChildCourse {
+  addCourse(
+    name: "Kids Programming Basics"
+    description: "Introduction to programming for children aged 8-12"
+    daysOfWeek: [SATURDAY, SUNDAY]
+    gender: CHILD
+    startAt: "2024-03-01"
+    endAt: "2024-12-31"
+    startTime: "2024-01-01T10:00:00Z"
+    endTime: "2024-01-01T12:00:00Z"
+    teacherId: "3"
+    degreeIds: ["1"]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Kursni Yangilash
+
+**⚠️ ROOT yoki ADMIN roli talab qilinadi**
+
+#### Nomi va Tavsifini Yangilash
+
+```graphql
+mutation UpdateCourse {
+  updateCourse(
+    courseId: "1"
+    name: "Advanced Computer Science"
+    description: "Updated description for the course"
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### Hafta Kunlarini Yangilash
+
+```graphql
+mutation UpdateCourseDays {
+  updateCourse(
+    courseId: "1"
+    daysOfWeek: [TUESDAY, THURSDAY, SATURDAY]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      daysOfWeek
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### Kurs O'qituvchisi va Darajalarini Yangilash
+
+```graphql
+mutation UpdateCourseTeacher {
+  updateCourse(
+    courseId: "1"
+    teacherId: "2"
+    degreeIds: ["3", "4"]
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### Bir Nechta Maydonlarni Yangilash
+
+```graphql
+mutation UpdateCourseMultiple {
+  updateCourse(
+    courseId: "1"
+    name: "Introduction to Data Science"
+    description: "Learn data science fundamentals"
+    daysOfWeek: [MONDAY, WEDNESDAY]
+    startAt: "2024-02-01"
+    endAt: "2024-12-31"
+    startTime: "2024-01-01T10:00:00Z"
+    endTime: "2024-01-01T12:00:00Z"
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      startAt
+      endAt
+      startTime
+      endTime
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### Kurs Jinsini Yangilash
+
+```graphql
+mutation UpdateCourseGender {
+  updateCourse(
+    courseId: "1"
+    gender: FEMALE
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      gender
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+**Eslatma:** `updateCourse`'dagi barcha maydonlar `courseId` dan tashqari ixtiyoriy - siz faqat o'zgartirmoqchi bo'lgan maydonlarni yangilashingiz mumkin.
+
+### Kursni O'chirish
+
+**⚠️ ROOT yoki ADMIN roli talab qilinadi**
+
+```graphql
+mutation DeleteCourse {
+  deleteCourse(courseId: "1") {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+### Talabani Kursga Qo'shish
+
+**⚠️ ROOT yoki ADMIN roli talab qilinadi**
+
+```graphql
+mutation AddStudentToCourse {
+  addStudentToCourse(
+    courseId: "1"
+    studentId: "10"
+    monthlyPayment: 500000
+  ) {
+    success
+    message
+    courseStudent {
+      id
+      course {
+        id
+        name
+      }
+      student {
+        id
+        fullname
+        username
+      }
+      monthlyPayment
+      joinedAt
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Talabani Kurstdan Olib Tashlash
+
+**⚠️ ROOT yoki ADMIN roli talab qilinadi**
+
+```graphql
+mutation RemoveStudentFromCourse {
+  removeStudentFromCourse(
+    courseId: "1"
+    studentId: "10"
+  ) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+---
+
 ## Davomat Boshqaruvi
 
-### Davomatni Belgilash Mutation'i
+### Davomatni Belgilash
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1031,11 +901,11 @@ mutation SetAbsentAttendance {
 
 ---
 
-# GraphQL Query Misollari
+## Query Operatsiyalari
 
-## Joriy Foydalanuvchi Ma'lumotlari
+### Joriy Foydalanuvchi Ma'lumotlari
 
-### Me Query
+#### Me Query
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1055,9 +925,9 @@ query Me {
 }
 ```
 
-## Adminlar Query'lari
+### Adminlar Query'lari
 
-### Barcha Adminlarni Olish
+#### Barcha Adminlarni Olish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -1077,7 +947,7 @@ query GetAdmins {
 }
 ```
 
-### Bitta Adminni Olish
+#### Bitta Adminni Olish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -1097,9 +967,9 @@ query GetAdmin {
 }
 ```
 
-## O'qituvchilar Query'lari
+### O'qituvchilar Query'lari
 
-### Barcha O'qituvchilarni Olish
+#### Barcha O'qituvchilarni Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1124,7 +994,7 @@ query GetTeachers {
 }
 ```
 
-### Bitta O'qituvchini Olish
+#### Bitta O'qituvchini Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1149,9 +1019,9 @@ query GetTeacher {
 }
 ```
 
-## Talabalar Query'lari
+### Talabalar Query'lari
 
-### Barcha Talabalarni Olish
+#### Barcha Talabalarni Olish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -1176,7 +1046,7 @@ query GetStudents {
 }
 ```
 
-### Bitta Talabani Olish
+#### Bitta Talabani Olish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -1201,9 +1071,9 @@ query GetStudent {
 }
 ```
 
-## Darajalar Query'lari
+### Darajalar Query'lari
 
-### Barcha Darajalarni Olish
+#### Barcha Darajalarni Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1217,7 +1087,7 @@ query GetDegrees {
 }
 ```
 
-### Bitta Darajani Olish
+#### Bitta Darajani Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1239,9 +1109,9 @@ query GetDegree {
 }
 ```
 
-## Kurslar Query'lari
+### Kurslar Query'lari
 
-### Barcha Kurslarni Olish
+#### Barcha Kurslarni Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1280,7 +1150,7 @@ query GetCourses {
 }
 ```
 
-### Bitta Kursni Olish
+#### Bitta Kursni Olish
 
 **⚠️ Autentifikatsiya talab qilinadi**
 
@@ -1320,9 +1190,9 @@ query GetCourse {
 }
 ```
 
-## Davomat Query'lari
+### Davomat Query'lari
 
-### Barcha Davomatlarni Olish
+#### Barcha Davomatlarni Olish
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1347,7 +1217,7 @@ query GetAttendances {
 }
 ```
 
-### Kurs Bo'yicha Davomatlarni Olish
+#### Kurs Bo'yicha Davomatlarni Olish
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1366,7 +1236,7 @@ query GetAttendancesByCourse {
 }
 ```
 
-### Talaba Bo'yicha Davomatlarni Olish
+#### Talaba Bo'yicha Davomatlarni Olish
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1385,7 +1255,7 @@ query GetAttendancesByStudent {
 }
 ```
 
-### Sana Oralig'i Bo'yicha Davomatlarni Olish
+#### Sana Oralig'i Bo'yicha Davomatlarni Olish
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1411,7 +1281,7 @@ query GetAttendancesByDateRange {
 }
 ```
 
-### Barcha Filtrlash bilan Davomatlarni Olish
+#### Barcha Filtrlash bilan Davomatlarni Olish
 
 **⚠️ ROOT, ADMIN yoki TEACHER roli talab qilinadi**
 
@@ -1440,9 +1310,9 @@ query GetFilteredAttendances {
 }
 ```
 
-## Dashboard Statistikasi
+### Dashboard Statistikasi
 
-### Dashboard Statistikasini Olish
+#### Dashboard Statistikasini Olish
 
 **⚠️ ROOT yoki ADMIN roli talab qilinadi**
 
@@ -1476,25 +1346,125 @@ query GetDashboardStats {
 
 ---
 
-# Qo'shimcha Eslatmalar
+## Umumiy Eslatmalar
 
-## Mutation'larda Ruxsatlar
+### Ruxsatlar va Rollar
 
-### ROOT foydalanuvchisi:
+#### ROOT foydalanuvchisi:
 - Barcha mutation'larni bajarishi mumkin
 - Barcha query'larni ko'ra oladi
+- Barcha resurslarni boshqarishi mumkin (jins cheklovlari yo'q)
 
-### ADMIN foydalanuvchisi:
+#### ADMIN foydalanuvchisi:
 - Faqat o'z jinsidagi resurslarni boshqarishi mumkin (CHILD bundan mustasno)
 - O'z profilini yangilashi mumkin
 - Adminlarni faqat ko'ra oladi (yaratish/o'chirish ROOT uchun)
+- O'z jinsidagi o'qituvchilarni boshqarishi mumkin
+- O'z jinsidagi yoki CHILD talabalar va kurslarni boshqarishi mumkin
 
-### TEACHER foydalanuvchisi:
+#### TEACHER foydalanuvchisi:
 - Faqat o'z profilini yangilashi mumkin
 - O'z jinsidagi kurslar uchun davomat belgilashi mumkin
 - Talabalarni boshqara olmaydi
+- Kurslarni boshqara olmaydi
 
-## Umumiy Xatolar (Qo'shimcha)
+### Hafta Kunlari Variantlari
+- `MONDAY`
+- `TUESDAY`
+- `WEDNESDAY`
+- `THURSDAY`
+- `FRIDAY`
+- `SATURDAY`
+- `SUNDAY`
+
+### Jins Variantlari
+- `MALE`
+- `FEMALE`
+- `CHILD`
+
+### Sana Formati
+- `Date` tipi: ISO 8601 formatidan foydalaning: `"2024-01-15"`
+- `DateTime` tipi: ISO 8601 formatidan foydalaning: `"2024-01-15T09:00:00Z"`
+- Sanalar UTC vaqtida bo'lishi kerak
+
+### Vaqt Formati
+- ISO 8601 formatidan foydalaning: `"2024-01-01T09:00:00Z"`
+- Vaqt UTC bo'lishi kerak
+- Sana qismi muhim emas, faqat vaqt qismi ishlatiladi
+
+### Telefon Raqami Formati
+- Format: Xalqaro format (masalan: `998901234567`)
+- Normalizatsiya: Barcha belgilar (bo'shliqlar, tirelar, qavslar) olib tashlanadi
+- Uzunlik: 8-17 raqam
+
+### Telegram Username Formati
+- Format: Faqat harflar, raqamlar va underscore (`_`)
+- Uzunlik: 5-32 belgi
+- Normalizatsiya: `@` belgisi avtomatik olib tashlanadi
+- Masalan: `@username` → `username`
+
+### Profil Rasm Yuklash
+Ba'zi mutation'larda profil rasmi yuklash mumkin:
+- `addTeacher`
+- `updateTeacher`
+- `addStudent`
+- `updateStudent`
+
+Bu fayl `Upload` scalar tipidan foydalanadi va multipart/form-data orqali yuborilishi kerak.
+
+### O'qituvchi va Daraja ID'larini Olish
+
+Kurs yaratishdan oldin, siz mavjud o'qituvchilar va darajalarni so'rab olishingiz kerak bo'lishi mumkin:
+
+```graphql
+query GetTeachers {
+  getTeachers {
+    id
+    fullname
+    username
+    gender
+    isActive
+    degrees {
+      id
+      name
+    }
+  }
+}
+
+query GetDegrees {
+  getDegrees {
+    id
+    name
+  }
+}
+```
+
+### Umumiy Xatolar
+
+1. **Ruxsat berilmagan / Ruxsat rad etildi**: 
+   - Tegishli roldagi hisob bilan tizimga kirganingizga ishonch hosil qiling
+   - JWT token'ingiz Authorization header'ida ekanligini tekshiring
+   - Foydalanuvchi rol'ingiz tegishli ekanligini tekshiring
+
+2. **O'qituvchi topilmadi yoki faol emas**: `teacherId` mavjudligini va o'qituvchining faol ekanligini tekshiring
+
+3. **Jins mos kelmadi**: O'qituvchining jinsi kurs jinsi bilan mos kelishi kerak
+
+4. **Daraja topilmadi**: Barcha `degreeIds` mavjudligini tekshiring
+
+5. **O'qituvchida kerakli darajalar yo'q**: O'qituvchi `degreeIds`'da ko'rsatilgan kamida bitta darajaga ega bo'lishi kerak
+
+6. **Kurs nomi allaqachon mavjud**: Kurs nomlari noyob bo'lishi kerak
+
+7. **Yangilash uchun maydonlar berilmagan**: Kurs yangilanganda kamida bitta maydon ko'rsatilishi kerak
+
+8. **Kurs topilmadi**: `courseId` mavjudligini tekshiring
+
+9. **Noto'g'ri kurs ID**: Kurs ID haqiqiy raqam bo'lishi kerak
+
+10. **Yozilish topilmadi**: Talabani o'chirganda, talaba haqiqatan ham kursga yozilganligini tekshiring
+
+11. **Talaba allaqachon o'chirilgan**: Kursdan allaqachon o'chirilgan talabani o'chirib bo'lmaydi
 
 12. **Telegram username noto'g'ri format**: Telegram username faqat harflar, raqamlar va underscore qabul qiladi (5-32 belgi)
 
@@ -1512,25 +1482,45 @@ query GetDashboardStats {
 
 19. **Davomat allaqachon mavjud**: Bu sana va kurs uchun davomat allaqachon belgilangan
 
-## Telefon Raqami Formati
+### Kurs Yangilashga Oid Maxsus Eslatmalar
 
-- Format: Xalqaro format (masalan: `998901234567`)
-- Normalizatsiya: Barcha belgilar (bo'shliqlar, tirelar, qavslar) olib tashlanadi
-- Uzunlik: 8-17 raqam
+- `updateCourse`'dagi barcha maydonlar ixtiyoriy - siz faqat o'zgartirmoqchi bo'lgan maydonlarni yangilashingiz mumkin
+- Agar `teacherId` yangilansa, o'qituvchi quyidagilarga javob berishi kerak:
+  - Mavjud bo'lishi va faol bo'lishi
+  - Kurs jinsi (yoki siz belgilamoqchi bo'lgan jins) bilan mos keladigan jinsga ega bo'lishi
+  - `degreeIds` (agar `degreeIds` ham yangilansa) bilan mos keladigan kamida bitta darajaga ega bo'lishi
+- Agar `degreeIds` yangilansa, barcha ko'rsatilgan daraja ID'lari mavjud bo'lishi kerak
+- Kurs nomi noyob bo'lishi kerak (boshqa mavjud kurs nomi bilan mos kelmasligi kerak)
+- Yangilash muvaffaqiyatli bo'lishi uchun kamida bitta maydon ko'rsatilishi kerak
 
-## Telegram Username Formati
+### GraphQL Playground'da Mutation'lardan Foydalanish
 
-- Format: Faqat harflar, raqamlar va underscore (`_`)
-- Uzunlik: 5-32 belgi
-- Normalizatsiya: `@` belgisi avtomatik olib tashlanadi
-- Masalan: `@username` → `username`
+GraphQL Playground'da sinash uchun siz quyidagilarni bajarishingiz kerak:
 
-## Profil Rasm Yuklash
+1. **Avval tizimga kiring** token olish uchun:
+```graphql
+mutation Login {
+  login(username: "admin.username", password: "your-password", userType: "admin") {
+    token
+  }
+}
+```
 
-Ba'zi mutation'larda profil rasmi yuklash mumkin:
-- `addTeacher`
-- `updateTeacher`
-- `addStudent`
-- `updateStudent`
+2. **Playground'da Authorization header'ini o'rnating**:
+   - Playground'ning pastki qismida "HTTP HEADERS"ni bosing
+   - Qo'shing: `{ "Authorization": "Bearer YOUR_TOKEN_HERE" }`
 
-Bu fayl `Upload` scalar tipidan foydalanadi va multipart/form-data orqali yuborilishi kerak.
+3. **Keyin mutation'larni ishga tushiring** masalan `addCourse` yoki `deleteCourse`
+
+### API Endpoint
+
+- **GraphQL Endpoint**: `http://localhost:4000/graphql`
+- **Health Check**: `http://localhost:4000/health`
+
+### Qo'shimcha Ma'lumotlar
+
+Qo'shimcha ma'lumotlar uchun quyidagi hujjatlarni ko'rib chiqing:
+- `docs/GRAPHQL_API.md` - API haqida batafsil ma'lumot
+- `docs/PERMISSIONS_REFERENCE.md` - Ruxsatlar haqida batafsil ma'lumot
+- `docs/ATTENDANCE_QUERIES.md` - Davomat query'lari haqida batafsil ma'lumot
+- `docs/ATTENDANCE_VALIDATION.md` - Davomat validatsiyasi haqida ma'lumot
