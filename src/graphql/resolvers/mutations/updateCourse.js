@@ -8,9 +8,6 @@ import { prisma } from "../../../database/index.js";
  * @param {string} args.name - Course name (optional)
  * @param {string} args.description - Course description (optional)
  * @param {Array} args.daysOfWeek - Days of week array (optional)
- * @param {string} args.gender - Gender enum (optional)
- * @param {Date} args.startAt - Start date (optional)
- * @param {Date} args.endAt - End date (optional)
  * @param {Date} args.startTime - Start time (optional)
  * @param {Date} args.endTime - End time (optional)
  * @param {number} args.teacherId - Teacher ID (optional)
@@ -25,8 +22,6 @@ const updateCourse = async (
 		name,
 		description,
 		daysOfWeek,
-		startAt,
-		endAt,
 		startTime,
 		endTime,
 		teacherId,
@@ -128,14 +123,6 @@ const updateCourse = async (
 		}
 
 		// Add dates if provided
-		if (startAt !== undefined) {
-			updateData.startAt = new Date(startAt);
-		}
-
-		if (endAt !== undefined) {
-			updateData.endAt = endAt ? new Date(endAt) : null;
-		}
-
 		if (startTime !== undefined) {
 			updateData.startTime = new Date(startTime);
 		}
@@ -182,6 +169,28 @@ const updateCourse = async (
 				};
 			}
 
+			// Validate teacher can teach this course gender:
+			// - MALE teacher -> MALE + CHILD courses
+			// - FEMALE teacher -> FEMALE + CHILD courses
+			// (CHILD courses accept MALE/FEMALE teachers)
+			const courseGender = existingCourse.gender;
+			const teacherCanTeachCourseGender =
+				courseGender === "CHILD"
+					? teacher.gender === "MALE" || teacher.gender === "FEMALE"
+					: teacher.gender === courseGender;
+
+			if (!teacherCanTeachCourseGender) {
+				return {
+					success: false,
+					message: "Gender mismatch",
+					course: null,
+					errors: [
+						`Teacher gender (${teacher.gender}) cannot teach course gender (${courseGender})`,
+					],
+					timestamp: new Date().toISOString(),
+				};
+			}
+
 			updateData.teacherId = parsedTeacherId;
 		}
 
@@ -197,20 +206,31 @@ const updateCourse = async (
 				};
 			}
 
-			const parsedDegreeIds = degreeIds.map((id) => parseInt(id));
+			const parsedDegreeIds = degreeIds
+				.map((id) => parseInt(id))
+				.filter((id) => Number.isFinite(id));
+
+			if (parsedDegreeIds.length === 0) {
+				return {
+					success: false,
+					message: "Validation failed",
+					course: null,
+					errors: ["Invalid degree IDs"],
+					timestamp: new Date().toISOString(),
+				};
+			}
 
 			// Check if all degrees exist
 			const degrees = await prisma.degree.findMany({
 				where: {
 					id: { in: parsedDegreeIds },
 				},
+				select: { id: true },
 			});
 
 			if (degrees.length !== parsedDegreeIds.length) {
 				const foundIds = degrees.map((d) => d.id);
-				const missingIds = parsedDegreeIds.filter(
-					(id) => !foundIds.includes(id)
-				);
+				const missingIds = parsedDegreeIds.filter((id) => !foundIds.includes(id));
 				return {
 					success: false,
 					message: "Invalid degree IDs",
@@ -220,22 +240,20 @@ const updateCourse = async (
 				};
 			}
 
-			// If teacher is being updated or already set, check if teacher has matching degrees
+			// Validate teacher has at least one of the course degrees (ANY-match)
 			const currentTeacherId =
-				teacherId !== undefined
-					? parseInt(teacherId)
-					: existingCourse.teacherId;
+				teacherId !== undefined ? parseInt(teacherId) : existingCourse.teacherId;
 
 			if (currentTeacherId) {
 				const teacher = await prisma.teacher.findUnique({
 					where: { id: currentTeacherId },
-					include: { degrees: true },
+					include: { degrees: { select: { id: true } } },
 				});
 
 				if (teacher) {
 					const teacherDegreeIds = teacher.degrees.map((d) => d.id);
-					const hasMatchingDegree = parsedDegreeIds.some((id) =>
-						teacherDegreeIds.includes(id)
+					const hasMatchingDegree = teacherDegreeIds.some((id) =>
+						parsedDegreeIds.includes(id)
 					);
 
 					if (!hasMatchingDegree) {
@@ -252,7 +270,6 @@ const updateCourse = async (
 				}
 			}
 
-			// Update degrees relation
 			updateData.degrees = {
 				set: [],
 				connect: parsedDegreeIds.map((id) => ({ id })),
