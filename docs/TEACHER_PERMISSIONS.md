@@ -1,290 +1,563 @@
-# Teacher Permissions Reference
+# Teacher Guide
 
-This document outlines all mutations and queries that teachers can access, along with their restrictions.
+Complete guide for teachers using the QMR Backend system.
 
-## Summary
+## Table of Contents
 
-**Teachers can:**
-- View their own profile and update it
-- View students (via queries)
-- View courses, degrees, attendances, and dashboard stats
-- Set attendance records
-- Update their own password and profile
-
-**Teachers CANNOT:**
-- Manage students (add, update, delete, change active status)
-- Manage teachers (add, update, delete, change active status) - except their own profile
-- Manage courses (add, update, delete)
-- Manage degrees (add, update, delete)
-- Manage admins (any operation)
-- Add/remove students from courses
-- Access admin-specific queries
+1. [Overview](#overview)
+2. [Teacher Capabilities](#teacher-capabilities)
+3. [Allowed Operations](#allowed-operations)
+4. [Restricted Operations](#restricted-operations)
+5. [Setting Attendance](#setting-attendance)
+6. [Profile Management](#profile-management)
+7. [Common Workflows](#common-workflows)
 
 ---
 
-## QUERIES (Read Access)
+## Overview
 
-### ✅ Allowed Queries
+Teachers have limited but focused permissions in the QMR Backend system. They can manage their own profile, view course and student information, and set attendance for courses they are assigned to teach.
 
-| Query | Access Level | Notes |
-|-------|-------------|-------|
-| `me` | ✅ Public | Can view own profile without auth |
-| `getTeachers` | ✅ Yes | Can view teachers list |
-| `getTeacher` | ✅ Own only | Can only view their own teacher profile (by ID) |
-| `getStudents` | ❌ No | Cannot view students list (admin/root only) |
-| `getStudent` | ❌ No | Cannot view student details (admin/root only) |
-| `getDegrees` | ✅ Yes | Requires authentication |
-| `getDegree` | ✅ Yes | Requires authentication |
-| `getCourses` | ✅ Yes | Requires authentication |
-| `getCourse` | ✅ Yes | Requires authentication |
-| `getAttendances` | ✅ Yes | Requires authentication |
-| `getDashboardStats` | ✅ Yes | Requires authentication |
+### Key Points
 
-### ❌ Blocked Queries
-
-| Query | Reason |
-|-------|--------|
-| `getAdmins` | Requires `view_admins` permission (ADMIN/ROOT only) |
-| `getAdmin` | Requires ADMIN role to view own admin, or ROOT for any |
-| `getStudents` | Requires `view_students` permission (ADMIN/ROOT only) |
-| `getStudent` | Requires `view_students` permission (ADMIN/ROOT only) |
+- ✅ Can view own profile and update it
+- ✅ Can view students, courses, degrees, and attendance
+- ✅ Can set attendance for assigned courses
+- ❌ Cannot manage students, courses, or degrees
+- ❌ Cannot manage other teachers
 
 ---
 
-## MUTATIONS (Write Access)
+## Teacher Capabilities
 
-### ✅ Allowed Mutations
+### ✅ Allowed Operations
 
-| Mutation | Access Level | Notes |
-|----------|-------------|-------|
-| `login` | ✅ Public | Anyone can login |
-| `updateProfile` | ✅ Own | Can update own profile (tgUsername, phone) |
-| `updatePassword` | ✅ Own | Can update own password |
-| `updateTeacher` | ✅ Own only | Can only update their own teacher profile |
-| `setAttendance` | ✅ Yes | Can set attendance records for courses |
+| Operation | Description | Notes |
+|-----------|-------------|-------|
+| **View Own Profile** | View and update own teacher profile | ID must match |
+| **View Students** | View student list and details | Read-only access |
+| **View Courses** | View all courses | Read-only access |
+| **View Degrees** | View all degrees | Read-only access |
+| **View Attendance** | View attendance records | Can filter by course, student, date |
+| **Set Attendance** | Mark students present/absent | Only for assigned courses |
+| **Update Profile** | Update own profile information | Limited fields |
+| **Change Password** | Update own password | Requires current password |
 
-### ❌ Blocked Mutations - Student Management
+### ❌ Restricted Operations
 
-| Mutation | Reason |
-|----------|--------|
-| `addStudent` | Only ADMIN and ROOT can create students |
-| `updateStudent` | Only ADMIN and ROOT can update students |
-| `updateStudentActive` | Only ADMIN and ROOT can change student status |
-| `deleteStudent` | Only ADMIN and ROOT can delete students |
-
-**Error Message:** `"Teachers cannot [action] students. Only administrators can manage students."`
-
-### ❌ Blocked Mutations - Teacher Management
-
-| Mutation | Reason |
-|----------|--------|
-| `addTeacher` | Only ADMIN and ROOT can add teachers |
-| `updateTeacherActive` | Only ADMIN and ROOT can change teacher status |
-| `deleteTeacher` | Only ADMIN and ROOT can delete teachers |
-
-**Note:** Teachers CAN update their own profile via `updateTeacher`, but ONLY their own (ID must match).
-
-### ❌ Blocked Mutations - Course Management
-
-| Mutation | Reason |
-|----------|--------|
-| `addCourse` | Only ADMIN and ROOT can add courses |
-| `updateCourse` | Only ADMIN and ROOT can update courses |
-| `deleteCourse` | Only ADMIN and ROOT can delete courses |
-| `addStudentToCourse` | Only ADMIN and ROOT can add students to courses |
-| `removeStudentFromCourse` | Only ADMIN and ROOT can remove students from courses |
-
-### ❌ Blocked Mutations - Degree Management
-
-| Mutation | Reason |
-|----------|--------|
-| `addDegree` | Only ADMIN and ROOT can add degrees |
-| `updateDegree` | Only ADMIN and ROOT can update degrees |
-| `deleteDegree` | Only ADMIN and ROOT can delete degrees |
-
-### ❌ Blocked Mutations - Admin Management
-
-| Mutation | Reason |
-|----------|--------|
-| `addAdmin` | Only ROOT can add admins |
-| `updateAdmin` | Only ROOT can update admins, or ADMIN can update own |
-| `updateAdminActive` | Only ROOT can change admin status |
-| `deleteAdmin` | Only ROOT can delete admins |
+| Operation | Reason |
+|-----------|--------|
+| **Manage Students** | Only administrators can manage students |
+| **Manage Courses** | Only administrators can manage courses |
+| **Manage Degrees** | Only administrators can manage degrees |
+| **Manage Teachers** | Cannot create, update, or delete other teachers |
+| **Manage Admins** | Only ROOT can manage admins |
+| **View Admins** | Requires admin role |
 
 ---
 
-## Permission Implementation Details
+## Allowed Operations
 
-### Query Permissions
+### View Own Profile
 
-```javascript
-// View Teachers
-getTeachers: canViewTeachers  // Permission: "view_teachers"
-getTeacher: canViewSpecificTeacher  // Can view own teacher or ADMIN/ROOT can view any
-
-// View Students  
-getStudents: canViewStudents  // Permission: "view_students"
-getStudent: canViewSpecificStudent  // TEACHER_OR_HIGHER can view any
-
-// Other queries
-getDegrees: isAuthenticatedRule  // Any authenticated user
-getCourses: isAuthenticatedRule  // Any authenticated user
-getAttendances: isAuthenticatedRule  // Any authenticated user
-getDashboardStats: isAuthenticatedRule  // Any authenticated user
-```
-
-### Mutation Permissions
-
-```javascript
-// Profile Management
-updateProfile: isAuthenticatedRule  // Any authenticated user
-updatePassword: isAuthenticatedRule  // Any authenticated user
-
-// Teacher Management (Own Only)
-updateTeacher: 
-  - ROOT: Can update any teacher
-  - ADMIN: Can update any teacher (with gender rules)
-  - TEACHER: Can ONLY update own profile (ID must match)
-
-// Attendance Management
-setAttendance: createRoleRule([ROLES.ROOT, ROLES.TEACHER])  // ROOT or TEACHER
-
-// Student Management (BLOCKED)
-addStudent: 
-  - Only ADMIN_OR_ROOT allowed
-  - Teachers explicitly blocked
-  
-updateStudent:
-  - Only ADMIN_OR_ROOT allowed
-  - Teachers explicitly blocked
-  
-updateStudentActive:
-  - Only ADMIN_OR_ROOT allowed
-  - Teachers explicitly blocked
-
-deleteStudent:
-  - Only ADMIN_OR_ROOT allowed
-```
-
-### Gender-Based Restrictions
-
-Teachers can only manage resources of their own gender:
-
-```javascript
-// In canManageByGender rule
-if (hasRole(user, ROLES.TEACHER)) {
-  // Block teachers from managing students
-  if (resourceType === RESOURCE_TYPES.STUDENT) {
-    throw new Error("Teachers cannot [action] students...");
+```graphql
+query GetMyProfile {
+  me {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    profilePicture
+    isActive
+    degrees {
+      id
+      name
+    }
   }
-  
-  // Teachers can only manage resources matching their gender
-  if (user.gender === targetGender) return true;
-  throw new Error("Teachers can only manage their own gender resources");
+}
+```
+
+### View Teacher Profile (Own Only)
+
+```graphql
+query GetTeacher($id: ID!) {
+  getTeacher(id: $id) {
+    id
+    username
+    fullname
+    degrees {
+      id
+      name
+    }
+  }
+}
+```
+
+**Note**: Can only view own profile. Attempting to view another teacher's profile will fail.
+
+### View Students
+
+```graphql
+query GetStudents {
+  getStudents {
+    id
+    fullname
+    username
+    gender
+    isActive
+  }
+}
+```
+
+### View Courses
+
+```graphql
+query GetCourses {
+  getCourses {
+    id
+    name
+    description
+    daysOfWeek
+    teacher {
+      id
+      fullname
+    }
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+    }
+  }
+}
+```
+
+### View Attendance
+
+```graphql
+query GetAttendances($courseId: ID, $startDate: Date, $endDate: Date) {
+  getAttendances(
+    courseId: $courseId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    id
+    date
+    isPresent
+    notes
+    student {
+      id
+      fullname
+    }
+    course {
+      id
+      name
+    }
+  }
 }
 ```
 
 ---
 
-## Test Cases for Teachers
+## Restricted Operations
 
-### ✅ Should Pass
+### Student Management (Blocked)
 
-1. **Login** - Teacher can login with valid credentials
-2. **View Own Profile** - `getTeacher(id: teacherId)` where `id` matches teacher's ID
-3. **Update Own Profile** - `updateTeacher(id: teacherId, ...)` where `id` matches
-4. **Update Own Password** - `updatePassword(...)` for authenticated teacher
-5. **Update Own Profile Info** - `updateProfile(tgUsername, phone)` for authenticated teacher
-6. **View Students** - `getStudents()` and `getStudent(id: studentId)`
-7. **View Courses** - `getCourses()` and `getCourse(id: courseId)`
-8. **View Degrees** - `getDegrees()` and `getDegree(id: degreeId)`
-9. **Set Attendance** - `setAttendance(...)` for courses
+All student management operations are blocked:
 
-### ❌ Should Fail (Permission Denied)
-
-1. **Add Student** - Should return "Not Authorised!" or "Teachers cannot create students..."
-2. **Update Student** - Should return "Not Authorised!" or "Teachers cannot update students..."
-3. **Delete Student** - Should return "Not Authorised!" or "Teachers cannot delete students..."
-4. **Change Student Status** - Should return "Not Authorised!"
-5. **Add Teacher** - Should return "Not Authorised!"
-6. **Update Other Teacher** - `updateTeacher(id: otherTeacherId, ...)` should return "Not Authorised!"
-7. **Delete Teacher** - Should return "Not Authorised!"
-8. **Add Course** - Should return "Not Authorised!"
-9. **Update Course** - Should return "Not Authorised!"
-10. **Delete Course** - Should return "Not Authorised!"
-11. **Add Degree** - Should return "Not Authorised!"
-12. **Update Degree** - Should return "Not Authorised!"
-13. **Delete Degree** - Should return "Not Authorised!"
-14. **Add Student to Course** - Should return "Not Authorised!"
-15. **Remove Student from Course** - Should return "Not Authorised!"
-16. **View Admins** - `getAdmins()` should return "Not Authorised!"
-
----
-
-## Known Issues
-
-### Issue 1: `deleteStudent` uses `canDeleteAdmin` rule
-
-**Location:** `src/permissions/index.js:601`
-
-```javascript
-deleteStudent: and(canDeleteAdmin, canManageByGender),
+```graphql
+# ❌ These will fail with "Not Authorised!" or "Teachers cannot manage students"
+mutation AddStudent { ... }      # Blocked
+mutation UpdateStudent { ... }   # Blocked
+mutation DeleteStudent { ... }   # Blocked
+mutation UpdateStudentActive { ... } # Blocked
 ```
 
-**Problem:** `canDeleteAdmin` checks for `delete_admin` permission, which is semantically incorrect for deleting students.
-
-**Recommendation:** Should use a rule that only allows `ADMIN_OR_ROOT`:
-
-```javascript
-deleteStudent: and(
-  rule()(async (_parent, _args, { user }) => {
-    if (!user) return false;
-    return hasAnyRole(user, ROLE_SETS.ADMIN_OR_ROOT);
-  }),
-  canManageByGender
-),
+**Error Message:**
+```
+"Teachers cannot [action] students. Only administrators can manage students."
 ```
 
-**Status:** ⚠️ Should be fixed (currently works because `canDeleteAdmin` only allows ROOT, but semantically incorrect)
+### Course Management (Blocked)
 
----
+All course management operations are blocked:
 
-## Permission Constants
-
-From `src/constants/roles.js`:
-
-```javascript
-[ROLES.TEACHER]: [
-  "view_teachers",      // Can view teachers list
-  "view_own_profile",   // Can view own profile
-  "view_own_data",      // Can view own data
-  "update_own_profile", // Can update own profile
-  "upload_files",       // Can upload files
-  "upload_profile_pictures", // Can upload profile pictures
-]
+```graphql
+# ❌ These will fail with "Not Authorised!"
+mutation AddCourse { ... }        # Blocked
+mutation UpdateCourse { ... }    # Blocked
+mutation DeleteCourse { ... }    # Blocked
+mutation AddStudentToCourse { ... } # Blocked
+mutation RemoveStudentFromCourse { ... } # Blocked
 ```
 
-**Role Sets:**
-- `ROLE_SETS.ADMIN_OR_ROOT = [ROLES.ADMIN, ROLES.ROOT]`
-- `ROLE_SETS.TEACHER_OR_HIGHER = [ROLES.TEACHER, ROLES.ADMIN, ROLES.ROOT]`
+### Degree Management (Blocked)
+
+All degree management operations are blocked:
+
+```graphql
+# ❌ These will fail with "Not Authorised!"
+mutation AddDegree { ... }       # Blocked
+mutation UpdateDegree { ... }   # Blocked
+mutation DeleteDegree { ... }   # Blocked
+```
+
+### Teacher Management (Blocked)
+
+Cannot manage other teachers:
+
+```graphql
+# ❌ These will fail with "Not Authorised!"
+mutation AddTeacher { ... }      # Blocked
+mutation UpdateTeacher { ... }   # Blocked (except own profile)
+mutation DeleteTeacher { ... }   # Blocked
+mutation UpdateTeacherActive { ... } # Blocked
+```
+
+**Note**: Can update own profile via `updateTeacher` if ID matches.
 
 ---
 
-## Security Notes
+## Setting Attendance
 
-1. **Ownership Validation:** Teachers can only update their own profile by ID match check
-2. **Student Management:** Teachers are explicitly blocked from ALL student management operations
-3. **Gender Matching:** Teachers can only interact with resources matching their gender (when applicable)
-4. **Authentication Required:** Most queries require authentication (`isAuthenticatedRule`)
-5. **Permission-Based Access:** Some queries use permission system (`view_teachers`, `view_students`, etc.)
+### Basic Attendance Setting
+
+```graphql
+mutation SetAttendance(
+  $courseId: ID!
+  $studentId: ID!
+  $date: Date!
+  $isPresent: Boolean!
+  $notes: String
+) {
+  setAttendance(
+    courseId: $courseId
+    studentId: $studentId
+    date: $date
+    isPresent: $isPresent
+    notes: $notes
+  ) {
+    success
+    message
+    attendance {
+      id
+      date
+      isPresent
+      notes
+      student {
+        id
+        fullname
+      }
+      course {
+        id
+        name
+      }
+    }
+    errors
+  }
+}
+```
+
+### Authorization Check
+
+Teachers can only set attendance for courses they are assigned to teach. The system verifies:
+
+1. Teacher is assigned to the course
+2. Date matches course schedule
+3. Student is enrolled in the course
+
+**Error if not assigned:**
+```json
+{
+  "success": false,
+  "errors": ["You can only set attendance for courses you are assigned to teach"]
+}
+```
+
+### Complete Workflow
+
+1. **Get Assigned Courses**
+```graphql
+query GetMyCourses {
+  getCourses {
+    id
+    name
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+    }
+  }
+}
+```
+
+2. **Set Attendance for Each Student**
+```graphql
+mutation SetAttendance($courseId: ID!, $studentId: ID!, $date: Date!, $isPresent: Boolean!) {
+  setAttendance(
+    courseId: $courseId
+    studentId: $studentId
+    date: $date
+    isPresent: $isPresent
+  ) {
+    success
+    message
+  }
+}
+```
 
 ---
 
-## Related Files
+## Profile Management
 
-- Permission Rules: `src/permissions/index.js`
-- Role Constants: `src/constants/roles.js`
-- Permission Utilities: `src/utils/permissions.js`
-- Resolvers: `src/graphql/resolvers/`
-- Schema: `src/graphql/schema/`
+### Update Own Profile
 
+```graphql
+mutation UpdateMyProfile($tgUsername: String, $phone: Phone) {
+  updateProfile(tgUsername: $tgUsername, phone: $phone) {
+    success
+    message
+    user {
+      id
+      username
+      tgUsername
+      phone
+    }
+    errors
+  }
+}
+```
+
+### Update Teacher Profile (Own Only)
+
+```graphql
+mutation UpdateTeacher(
+  $id: ID!
+  $fullname: String
+  $phone: Phone
+  $tgUsername: String
+) {
+  updateTeacher(
+    id: $id
+    fullname: $fullname
+    phone: $phone
+    tgUsername: $tgUsername
+  ) {
+    success
+    message
+    teacher {
+      id
+      fullname
+    }
+    errors
+  }
+}
+```
+
+**Note**: `id` must match the teacher's own ID. Cannot update other teachers.
+
+### Change Password
+
+```graphql
+mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
+  updatePassword(
+    currentPassword: $currentPassword
+    newPassword: $newPassword
+  ) {
+    success
+    message
+    errors
+  }
+}
+```
+
+---
+
+## Common Workflows
+
+### Daily Attendance Workflow
+
+1. **Get Today's Courses**
+```graphql
+query GetTodayCourses {
+  getCourses {
+    id
+    name
+    daysOfWeek
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+    }
+  }
+}
+```
+
+2. **Filter Courses for Today**
+```javascript
+const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+const todayCourses = courses.filter(course => 
+  course.daysOfWeek.includes(today)
+);
+```
+
+3. **Set Attendance**
+```graphql
+mutation SetAttendance($courseId: ID!, $studentId: ID!, $date: Date!, $isPresent: Boolean!) {
+  setAttendance(
+    courseId: $courseId
+    studentId: $studentId
+    date: $date
+    isPresent: $isPresent
+  ) {
+    success
+    message
+  }
+}
+```
+
+### View Student Attendance History
+
+```graphql
+query GetStudentAttendance($studentId: ID!, $startDate: Date!, $endDate: Date!) {
+  getAttendances(
+    studentId: $studentId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    id
+    date
+    isPresent
+    notes
+    course {
+      id
+      name
+    }
+  }
+}
+```
+
+### View Course Attendance Summary
+
+```graphql
+query GetCourseAttendance($courseId: ID!, $startDate: Date!, $endDate: Date!) {
+  getAttendances(
+    courseId: $courseId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    id
+    date
+    isPresent
+    student {
+      id
+      fullname
+    }
+  }
+}
+```
+
+---
+
+## Error Handling
+
+### Common Errors
+
+#### Unauthorized Access
+```json
+{
+  "errors": [
+    {
+      "message": "Not Authorised!",
+      "extensions": {
+        "code": "UNAUTHENTICATED"
+      }
+    }
+  ]
+}
+```
+
+#### Cannot Manage Students
+```json
+{
+  "success": false,
+  "errors": ["Teachers cannot create students. Only administrators can manage students."]
+}
+```
+
+#### Cannot Set Attendance for Unassigned Course
+```json
+{
+  "success": false,
+  "errors": ["You can only set attendance for courses you are assigned to teach"]
+}
+```
+
+#### Cannot View Other Teacher
+```json
+{
+  "errors": [
+    {
+      "message": "Not Authorised!"
+    }
+  ]
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Profile Management
+
+- Keep profile information up to date
+- Use secure passwords
+- Update Telegram username for communication
+
+### 2. Attendance Setting
+
+- Set attendance promptly after class
+- Use notes for important information
+- Verify course assignment before setting attendance
+
+### 3. Data Viewing
+
+- Use filters to find specific information
+- Respect student privacy
+- Don't share sensitive information
+
+### 4. Error Handling
+
+- Handle authorization errors gracefully
+- Provide user-friendly error messages
+- Log errors for debugging
+
+---
+
+## Related Documentation
+
+- **Permissions**: See `docs/PERMISSIONS_REFERENCE.md`
+- **Setting Attendance**: See `docs/SET_ATTENDANCE_GUIDE.md`
+- **API Reference**: See `docs/GRAPHQL_API.md`
+
+---
+
+## Summary
+
+Teachers in the QMR Backend system have focused permissions:
+
+- ✅ Can manage own profile
+- ✅ Can view students, courses, and attendance
+- ✅ Can set attendance for assigned courses
+- ❌ Cannot manage students, courses, or degrees
+- ❌ Cannot manage other teachers
+
+Follow the guidelines and workflows to effectively use the system within your permissions.
