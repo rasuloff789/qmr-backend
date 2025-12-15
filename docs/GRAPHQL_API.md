@@ -1121,9 +1121,6 @@ mutation UpdateCourse(
   $name: String
   $description: String
   $daysOfWeek: [DaysOfWeek!]
-  $gender: Gender
-  $startAt: Date
-  $endAt: Date
   $startTime: Date
   $endTime: Date
   $teacherId: ID
@@ -1134,9 +1131,6 @@ mutation UpdateCourse(
     name: $name
     description: $description
     daysOfWeek: $daysOfWeek
-    gender: $gender
-    startAt: $startAt
-    endAt: $endAt
     startTime: $startTime
     endTime: $endTime
     teacherId: $teacherId
