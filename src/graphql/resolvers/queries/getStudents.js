@@ -10,9 +10,25 @@ import { studentSelectFields } from "../helpers/studentSelect.js";
  */
 export default async function (_, args, context) {
 	try {
+		const user = context?.user || null;
+		const role = String(user?.role || "").toLowerCase();
+		const userGender = String(user?.gender || "").toUpperCase();
+
+		// ROOT can see all students; non-root users are scoped by their gender + CHILD.
+		// (male -> MALE+CHILD, female -> FEMALE+CHILD)
+		let genderFilter = undefined;
+		if (role !== "root") {
+			if (userGender !== "MALE" && userGender !== "FEMALE") {
+				// Should be prevented by permissions, but keep resolver safe.
+				throw new Error("User gender is required to view students");
+			}
+			genderFilter = { in: [userGender, "CHILD"] };
+		}
+
 		const students = await prisma.student.findMany({
 			where: {
 				isDeleted: false,
+				...(genderFilter ? { gender: genderFilter } : {}),
 			},
 			select: studentSelectFields,
 			orderBy: {
