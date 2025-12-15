@@ -114,10 +114,6 @@ extend type Mutation {
         description: String
         """Days of the week when the course meets."""
         daysOfWeek: [DaysOfWeek!]
-        """Course start date."""
-        startAt: Date
-        """Optional end date."""
-        endAt: Date
         """Daily start time."""
         startTime: Date
         """Daily end time."""
