@@ -16,18 +16,41 @@ describe("getTeachers Query", () => {
 		degrees: [],
 		teachers: [],
 	};
+	let maleTeacher;
+	let femaleTeacher;
+	let childTeacher;
+	let deletedTeacher;
 
 	beforeEach(async () => {
 		const degree = await createTestDegree();
 		testData.degrees.push(degree);
 
-		for (let i = 0; i < 3; i++) {
-			const teacher = await createTestTeacher({
-				username: `teacher${i}${Date.now()}${Math.random().toString(36).substring(2, 4)}`.slice(0, 10),
-				degreeIds: [degree.id],
-			});
-			testData.teachers.push(teacher);
-		}
+		maleTeacher = await createTestTeacher({
+			username: `male${Date.now()}${Math.random().toString(36).substring(2, 4)}`.slice(0, 10),
+			gender: "MALE",
+			degreeIds: [degree.id],
+			isDeleted: false,
+		});
+		femaleTeacher = await createTestTeacher({
+			username: `fem${Date.now()}${Math.random().toString(36).substring(2, 4)}`.slice(0, 10),
+			gender: "FEMALE",
+			degreeIds: [degree.id],
+			isDeleted: false,
+		});
+		childTeacher = await createTestTeacher({
+			username: `chd${Date.now()}${Math.random().toString(36).substring(2, 4)}`.slice(0, 10),
+			gender: "CHILD",
+			degreeIds: [degree.id],
+			isDeleted: false,
+		});
+		deletedTeacher = await createTestTeacher({
+			username: `del${Date.now()}${Math.random().toString(36).substring(2, 4)}`.slice(0, 10),
+			gender: "MALE",
+			degreeIds: [degree.id],
+			isDeleted: true,
+		});
+
+		testData.teachers.push(maleTeacher, femaleTeacher, childTeacher, deletedTeacher);
 	});
 
 	afterEach(async () => {
@@ -36,24 +59,27 @@ describe("getTeachers Query", () => {
 	});
 
 	describe("Muvaffaqiyatli testlar", () => {
-		it("Barcha teachersni qaytarishi kerak", async () => {
-			const context = createMockContext();
+		it("Male admin faqat MALE teacherlarni qaytarishi kerak", async () => {
+			const context = createMockContext({ id: 1, role: "admin", gender: "MALE" });
 			const result = await getTeachers(null, {}, context);
 
 			expect(Array.isArray(result)).toBe(true);
-			expect(result.length).toBeGreaterThanOrEqual(3);
+			const ids = result.map((t) => t.id);
+			expect(ids).toContain(maleTeacher.id);
+			expect(ids).not.toContain(femaleTeacher.id);
+			expect(ids).not.toContain(childTeacher.id);
+			expect(ids).not.toContain(deletedTeacher.id);
 		});
 
-		it("Teacher barcha kerakli maydonlar bilan qaytarilishi kerak", async () => {
-			const context = createMockContext();
+		it("Female admin faqat FEMALE teacherlarni qaytarishi kerak", async () => {
+			const context = createMockContext({ id: 1, role: "admin", gender: "FEMALE" });
 			const result = await getTeachers(null, {}, context);
 
-			if (result.length > 0) {
-				const teacher = result[0];
-				expect(teacher).toHaveProperty("id");
-				expect(teacher).toHaveProperty("username");
-				expect(teacher).toHaveProperty("degrees");
-			}
+			const ids = result.map((t) => t.id);
+			expect(ids).toContain(femaleTeacher.id);
+			expect(ids).not.toContain(maleTeacher.id);
+			expect(ids).not.toContain(childTeacher.id);
+			expect(ids).not.toContain(deletedTeacher.id);
 		});
 	});
 });
