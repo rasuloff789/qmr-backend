@@ -41,16 +41,20 @@ export const processUploadedFile = async (upload) => {
 	}
 
 	try {
-		// Validate file type
-		const allowedTypes = [
+		// Validate file type (mimetype)
+		// Note: Some clients/browsers report PNG as image/x-png.
+		const allowedMimeTypes = [
 			"image/jpeg",
 			"image/jpg",
+			"image/pjpeg",
 			"image/png",
+			"image/x-png",
 			"image/gif",
 			"image/webp",
 		];
 
-		if (!upload.mimetype || !allowedTypes.includes(upload.mimetype)) {
+		const mimetype = (upload.mimetype || "").toLowerCase();
+		if (!mimetype || !allowedMimeTypes.includes(mimetype)) {
 			return {
 				success: false,
 				error: `Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed. Received: ${upload.mimetype}`,
@@ -69,7 +73,28 @@ export const processUploadedFile = async (upload) => {
 		// Generate unique filename - handle missing filename
 		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
 		const originalFilename = upload.filename || "upload";
-		const ext = path.extname(originalFilename) || ".png"; // Default to .png if no extension
+		const originalExt = (path.extname(originalFilename) || "").toLowerCase();
+
+		const mimeToExt = {
+			"image/jpeg": ".jpg",
+			"image/jpg": ".jpg",
+			"image/pjpeg": ".jpg",
+			"image/png": ".png",
+			"image/x-png": ".png",
+			"image/gif": ".gif",
+			"image/webp": ".webp",
+		};
+
+		// Prefer the original extension only if it matches the allowed type; otherwise use the mimetype-derived extension.
+		const desiredExt = mimeToExt[mimetype] || ".bin";
+		const isJpeg =
+			mimetype === "image/jpeg" ||
+			mimetype === "image/jpg" ||
+			mimetype === "image/pjpeg";
+		const jpegExts = new Set([".jpg", ".jpeg"]);
+		const keepOriginalExt =
+			(isJpeg && jpegExts.has(originalExt)) || originalExt === desiredExt;
+		const ext = keepOriginalExt ? originalExt : desiredExt;
 		const filename = `teacher-${uniqueSuffix}${ext}`;
 		const filePath = path.join(profilePicturesDir, filename);
 
