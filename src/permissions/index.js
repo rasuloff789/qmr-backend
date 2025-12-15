@@ -454,6 +454,7 @@ export const permissions = shield(
 			getAdmins: canViewAdmins,
 			getAdmin: canViewSpecificAdmin,
 			getTeachers: canViewTeachers,
+			getTeachersForCourse: canViewTeachers,
 			getTeacher: canViewSpecificTeacher,
 			getStudents: canViewStudents,
 			getStudent: canViewSpecificStudent,
