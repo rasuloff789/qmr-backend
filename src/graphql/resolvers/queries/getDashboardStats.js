@@ -49,15 +49,24 @@ export default async function (_, args, context) {
 			allTeachers,
 			allAdmins,
 		] = await Promise.all([
-			prisma.student.count(),
-			prisma.teacher.count(),
-			prisma.admin.count(),
-			prisma.student.count({ where: { isActive: true } }),
-			prisma.teacher.count({ where: { isActive: true } }),
+			prisma.student.count({ where: { isDeleted: false } }),
+			prisma.teacher.count({ where: { isDeleted: false } }),
+			prisma.admin.count({ where: { isDeleted: false } }),
+			prisma.student.count({ where: { isActive: true, isDeleted: false } }),
+			prisma.teacher.count({ where: { isActive: true, isDeleted: false } }),
 			prisma.admin.count({ where: { isActive: true, isDeleted: false } }),
-			prisma.student.findMany({ select: { birthDate: true, gender: true } }),
-			prisma.teacher.findMany({ select: { birthDate: true, gender: true } }),
-			prisma.admin.findMany({ select: { birthDate: true } }),
+			prisma.student.findMany({
+				where: { isDeleted: false },
+				select: { birthDate: true, gender: true },
+			}),
+			prisma.teacher.findMany({
+				where: { isDeleted: false },
+				select: { birthDate: true, gender: true },
+			}),
+			prisma.admin.findMany({
+				where: { isDeleted: false },
+				select: { birthDate: true },
+			}),
 		]);
 
 		const totalUsers = totalStudents + totalTeachers + totalAdmins;
