@@ -65,6 +65,35 @@ describe("addCourse Mutation", () => {
 			expect(result.course.name).toBe(args.name.trim());
 			testData.courses.push(result.course);
 		});
+
+		it("CHILD course uchun MALE teacher bilan course yaratish kerak", async () => {
+			const context = createMockContext();
+			const args = {
+				name: `Test Child Course ${Date.now()}`,
+				description: "Test description",
+				daysOfWeek: ["MONDAY", "WEDNESDAY"],
+				gender: "CHILD",
+				startAt: "2024-01-01T00:00:00Z",
+				endAt: "2024-12-31T00:00:00Z",
+				startTime: "2024-01-01T09:00:00Z",
+				endTime: "2024-01-01T11:00:00Z",
+				teacherId: testData.teachers[0].id,
+				degreeIds: [String(testData.degrees[0].id)],
+			};
+
+			const result = await addCourse(null, args, context);
+
+			if (!result.success) {
+				throw new Error(
+					`Test muvaffaqiyatsiz: ${result.message}. Xatolar: ${JSON.stringify(result.errors)}`
+				);
+			}
+
+			expect(result.success).toBe(true);
+			expect(result.course).toBeTruthy();
+			expect(result.course.gender).toBe("CHILD");
+			testData.courses.push(result.course);
+		});
 	});
 
 	describe("Validatsiya xatoliklari", () => {
