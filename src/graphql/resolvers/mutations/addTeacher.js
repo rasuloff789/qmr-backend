@@ -93,6 +93,17 @@ const addTeacher = async (
 			};
 		}
 
+		// Validate teacher must have at least one degree
+		if (!Array.isArray(degreeIds) || degreeIds.length === 0) {
+			return {
+				success: false,
+				message: "Validation failed",
+				teacher: null,
+				errors: ["Teacher must have at least one degree"],
+				timestamp: new Date().toISOString(),
+			};
+		}
+
 		// Ensure unique username
 		const existing = await prisma.teacher.findUnique({ where: { username } });
 		if (existing) {
@@ -128,9 +139,7 @@ const addTeacher = async (
 			: trPhone.normalized;
 		const normalizedTg = tg.normalized;
 		const degreesConnection =
-			Array.isArray(degreeIds) && degreeIds.length > 0
-				? { connect: degreeIds.map((id) => ({ id: parseInt(id) })) }
-				: {};
+			{ connect: degreeIds.map((id) => ({ id: parseInt(id) })) };
 
 		// Persist
 		const newTeacher = await prisma.teacher.create({
