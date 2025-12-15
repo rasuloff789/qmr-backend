@@ -4,4 +4,6 @@ extend type Query {
     getTeachers: [Teacher!]!
     """Fetch a single teacher profile by unique identifier."""
     getTeacher(id: ID!): Teacher
+    """Retrieve teachers eligible for a course by gender and required degrees."""
+    getTeachersForCourse(gender: Gender!, degreeIds: [ID!]!): [Teacher!]!
 }
