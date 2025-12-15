@@ -686,7 +686,7 @@ mutation UpdateCourseDays {
 #### Kurs O'qituvchisi va Darajalarini Yangilash
 
 ```graphql
-mutation UpdateCourseTeacher {
+mutation UpdateCourseTeacherAndDegrees {
   updateCourse(
     courseId: "1"
     teacherId: "2"
@@ -697,14 +697,8 @@ mutation UpdateCourseTeacher {
     course {
       id
       name
-      teacher {
-        id
-        fullname
-      }
-      degrees {
-        id
-        name
-      }
+      teacher { id fullname }
+      degrees { id name }
     }
     errors
     timestamp
@@ -721,8 +715,6 @@ mutation UpdateCourseMultiple {
     name: "Introduction to Data Science"
     description: "Learn data science fundamentals"
     daysOfWeek: [MONDAY, WEDNESDAY]
-    startAt: "2024-02-01"
-    endAt: "2024-12-31"
     startTime: "2024-01-01T10:00:00Z"
     endTime: "2024-01-01T12:00:00Z"
   ) {
@@ -733,31 +725,8 @@ mutation UpdateCourseMultiple {
       name
       description
       daysOfWeek
-      startAt
-      endAt
       startTime
       endTime
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-#### Kurs Jinsini Yangilash
-
-```graphql
-mutation UpdateCourseGender {
-  updateCourse(
-    courseId: "1"
-    gender: FEMALE
-  ) {
-    success
-    message
-    course {
-      id
-      name
-      gender
     }
     errors
     timestamp
