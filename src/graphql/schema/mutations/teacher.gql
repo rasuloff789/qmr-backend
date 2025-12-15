@@ -75,7 +75,7 @@ extend type Mutation {
         """Optional profile picture upload."""
         profilePicture: Upload
         """Degree identifiers the teacher is associated with."""
-        degreeIds: [ID!]
+        degreeIds: [ID!]!
     ): AddTeacherResponse!
     
     """Update an existing teacher profile."""
