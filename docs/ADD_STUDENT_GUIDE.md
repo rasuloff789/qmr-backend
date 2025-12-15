@@ -1,34 +1,44 @@
-# Add Student - Complete Guide
+# Student Management Guide
 
-This guide shows you how to create a new student profile using the `addStudent` mutation.
+Complete guide to managing students in the QMR Backend system.
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Mutation Definition](#mutation-definition)
-4. [Input Parameters](#input-parameters)
-5. [Response Structure](#response-structure)
+2. [Creating Students](#creating-students)
+3. [Updating Students](#updating-students)
+4. [Managing Student Status](#managing-student-status)
+5. [Enrolling Students in Courses](#enrolling-students-in-courses)
 6. [Validation Rules](#validation-rules)
 7. [Permissions](#permissions)
-8. [Example Queries](#example-queries)
-9. [Error Handling](#error-handling)
-10. [Best Practices](#best-practices)
+8. [Best Practices](#best-practices)
+
+---
 
 ## Overview
 
-The `addStudent` mutation allows authenticated administrators to create new student profiles in the system. The mutation includes comprehensive validation, optional profile picture upload, and automatic password hashing.
+The student management system allows administrators to create, update, and manage student profiles. Students can be enrolled in courses and have attendance tracked.
 
-## Prerequisites
+### Key Features
 
-1. **Authentication**: You must be logged in with a valid JWT token
-2. **Permissions**: You must have the `create_student` permission
-3. **Gender Restrictions**: You can only create students matching your gender (unless you're ROOT)
-4. **Required Data**: 
-   - At least one degree must exist in the system (for `possibleDegrees`)
-   - Valid degrees must be created before adding students
+- ✅ Create student profiles with comprehensive validation
+- ✅ Update student information
+- ✅ Manage active/inactive status
+- ✅ Enroll students in courses
+- ✅ Track attendance records
+- ✅ Profile picture uploads
 
-## Mutation Definition
+### Access Control
+
+- **ROOT**: Full access to all students
+- **ADMIN**: Can manage students of own gender or CHILD students
+- **TEACHER**: Cannot manage students (view only)
+
+---
+
+## Creating Students
+
+### Basic Student Creation
 
 ```graphql
 mutation AddStudent(
@@ -65,11 +75,11 @@ mutation AddStudent(
       gender
       profilePicture
       isActive
-      createdAt
       possibleDegrees {
         id
         name
       }
+      createdAt
     }
     errors
     timestamp
@@ -77,70 +87,199 @@ mutation AddStudent(
 }
 ```
 
-## Input Parameters
+### Example Variables
 
-### Required Parameters
-
-| Parameter | Type | Description | Validation |
-|-----------|------|-------------|------------|
-| `username` | `String!` | Unique username for login | 4-32 lowercase letters/numbers, no spaces |
-| `password` | `String!` | Plain-text password | Min 8 chars, uppercase, lowercase, number |
-| `fullname` | `String!` | Full display name | Non-empty string |
-| `tgUsername` | `String!` | Telegram username | 5-32 chars, letters/numbers/underscore only |
-| `birthDate` | `Date!` | Date of birth | YYYY-MM-DD format, not in future |
-| `gender` | `Gender!` | Gender classification | MALE, FEMALE, or CHILD |
-| `possibleDegrees` | `[ID!]!` | Array of degree IDs | At least one valid degree ID required |
-
-### Optional Parameters
-
-| Parameter | Type | Description | Validation |
-|-----------|------|-------------|------------|
-| `phone` | `Phone` | International phone number | 8-17 digits, international format |
-| `profilePicture` | `Upload` | Profile picture file | Image file (processed by fileUpload utility) |
-
-## Response Structure
-
-The mutation returns an `AddStudentResponse` object:
-
-```graphql
-type AddStudentResponse {
-  success: Boolean!      # Operation success flag
-  message: String!       # Human-readable summary
-  student: Student       # Created student record (null on failure)
-  errors: [String!]      # Array of validation/error messages
-  timestamp: String      # ISO timestamp of operation
+```json
+{
+  "username": "student001",
+  "password": "StudentPass123",
+  "fullname": "John Doe",
+  "tgUsername": "john_doe",
+  "birthDate": "2005-03-20",
+  "gender": "MALE",
+  "possibleDegrees": ["1", "2"],
+  "phone": "998901234567"
 }
 ```
 
-### Student Object Fields
+### Required Fields
 
-When successful, the `student` field contains:
+- `username`: Unique username (4-32 chars, lowercase, alphanumeric)
+- `password`: Secure password (min 8 chars, uppercase, lowercase, number)
+- `fullname`: Full display name
+- `tgUsername`: Telegram username (5-32 chars, alphanumeric + underscore)
+- `birthDate`: Date of birth (YYYY-MM-DD, not in future)
+- `gender`: MALE, FEMALE, or CHILD
+- `possibleDegrees`: Array of at least one degree ID
 
-- `id`: Unique identifier
-- `username`: Login username
-- `fullname`: Display name
-- `birthDate`: Date of birth
-- `phone`: Normalized phone number (if provided)
-- `tgUsername`: Normalized Telegram username
-- `gender`: Gender classification
-- `profilePicture`: URL path to profile picture (if uploaded)
-- `isActive`: Active status (defaults to `true`)
-- `isDeleted`: Soft delete flag (defaults to `false`)
-- `createdAt`: Creation timestamp
-- `possibleDegrees`: Array of associated degree objects
+### Optional Fields
+
+- `phone`: International phone number (8-17 digits)
+- `profilePicture`: Image file upload
+
+---
+
+## Updating Students
+
+### Update Student Information
+
+```graphql
+mutation UpdateStudent(
+  $id: ID!
+  $username: String
+  $fullname: String
+  $birthDate: Date
+  $phone: Phone
+  $tgUsername: String
+  $password: String
+  $profilePicture: Upload
+  $isActive: Boolean
+) {
+  updateStudent(
+    id: $id
+    username: $username
+    fullname: $fullname
+    birthDate: $birthDate
+    phone: $phone
+    tgUsername: $tgUsername
+    password: $password
+    profilePicture: $profilePicture
+    isActive: $isActive
+  ) {
+    success
+    message
+    student {
+      id
+      username
+      fullname
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+**Note**: All fields except `id` are optional. Only include fields you want to update.
+
+### Example: Update Phone and Telegram
+
+```json
+{
+  "id": "1",
+  "phone": "998907654321",
+  "tgUsername": "new_telegram_username"
+}
+```
+
+---
+
+## Managing Student Status
+
+### Toggle Active Status
+
+```graphql
+mutation UpdateStudentActive($id: ID!, $isActive: Boolean!) {
+  updateStudentActive(id: $id, isActive: $isActive) {
+    success
+    message
+    student {
+      id
+      username
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Soft Delete Student
+
+```graphql
+mutation DeleteStudent($id: ID!) {
+  deleteStudent(id: $id) {
+    success
+    message
+    student {
+      id
+      username
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+**Note**: This is a soft delete. The student is marked as deleted but not permanently removed from the database.
+
+---
+
+## Enrolling Students in Courses
+
+### Add Student to Course
+
+```graphql
+mutation AddStudentToCourse(
+  $courseId: ID!
+  $studentId: ID!
+  $monthlyPayment: Int!
+) {
+  addStudentToCourse(
+    courseId: $courseId
+    studentId: $studentId
+    monthlyPayment: $monthlyPayment
+  ) {
+    success
+    message
+    courseStudent {
+      id
+      course {
+        id
+        name
+      }
+      student {
+        id
+        fullname
+      }
+      monthlyPayment
+      joinedAt
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Remove Student from Course
+
+```graphql
+mutation RemoveStudentFromCourse($courseId: ID!, $studentId: ID!) {
+  removeStudentFromCourse(courseId: $courseId, studentId: $studentId) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+---
 
 ## Validation Rules
 
-### Username Validation
+### Username
 
 - **Format**: Lowercase letters and numbers only
 - **Length**: 4-32 characters
 - **Restrictions**: No spaces, no special characters
 - **Uniqueness**: Must be unique across all students
-- **Example Valid**: `john123`, `student01`
-- **Example Invalid**: `John123` (uppercase), `user name` (space), `ab` (too short)
+- **Examples**: 
+  - ✅ Valid: `john123`, `student01`
+  - ❌ Invalid: `John123` (uppercase), `user name` (space), `ab` (too short)
 
-### Password Validation
+### Password
 
 - **Minimum Length**: 8 characters
 - **Requirements**: 
@@ -148,638 +287,184 @@ When successful, the `student` field contains:
   - At least one lowercase letter (a-z)
   - At least one number (0-9)
 - **Allowed Special Characters**: `@$!%*?&`
-- **Example Valid**: `Password123`, `SecurePass1`
-- **Example Invalid**: `password` (no uppercase/number), `PASS123` (no lowercase), `Pass1` (too short)
+- **Examples**: 
+  - ✅ Valid: `Password123`, `SecurePass1`
+  - ❌ Invalid: `password` (no uppercase/number), `PASS123` (no lowercase), `Pass1` (too short)
 
-### Telegram Username Validation
+### Telegram Username
 
 - **Format**: Letters, numbers, and underscores only
 - **Length**: 5-32 characters
 - **Restrictions**: No spaces, no special characters except underscore
-- **Normalization**: `@` prefix is automatically removed if present
-- **Example Valid**: `john_doe`, `student123`, `@username` (normalized to `username`)
-- **Example Invalid**: `user name` (space), `ab` (too short), `user-name` (hyphen not allowed)
+- **Normalization**: `@` prefix is automatically removed
+- **Examples**: 
+  - ✅ Valid: `john_doe`, `student123`, `@username` (normalized to `username`)
+  - ❌ Invalid: `user name` (space), `ab` (too short), `user-name` (hyphen)
 
-### Phone Number Validation
+### Phone Number
 
 - **Format**: International format
 - **Length**: 8-17 digits
 - **Normalization**: Non-digit characters are removed
 - **Optional**: Can be omitted (null)
-- **Example Valid**: `998901234567`, `+998 90 123 45 67` (normalized to digits)
-- **Example Invalid**: `123` (too short), `abc123` (contains letters)
+- **Examples**: 
+  - ✅ Valid: `998901234567`, `+998 90 123 45 67` (normalized)
+  - ❌ Invalid: `123` (too short), `abc123` (contains letters)
 
-### Birth Date Validation
+### Birth Date
 
-- **Format**: `YYYY-MM-DD` (ISO 8601 date format)
+- **Format**: `YYYY-MM-DD` (ISO 8601)
 - **Restrictions**: 
   - Must be a valid date
   - Cannot be in the future
-- **Example Valid**: `2000-01-15`, `1995-12-31`
-- **Example Invalid**: `01-15-2000` (wrong format), `2025-12-31` (future date)
+- **Examples**: 
+  - ✅ Valid: `2000-01-15`, `1995-12-31`
+  - ❌ Invalid: `01-15-2000` (wrong format), `2025-12-31` (future)
 
-### Gender Validation
+### Gender
 
 - **Allowed Values**: `MALE`, `FEMALE`, `CHILD`
 - **Case Sensitive**: Must match enum exactly
 
-### Possible Degrees Validation
+### Possible Degrees
 
 - **Type**: Array of degree IDs
 - **Required**: At least one degree ID must be provided
 - **Format**: Each ID must be a valid integer that exists in the database
-- **Relationship**: Creates connections to existing Degree records
 
-### Profile Picture Validation
+### Profile Picture
 
 - **Type**: File upload (GraphQL Upload scalar)
 - **Optional**: Can be omitted
-- **Processing**: Handled by `processUploadedFile` utility
-- **Supported Formats**: Depends on fileUpload utility configuration
-- **Error Handling**: Returns error if upload fails
+- **Processing**: Handled by file upload utility
+- **Supported Formats**: Image files (depends on configuration)
+
+---
 
 ## Permissions
 
-### Required Permissions
-
-1. **Authentication**: User must be logged in
-2. **Permission**: User must have `create_student` permission
-3. **Role-Based Access**: 
-   - `ROOT`: Can create students of any gender
-   - `ADMIN`: Can create students matching their own gender
-   - `TEACHER`: Cannot create students
-   - `STUDENT`: Cannot create students
-
 ### Gender-Based Restrictions
 
-- Administrators can only create students matching their own gender
-- ROOT users can create students of any gender
-- The system validates gender matching before allowing creation
+#### ROOT
+- ✅ Can create/update/delete students of any gender
 
-## Example Queries
+#### MALE ADMIN
+- ✅ Can create/update/delete **MALE** students
+- ✅ Can create/update/delete **CHILD** students
+- ❌ Cannot create/update/delete FEMALE students
 
-### 1. Basic Student Creation
+#### FEMALE ADMIN
+- ✅ Can create/update/delete **FEMALE** students
+- ✅ Can create/update/delete **CHILD** students
+- ❌ Cannot create/update/delete MALE students
 
-Create a student with minimal required fields:
+#### TEACHER
+- ❌ **Completely blocked** from all student management operations
+- ✅ Can view students (read-only)
 
-```graphql
-mutation CreateBasicStudent {
-  addStudent(
-    username: "john_doe"
-    password: "SecurePass123"
-    fullname: "John Doe"
-    tgUsername: "johndoe"
-    birthDate: "2000-01-15"
-    gender: MALE
-    possibleDegrees: ["1", "2"]
-  ) {
-    success
-    message
-    student {
-      id
-      username
-      fullname
-      gender
-      isActive
-    }
-    errors
-  }
-}
-```
-
-### 2. Student with Phone Number
-
-Create a student including phone number:
-
-```graphql
-mutation CreateStudentWithPhone {
-  addStudent(
-    username: "jane_smith"
-    password: "MyPassword123"
-    fullname: "Jane Smith"
-    tgUsername: "janesmith"
-    birthDate: "1998-05-20"
-    gender: FEMALE
-    possibleDegrees: ["1"]
-    phone: "998901234567"
-  ) {
-    success
-    message
-    student {
-      id
-      username
-      fullname
-      phone
-      tgUsername
-      createdAt
-    }
-    errors
-  }
-}
-```
-
-### 3. Student with Profile Picture
-
-Create a student with profile picture upload (using variables):
-
-```graphql
-mutation CreateStudentWithPicture(
-  $username: String!
-  $password: String!
-  $fullname: String!
-  $tgUsername: String!
-  $birthDate: Date!
-  $gender: Gender!
-  $possibleDegrees: [ID!]!
-  $profilePicture: Upload
-) {
-  addStudent(
-    username: $username
-    password: $password
-    fullname: $fullname
-    tgUsername: $tgUsername
-    birthDate: $birthDate
-    gender: $gender
-    possibleDegrees: $possibleDegrees
-    profilePicture: $profilePicture
-  ) {
-    success
-    message
-    student {
-      id
-      username
-      fullname
-      profilePicture
-      possibleDegrees {
-        id
-        name
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-**Variables:**
-```json
-{
-  "username": "alice_wonder",
-  "password": "Secure123",
-  "fullname": "Alice Wonder",
-  "tgUsername": "alicewonder",
-  "birthDate": "2002-03-10",
-  "gender": "FEMALE",
-  "possibleDegrees": ["1", "3"],
-  "profilePicture": null
-}
-```
-
-### 4. Complete Student Creation
-
-Create a student with all fields:
-
-```graphql
-mutation CreateCompleteStudent {
-  addStudent(
-    username: "bob_jones"
-    password: "Password123"
-    fullname: "Bob Jones"
-    tgUsername: "bobjones"
-    birthDate: "1999-11-25"
-    gender: MALE
-    possibleDegrees: ["1", "2", "3"]
-    phone: "+998 90 123 45 67"
-    profilePicture: null
-  ) {
-    success
-    message
-    student {
-      id
-      username
-      fullname
-      birthDate
-      phone
-      tgUsername
-      gender
-      profilePicture
-      isActive
-      isDeleted
-      createdAt
-      possibleDegrees {
-        id
-        name
-        createdAt
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-### 5. Using Variables (Recommended)
-
-Best practice: Use variables for all inputs:
-
-```graphql
-mutation CreateStudent(
-  $username: String!
-  $password: String!
-  $fullname: String!
-  $tgUsername: String!
-  $birthDate: Date!
-  $gender: Gender!
-  $possibleDegrees: [ID!]!
-  $phone: Phone
-  $profilePicture: Upload
-) {
-  addStudent(
-    username: $username
-    password: $password
-    fullname: $fullname
-    tgUsername: $tgUsername
-    birthDate: $birthDate
-    gender: $gender
-    possibleDegrees: $possibleDegrees
-    phone: $phone
-    profilePicture: $profilePicture
-  ) {
-    success
-    message
-    student {
-      id
-      username
-      fullname
-      birthDate
-      phone
-      tgUsername
-      gender
-      profilePicture
-      isActive
-      createdAt
-      possibleDegrees {
-        id
-        name
-      }
-    }
-    errors
-    timestamp
-  }
-}
-```
-
-**Variables:**
-```json
-{
-  "username": "student_001",
-  "password": "SecurePass123",
-  "fullname": "Student One",
-  "tgUsername": "student001",
-  "birthDate": "2001-06-15",
-  "gender": "MALE",
-  "possibleDegrees": ["1"],
-  "phone": "998901234567",
-  "profilePicture": null
-}
-```
-
-## Error Handling
-
-### Success Response
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": true,
-      "message": "Student user created successfully",
-      "student": {
-        "id": "1",
-        "username": "john_doe",
-        "fullname": "John Doe",
-        "birthDate": "2000-01-15",
-        "phone": "998901234567",
-        "tgUsername": "johndoe",
-        "gender": "MALE",
-        "profilePicture": null,
-        "isActive": true,
-        "createdAt": "2024-01-15T10:30:00.000Z",
-        "possibleDegrees": [
-          {
-            "id": "1",
-            "name": "Bachelor's Degree"
-          }
-        ]
-      },
-      "errors": [],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-### Validation Error Examples
-
-#### Username Validation Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Validation failed",
-      "student": null,
-      "errors": [
-        "Username must contain only lowercase letters and numbers, length 4-32 characters."
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Password Validation Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Validation failed",
-      "student": null,
-      "errors": [
-        "Password must be at least 8 characters with uppercase, lowercase, and number."
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Username Already Exists
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Username already exists",
-      "student": null,
-      "errors": [
-        "Username 'john_doe' is already in use"
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Telegram Username Validation Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Validation failed",
-      "student": null,
-      "errors": [
-        "Invalid format. Telegram username must contain only letters, numbers, and \"_\", length 5-32 characters."
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Phone Number Validation Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Validation failed",
-      "student": null,
-      "errors": [
-        "Invalid phone format. Expected international format with 8-17 digits."
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Birth Date Validation Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Validation failed",
-      "student": null,
-      "errors": [
-        "Invalid birth date format. Expected: YYYY-MM-DD"
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### File Upload Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "File upload failed",
-      "student": null,
-      "errors": [
-        "Invalid file type. Only images are allowed."
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
-
-#### Server Error
-
-```json
-{
-  "data": {
-    "addStudent": {
-      "success": false,
-      "message": "Failed to create student user",
-      "student": null,
-      "errors": [
-        "An unexpected error occurred"
-      ],
-      "timestamp": "2024-01-15T10:30:00.123Z"
-    }
-  }
-}
-```
+---
 
 ## Best Practices
 
-### 1. Input Validation
+### 1. Username Generation
 
-- **Always validate on frontend**: Perform client-side validation before sending the mutation
-- **Check username availability**: Consider checking username uniqueness before form submission
-- **Validate date format**: Ensure birth date is in YYYY-MM-DD format
-- **Password strength**: Guide users to create strong passwords
+- Use consistent naming conventions
+- Include student identifier or serial number
+- Avoid personal information in usernames
 
-### 2. Error Handling
+### 2. Password Security
 
-- **Check `success` field**: Always check the `success` boolean before accessing `student`
-- **Display errors**: Show all errors from the `errors` array to users
-- **Handle edge cases**: Account for network errors, authentication failures, etc.
+- Generate secure passwords for students
+- Consider password reset functionality
+- Never store plain-text passwords
 
-### 3. Security
+### 3. Data Validation
 
-- **Never log passwords**: Don't log or store plain-text passwords
-- **Use HTTPS**: Always use HTTPS in production
-- **Validate permissions**: Ensure user has proper permissions before showing the form
-- **Rate limiting**: Consider implementing rate limiting on the frontend
+- Validate all inputs on the client side
+- Handle validation errors gracefully
+- Provide clear error messages
 
-### 4. User Experience
+### 4. Profile Pictures
 
-- **Clear error messages**: Display validation errors clearly to users
-- **Loading states**: Show loading indicators during mutation execution
-- **Success feedback**: Confirm successful student creation
-- **Form reset**: Clear form after successful creation
+- Validate file types and sizes
+- Handle upload errors
+- Provide default avatars for missing pictures
 
-### 5. Data Management
+### 5. Degree Assignment
 
-- **Degree validation**: Ensure degrees exist before creating students
-- **Profile pictures**: Handle upload errors gracefully
-- **Phone normalization**: Understand that phone numbers are normalized automatically
-- **Telegram username**: Note that `@` prefix is automatically removed
+- Ensure degrees exist before assigning
+- Assign relevant degrees only
+- Update degrees as student progresses
 
-### 6. Code Examples
+### 6. Course Enrollment
 
-#### Frontend Validation Example (JavaScript)
+- Verify course capacity before enrollment
+- Set appropriate monthly payment amounts
+- Track enrollment dates
 
-```javascript
-function validateStudentInput(data) {
-  const errors = [];
-  
-  // Username validation
-  if (!/^[a-z0-9]{4,32}$/.test(data.username)) {
-    errors.push('Username must be 4-32 lowercase letters/numbers');
-  }
-  
-  // Password validation
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/.test(data.password)) {
-    errors.push('Password must be 8+ chars with uppercase, lowercase, and number');
-  }
-  
-  // Telegram username validation
-  if (!/^[a-zA-Z0-9_]{5,32}$/.test(data.tgUsername)) {
-    errors.push('Telegram username must be 5-32 chars (letters, numbers, underscore)');
-  }
-  
-  // Birth date validation
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(data.birthDate)) {
-    errors.push('Birth date must be in YYYY-MM-DD format');
-  }
-  
-  // Check if date is in future
-  const birthDate = new Date(data.birthDate);
-  if (birthDate > new Date()) {
-    errors.push('Birth date cannot be in the future');
-  }
-  
-  // Possible degrees validation
-  if (!data.possibleDegrees || data.possibleDegrees.length === 0) {
-    errors.push('At least one degree must be selected');
-  }
-  
-  return errors;
+### 7. Status Management
+
+- Use active/inactive status appropriately
+- Soft delete instead of hard delete
+- Maintain audit trail
+
+---
+
+## Error Handling
+
+### Common Errors
+
+#### Username Already Exists
+```json
+{
+      "success": false,
+  "errors": ["Username already exists"]
 }
 ```
 
-#### GraphQL Client Example (Apollo)
-
-```javascript
-import { gql, useMutation } from '@apollo/client';
-
-const ADD_STUDENT = gql`
-  mutation AddStudent(
-    $username: String!
-    $password: String!
-    $fullname: String!
-    $tgUsername: String!
-    $birthDate: Date!
-    $gender: Gender!
-    $possibleDegrees: [ID!]!
-    $phone: Phone
-    $profilePicture: Upload
-  ) {
-    addStudent(
-      username: $username
-      password: $password
-      fullname: $fullname
-      tgUsername: $tgUsername
-      birthDate: $birthDate
-      gender: $gender
-      possibleDegrees: $possibleDegrees
-      phone: $phone
-      profilePicture: $profilePicture
-    ) {
-      success
-      message
-      student {
-        id
-        username
-        fullname
-      }
-      errors
-    }
-  }
-`;
-
-function useAddStudent() {
-  const [addStudent, { loading, error }] = useMutation(ADD_STUDENT);
-  
-  const createStudent = async (studentData) => {
-    try {
-      const { data } = await addStudent({
-        variables: studentData,
-      });
-      
-      if (data.addStudent.success) {
-        return { success: true, student: data.addStudent.student };
-      } else {
-        return { success: false, errors: data.addStudent.errors };
-      }
-    } catch (err) {
-      return { success: false, errors: [err.message] };
-    }
-  };
-  
-  return { createStudent, loading, error };
+#### Invalid Password Format
+```json
+{
+      "success": false,
+  "errors": ["Password must be at least 8 characters and contain uppercase, lowercase, and number"]
 }
 ```
+
+#### Degree Not Found
+```json
+{
+      "success": false,
+  "errors": ["One or more degree IDs are invalid"]
+}
+```
+
+#### Gender Restriction
+```json
+{
+      "success": false,
+  "errors": ["You cannot create a FEMALE student. You can only create MALE or CHILD students."]
+}
+```
+
+---
 
 ## Related Documentation
 
-- [GraphQL API Documentation](./GRAPHQL_API.md)
-- [Examples](./EXAMPLES.md)
-- [Student Management Queries](./ATTENDANCE_QUERIES.md)
+- **API Reference**: See `docs/GRAPHQL_API.md`
+- **Permissions**: See `docs/PERMISSIONS_REFERENCE.md`
+- **Examples**: See `docs/EXAMPLES.md`
 
-## Support
+---
 
-For issues or questions:
-1. Check the error messages in the response
-2. Verify your authentication token is valid
-3. Ensure you have the required permissions
-4. Review the validation rules above
-5. Check that required degrees exist in the system
+## Summary
 
+Student management in QMR Backend provides:
+
+- ✅ Comprehensive validation
+- ✅ Flexible update operations
+- ✅ Status management
+- ✅ Course enrollment
+- ✅ Profile picture support
+- ✅ Gender-based access control
+
+Follow the validation rules and best practices to ensure data integrity and system security.
