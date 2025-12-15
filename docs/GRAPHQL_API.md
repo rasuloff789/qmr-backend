@@ -1,29 +1,80 @@
-## GraphQL API Reference
+# GraphQL API Reference
 
-This guide documents the QMR backend GraphQL surface for integrators and QA. It focuses on available queries/mutations, expected payloads, authorization, and common error patterns.
+Complete reference documentation for the QMR Backend GraphQL API.
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Getting Started](#getting-started)
+3. [Authentication](#authentication)
+4. [Queries](#queries)
+5. [Mutations](#mutations)
+6. [Types & Schemas](#types--schemas)
+7. [Error Handling](#error-handling)
+8. [Best Practices](#best-practices)
 
 ---
 
-### 1. Access & Headers
-- **Endpoint (dev):** `http://localhost:4000/graphql`
-- **Transport:** standard GraphQL over HTTP POST; websocket subscriptions are not implemented.
-- **Auth:** Send `Authorization: Bearer <JWT>` for authenticated operations. Tokens come from the `login` mutation.
-- **Uploads:** Use multipart requests (`Upload` scalar) for file fields such as `profilePicture`.
-- **Date handling:** `Date` values use `YYYY-MM-DD`; `DateTime` uses ISO strings (`YYYY-MM-DDTHH:mm:ss.sssZ`).
+## Overview
 
-#### Sample request (curl)
+The QMR Backend provides a comprehensive GraphQL API for managing an educational management system. The API supports:
+
+- **User Management**: Root, Admin, Teacher, and Student accounts
+- **Course Management**: Course creation, scheduling, and enrollment
+- **Attendance Tracking**: Student attendance records with validation
+- **Dashboard Analytics**: Statistical data and reports
+- **Role-Based Access Control**: Granular permissions based on user roles
+
+### API Endpoints
+
+- **GraphQL Endpoint**: `http://localhost:4000/graphql`
+- **Health Check**: `http://localhost:4000/health`
+- **Static Assets**: `http://localhost:4000/uploads/...`
+
+### Transport
+
+- **Protocol**: HTTP POST (standard GraphQL over HTTP)
+- **WebSocket Subscriptions**: Not implemented
+- **File Uploads**: Multipart requests using GraphQL `Upload` scalar
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+1. Node.js v18 or higher
+2. PostgreSQL database
+3. Valid JWT token for authenticated operations
+
+### Basic Request Format
+
 ```bash
 curl -X POST http://localhost:4000/graphql \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{ "query": "{ getStudents { id fullname } }" }'
 ```
 
+### Headers
+
+- **Content-Type**: `application/json` (for standard requests)
+- **Authorization**: `Bearer <JWT_TOKEN>` (for authenticated operations)
+- **Multipart**: Required for file uploads
+
+### Date Formats
+
+- **Date Scalar**: ISO 8601 format `YYYY-MM-DD` (e.g., `"2024-01-15"`)
+- **DateTime Scalar**: ISO 8601 format `YYYY-MM-DDTHH:mm:ss.sssZ` (e.g., `"2024-01-15T09:00:00Z"`)
+
 ---
 
-### 2. Authentication Mutations
+## Authentication
 
-#### `login`
+### Login Mutation
+
+Authenticate a user and receive a JWT token.
+
 ```graphql
 mutation Login($username: String!, $password: String!, $userType: String!) {
   login(username: $username, password: $password, userType: $userType) {
@@ -32,6 +83,7 @@ mutation Login($username: String!, $password: String!, $userType: String!) {
     token
     user {
       id
+      username
       fullname
       role
       createdAt
@@ -39,237 +91,1524 @@ mutation Login($username: String!, $password: String!, $userType: String!) {
   }
 }
 ```
-- **userType:** `"root" | "admin" | "teacher"` (student login is not implemented).
-- **Errors:** returns `success: false` with message for invalid credentials; mutation never throws GraphQL errors for auth failures.
 
-#### Testing root user
-- Seeded via `npm run seed:root`.
-- Defaults: username `root`, password `Root123!` (override with `ROOT_USERNAME` / `ROOT_PASSWORD` env variables).
+**Parameters:**
+- `username`: User's username
+- `password`: Plain-text password
+- `userType`: `"root"`, `"admin"`, or `"teacher"` (student login not implemented)
+
+**Response:**
+- `token`: JWT token (valid for 10 days by default)
+- `user`: Authenticated user information
+
+**Example:**
+```json
+{
+  "username": "admin001",
+  "password": "SecurePass123",
+  "userType": "admin"
+}
+```
+
+### Token Usage
+
+Include the token in the `Authorization` header for all authenticated requests:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+### Root User Setup
+
+Default root user can be seeded with:
+```bash
+npm run seed:root
+```
+
+Default credentials:
+- Username: `root`
+- Password: `Root123!`
+
+Override with environment variables: `ROOT_USERNAME`, `ROOT_PASSWORD`
 
 ---
 
-### 3. Query Reference
+## Queries
 
-| Query | Description | Auth requirements |
-| ----- | ----------- | ----------------- |
-| `me` | Returns the authenticated user, based on JWT. | Any authenticated user. |
-| `getAdmins` / `getAdmin(id)` | List admins or fetch by id. | Root & Admin (admin can only see self). |
-| `getTeachers` / `getTeacher(id)` | List teachers or fetch by id. | Root, Admin; Teachers see own profile. |
-| `getStudents` / `getStudent(id)` | List/fetch students. | Root, Admin, Teacher (student self-access pending). |
-| `getDegrees` / `getDegree(id)` | Degree catalog. | Any authenticated user. |
-| `getCourses` / `getCourse(id)` | Course catalog with teacher/degree relations. | Any authenticated user. |
-| `getDashboardStats` | Aggregate counts, averages, gender distribution. | Any authenticated user. |
+### User Queries
 
-#### Query details
-- **`me`**
-  - *Args:* none.
-  - *Returns:* `UserData` representing the caller (role-aware fields for admins/teachers).
-- **`getAdmins`**
-  - *Args:* none.
-  - *Returns:* `[Admin!]` for all non-deleted admins.
-- **`getAdmin(id: ID!)`**
-  - *Args:* `id` (admin id).
-  - *Returns:* `Admin` or `null` if not found/unauthorized.
-- **`getTeachers`**
-  - *Args:* none.
-  - *Returns:* `[Teacher!]` including related degree summaries.
-- **`getTeacher(id: ID!)`**
-  - *Args:* `id` (teacher id).
-  - *Returns:* `Teacher` or `null`; teachers can only access their own record.
-- **`getStudents`**
-  - *Args:* none.
-  - *Returns:* `[Student!]`; soft-deleted students (`isDeleted=true`) are excluded.
-- **`getStudent(id: ID!)`**
-  - *Args:* `id` (student id).
-  - *Returns:* `Student` or `null`; teachers/admin/root can access any student.
-- **`getDegrees`**
-  - *Args:* none.
-  - *Returns:* `[Degree!]` with linked teachers/courses.
-- **`getDegree(id: ID!)`**
-  - *Args:* `id` (degree id).
-  - *Returns:* `Degree` or `null`.
-- **`getCourses`**
-  - *Args:* none.
-  - *Returns:* `[Course!]` with nested teacher, degrees, students, substitutes.
-- **`getCourse(id: ID!)`**
-  - *Args:* `id` (course id).
-  - *Returns:* `Course` or `null`.
-- **`getDashboardStats`**
-  - *Args:* none.
-  - *Returns:* `DashboardStats` aggregate with counts, averages, and gender distribution.
+#### `me`
 
-#### Example: `getDashboardStats`
+Get current authenticated user's profile.
+
+**Access**: Any authenticated user
+
 ```graphql
-query Dashboard {
+query Me {
+  me {
+    id
+    username
+    fullname
+    role
+    birthDate
+    phone
+    tgUsername
+    isActive
+    createdAt
+  }
+}
+```
+
+#### `getAdmins`
+
+Get list of all admin users.
+
+**Access**: ROOT, ADMIN (admin can only see self in `getAdmin`)
+
+```graphql
+query GetAdmins {
+  getAdmins {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    isActive
+    createdAt
+  }
+}
+```
+
+#### `getAdmin(id: ID!)`
+
+Get specific admin by ID.
+
+**Access**: ROOT (any admin), ADMIN (own profile only)
+
+```graphql
+query GetAdmin($id: ID!) {
+  getAdmin(id: $id) {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    isActive
+    createdAt
+  }
+}
+```
+
+#### `getTeachers`
+
+Get list of all teachers.
+
+**Access**: Any authenticated user
+
+```graphql
+query GetTeachers {
+  getTeachers {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    profilePicture
+    isActive
+    degrees {
+      id
+      name
+    }
+    createdAt
+  }
+}
+```
+
+#### `getTeacher(id: ID!)`
+
+Get specific teacher by ID.
+
+**Access**: ROOT, ADMIN (any teacher), TEACHER (own profile only)
+
+```graphql
+query GetTeacher($id: ID!) {
+  getTeacher(id: $id) {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    profilePicture
+    isActive
+    degrees {
+      id
+      name
+    }
+    createdAt
+  }
+}
+```
+
+#### `getStudents`
+
+Get list of all students.
+
+**Access**: ROOT, ADMIN, TEACHER
+
+```graphql
+query GetStudents {
+  getStudents {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    profilePicture
+    isActive
+    possibleDegrees {
+      id
+      name
+    }
+    createdAt
+  }
+}
+```
+
+#### `getStudent(id: ID!)`
+
+Get specific student by ID.
+
+**Access**: ROOT, ADMIN, TEACHER
+
+```graphql
+query GetStudent($id: ID!) {
+  getStudent(id: $id) {
+    id
+    username
+    fullname
+    birthDate
+    phone
+    tgUsername
+    gender
+    profilePicture
+    isActive
+    possibleDegrees {
+      id
+      name
+    }
+    createdAt
+  }
+}
+```
+
+### Degree Queries
+
+#### `getDegrees`
+
+Get list of all degrees.
+
+**Access**: Any authenticated user
+
+```graphql
+query GetDegrees {
+  getDegrees {
+    id
+    name
+    createdAt
+  }
+}
+```
+
+#### `getDegree(id: ID!)`
+
+Get specific degree by ID with related data.
+
+**Access**: Any authenticated user
+
+```graphql
+query GetDegree($id: ID!) {
+  getDegree(id: $id) {
+    id
+    name
+    createdAt
+    teachers {
+      id
+      fullname
+    }
+    courses {
+      id
+      name
+    }
+  }
+}
+```
+
+### Course Queries
+
+#### `getCourses`
+
+Get list of all courses with related data.
+
+**Access**: Any authenticated user
+
+```graphql
+query GetCourses {
+  getCourses {
+    id
+    name
+    description
+    daysOfWeek
+    gender
+    startAt
+    endAt
+    startTime
+    endTime
+    teacher {
+      id
+      fullname
+      username
+    }
+    degrees {
+      id
+      name
+    }
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+      monthlyPayment
+      isActive
+    }
+    createdAt
+  }
+}
+```
+
+#### `getCourse(id: ID!)`
+
+Get specific course by ID.
+
+**Access**: Any authenticated user
+
+```graphql
+query GetCourse($id: ID!) {
+  getCourse(id: $id) {
+    id
+    name
+    description
+    daysOfWeek
+    gender
+    startAt
+    endAt
+    startTime
+    endTime
+    teacher {
+      id
+      fullname
+      username
+    }
+    degrees {
+      id
+      name
+    }
+    students {
+      id
+      student {
+        id
+        fullname
+      }
+      monthlyPayment
+      joinedAt
+      isActive
+    }
+    createdAt
+  }
+}
+```
+
+### Attendance Queries
+
+#### `getAttendances`
+
+Get attendance records with optional filters.
+
+**Access**: ROOT, ADMIN, TEACHER
+
+**Parameters:**
+- `courseId` (optional): Filter by course
+- `studentId` (optional): Filter by student
+- `startDate` (optional): Filter from date
+- `endDate` (optional): Filter to date
+
+```graphql
+query GetAttendances(
+  $courseId: ID
+  $studentId: ID
+  $startDate: Date
+  $endDate: Date
+) {
+  getAttendances(
+    courseId: $courseId
+    studentId: $studentId
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    id
+    date
+    isPresent
+    notes
+    course {
+      id
+      name
+    }
+    student {
+      id
+      fullname
+      username
+    }
+    createdAt
+  }
+}
+```
+
+### Dashboard Queries
+
+#### `getDashboardStats`
+
+Get aggregated dashboard statistics.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+query GetDashboardStats {
   getDashboardStats {
     totalStudents
+    totalTeachers
+    totalAdmins
     activeStudents
+    activeTeachers
+    activeAdmins
+    totalUsers
+    activeUsers
     averageStudentAge
+    averageTeacherAge
+    averageAdminAge
     studentGenderDistribution {
       male
       female
       child
     }
-    totalTeachers
-    activeTeachers
-    averageTeacherAge
+    teacherGenderDistribution {
+      male
+      female
+      child
+    }
   }
 }
 ```
 
 ---
 
-### 4. Mutation Reference
+## Mutations
 
-#### Authentication & profile
-- **`login`** — documented in Section 2.
-- **`updateProfile(tgUsername?, phone?)`**
-  - Allows the current user to change Telegram username and phone.
-  - Returns `UpdateProfileResponse` (`success`, `message`, updated `user`).
-- **`changePassword(currentPassword!, newPassword!)`**
-  - Validates current password and updates to `newPassword`.
-  - Returns `ChangePasswordResponse`; `errors` includes validation messages.
+### Authentication Mutations
 
-#### Admin management
-- **`addAdmin`**
-  - *Args:* `username`, `password`, `fullname`, `tgUsername`, `birthDate`, `phone`.
-  - *Returns:* `AddAdminResponse` with created `Admin`.
-  - *Notes:* Phone uses the custom `Phone` scalar (Uzbekistan-style by default).
-- **`changeAdmin`**
-  - *Args:* `id` plus optional profile fields (`username`, `fullname`, `birthDate`, `phone`, `tgUsername`, `password`, `isActive`).
-  - *Returns:* `UpdateAdminResponse`.
-  - *Notes:* Admins can only update their own profile; root can update any.
-- **`changeAdminActive(adminId, isActive)`**
-  - Toggles active status; root-only.
-  - *Returns:* `UpdateAdminResponse`.
-- **`deleteAdmin(adminId)`**
-  - Soft deletion (marks admin as deleted).
-  - *Returns:* `DeleteAdminResponse`.
+#### `login`
 
-#### Teacher management
-- **`addTeacher`**
-  - *Args:* `username`, `password`, `fullname`, `tgUsername`, `birthDate`, `phone`, `gender`, optional `profilePicture`, `degreeIds`.
-  - *Returns:* `AddTeacherResponse`.
-  - *Notes:* Accepts file upload for profile picture; connects degrees by id.
-- **`changeTeacher`**
-  - *Args:* `id` plus optional profile fields (mirrors `addTeacher`) including `degreeIds`, `isActive`.
-  - *Returns:* `UpdateTeacherResponse`.
-  - *Notes:* Teachers can only change their own record; root/admin unrestricted.
-- **`changeTeacherActive(id, isActive)`**
-  - Toggles teacher active status (root/admin).
-  - *Returns:* `ChangeTeacherActiveResponse`.
-- **`deleteTeacher(id)`**
-  - Soft deletion (sets `isDeleted = true`).
-  - *Returns:* `DeleteTeacherResponse`.
+See [Authentication](#authentication) section above.
 
-#### Student management
+### Profile Management Mutations
+
+#### `updateProfile`
+
+Update current user's profile (Telegram username and phone).
+
+**Access**: Any authenticated user
+
 ```graphql
-mutation AddStudent($input: AddStudentInput!) {
+mutation UpdateProfile($tgUsername: String, $phone: Phone) {
+  updateProfile(tgUsername: $tgUsername, phone: $phone) {
+    success
+    message
+    user {
+      id
+      username
+      fullname
+      tgUsername
+      phone
+      role
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updatePassword`
+
+Change current user's password.
+
+**Access**: Any authenticated user
+
+```graphql
+mutation UpdatePassword($currentPassword: String!, $newPassword: String!) {
+  updatePassword(currentPassword: $currentPassword, newPassword: $newPassword) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+### Admin Management Mutations
+
+#### `addAdmin`
+
+Create a new admin user.
+
+**Access**: ROOT only
+
+```graphql
+mutation AddAdmin(
+  $username: String!
+  $password: String!
+  $fullname: String!
+  $tgUsername: String!
+  $birthDate: Date!
+  $phone: Phone!
+  $gender: Gender!
+) {
+  addAdmin(
+    username: $username
+    password: $password
+    fullname: $fullname
+    tgUsername: $tgUsername
+    birthDate: $birthDate
+    phone: $phone
+    gender: $gender
+  ) {
+    success
+    message
+    admin {
+      id
+      username
+      fullname
+      tgUsername
+      phone
+      gender
+      isActive
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateAdmin`
+
+Update an admin user.
+
+**Access**: ROOT (any admin), ADMIN (own profile only)
+
+```graphql
+mutation UpdateAdmin(
+  $id: ID!
+  $username: String
+  $fullname: String
+  $birthDate: Date
+  $phone: Phone
+  $tgUsername: String
+  $password: String
+  $isActive: Boolean
+) {
+  updateAdmin(
+    id: $id
+    username: $username
+    fullname: $fullname
+    birthDate: $birthDate
+    phone: $phone
+    tgUsername: $tgUsername
+    password: $password
+    isActive: $isActive
+  ) {
+    success
+    message
+    admin {
+      id
+      username
+      fullname
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateAdminActive`
+
+Toggle admin active status.
+
+**Access**: ROOT only
+
+```graphql
+mutation UpdateAdminActive($adminId: ID!, $isActive: Boolean!) {
+  updateAdminActive(adminId: $adminId, isActive: $isActive) {
+    success
+    message
+    admin {
+      id
+      username
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `deleteAdmin`
+
+Soft delete an admin user.
+
+**Access**: ROOT only
+
+```graphql
+mutation DeleteAdmin($adminId: ID!) {
+  deleteAdmin(adminId: $adminId) {
+    success
+    message
+    admin {
+      id
+      username
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Teacher Management Mutations
+
+#### `addTeacher`
+
+Create a new teacher user.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation AddTeacher(
+  $username: String!
+  $password: String!
+  $fullname: String!
+  $tgUsername: String!
+  $birthDate: Date!
+  $phone: Phone!
+  $gender: Gender!
+  $degreeIds: [ID!]
+  $profilePicture: Upload
+) {
+  addTeacher(
+    username: $username
+    password: $password
+    fullname: $fullname
+    tgUsername: $tgUsername
+    birthDate: $birthDate
+    phone: $phone
+    gender: $gender
+    degreeIds: $degreeIds
+    profilePicture: $profilePicture
+  ) {
+    success
+    message
+    teacher {
+      id
+      username
+      fullname
+      gender
+      isActive
+      degrees {
+        id
+        name
+      }
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateTeacher`
+
+Update a teacher user.
+
+**Access**: ROOT (any teacher), ADMIN (any teacher), TEACHER (own profile only)
+
+```graphql
+mutation UpdateTeacher(
+  $id: ID!
+  $username: String
+  $fullname: String
+  $birthDate: Date
+  $phone: Phone
+  $tgUsername: String
+  $password: String
+  $profilePicture: Upload
+  $degreeIds: [ID!]
+  $isActive: Boolean
+) {
+  updateTeacher(
+    id: $id
+    username: $username
+    fullname: $fullname
+    birthDate: $birthDate
+    phone: $phone
+    tgUsername: $tgUsername
+    password: $password
+    profilePicture: $profilePicture
+    degreeIds: $degreeIds
+    isActive: $isActive
+  ) {
+    success
+    message
+    teacher {
+      id
+      username
+      fullname
+      degrees {
+        id
+        name
+      }
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateTeacherActive`
+
+Toggle teacher active status.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation UpdateTeacherActive($id: ID!, $isActive: Boolean!) {
+  updateTeacherActive(id: $id, isActive: $isActive) {
+    success
+    message
+    teacher {
+      id
+      username
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `deleteTeacher`
+
+Soft delete a teacher user.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation DeleteTeacher($id: ID!) {
+  deleteTeacher(id: $id) {
+    success
+    message
+    teacher {
+      id
+      username
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Student Management Mutations
+
+#### `addStudent`
+
+Create a new student user.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation AddStudent(
+  $username: String!
+  $password: String!
+  $fullname: String!
+  $tgUsername: String!
+  $birthDate: Date!
+  $gender: Gender!
+  $possibleDegrees: [ID!]!
+  $phone: Phone
+  $profilePicture: Upload
+) {
   addStudent(
-    username: $input.username
-    password: $input.password
-    fullname: $input.fullname
-    tgUsername: $input.tgUsername
-    birthDate: $input.birthDate
-    phone: $input.phone
-    gender: $input.gender
-    profilePicture: $input.profilePicture
+    username: $username
+    password: $password
+    fullname: $fullname
+    tgUsername: $tgUsername
+    birthDate: $birthDate
+    gender: $gender
+    possibleDegrees: $possibleDegrees
+    phone: $phone
+    profilePicture: $profilePicture
   ) {
     success
     message
     student {
       id
+      username
       fullname
-      phone
-      profilePicture
+      gender
+      isActive
+      possibleDegrees {
+        id
+        name
+      }
+      createdAt
     }
     errors
+    timestamp
   }
 }
 ```
-- `phone` accepts any international format; backend normalizes via `checkInternationalPhone`.
-- `deleteStudent` performs a soft delete (sets `isDeleted = true`).
-- `changeStudent` mirrors `addStudent`, with all fields optional after `id`.
-- `changeStudentActive(id, isActive)` toggles active status for a student.
 
-#### Course management
-- **`addCourse`**
-  - *Args:* `name`, optional `description`, `daysOfWeek`, `gender`, `startAt`, optional `endAt`, `startTime`, `endTime`, `teacherId`, `degreeIds`.
-  - *Returns:* `AddCourseResponse` with created `Course`.
-  - *Validations:*
-    - Unique course name.
-    - Teacher exists, active, not deleted.
-    - Teacher gender matches course gender.
-    - Teacher shares at least one degree in `degreeIds` (ids coerced to integers).
-  - *Notes:* See `docs/COURSE_MUTATIONS.md` for request/response samples.
+#### `updateStudent`
 
-#### Dashboard
-- No mutations; all stats are read-only.
+Update a student user.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation UpdateStudent(
+  $id: ID!
+  $username: String
+  $fullname: String
+  $birthDate: Date
+  $phone: Phone
+  $tgUsername: String
+  $password: String
+  $profilePicture: Upload
+  $isActive: Boolean
+) {
+  updateStudent(
+    id: $id
+    username: $username
+    fullname: $fullname
+    birthDate: $birthDate
+    phone: $phone
+    tgUsername: $tgUsername
+    password: $password
+    profilePicture: $profilePicture
+    isActive: $isActive
+  ) {
+    success
+    message
+    student {
+      id
+      username
+      fullname
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateStudentActive`
+
+Toggle student active status.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation UpdateStudentActive($id: ID!, $isActive: Boolean!) {
+  updateStudentActive(id: $id, isActive: $isActive) {
+    success
+    message
+    student {
+      id
+      username
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `deleteStudent`
+
+Soft delete a student user.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation DeleteStudent($id: ID!) {
+  deleteStudent(id: $id) {
+    success
+    message
+    student {
+      id
+      username
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Degree Management Mutations
+
+#### `addDegree`
+
+Create a new degree.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation AddDegree($name: String!) {
+  addDegree(name: $name) {
+    success
+    message
+    degree {
+      id
+      name
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateDegree`
+
+Update a degree.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation UpdateDegree($id: ID!, $name: String) {
+  updateDegree(id: $id, name: $name) {
+    success
+    message
+    degree {
+      id
+      name
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `deleteDegree`
+
+Soft delete a degree.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation DeleteDegree($id: ID!) {
+  deleteDegree(id: $id) {
+    success
+    message
+    degree {
+      id
+      name
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+### Course Management Mutations
+
+#### `addCourse`
+
+Create a new course.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation AddCourse(
+  $name: String!
+  $description: String
+  $daysOfWeek: [DaysOfWeek!]!
+  $gender: Gender!
+  $startAt: Date!
+  $endAt: Date
+  $startTime: Date!
+  $endTime: Date!
+  $teacherId: ID!
+  $degreeIds: [ID!]!
+) {
+  addCourse(
+    name: $name
+    description: $description
+    daysOfWeek: $daysOfWeek
+    gender: $gender
+    startAt: $startAt
+    endAt: $endAt
+    startTime: $startTime
+    endTime: $endTime
+    teacherId: $teacherId
+    degreeIds: $degreeIds
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `updateCourse`
+
+Update a course.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation UpdateCourse(
+  $courseId: ID!
+  $name: String
+  $description: String
+  $daysOfWeek: [DaysOfWeek!]
+  $gender: Gender
+  $startAt: Date
+  $endAt: Date
+  $startTime: Date
+  $endTime: Date
+  $teacherId: ID
+  $degreeIds: [ID!]
+) {
+  updateCourse(
+    courseId: $courseId
+    name: $name
+    description: $description
+    daysOfWeek: $daysOfWeek
+    gender: $gender
+    startAt: $startAt
+    endAt: $endAt
+    startTime: $startTime
+    endTime: $endTime
+    teacherId: $teacherId
+    degreeIds: $degreeIds
+  ) {
+    success
+    message
+    course {
+      id
+      name
+      description
+      daysOfWeek
+      gender
+      startAt
+      endAt
+      startTime
+      endTime
+      teacher {
+        id
+        fullname
+      }
+      degrees {
+        id
+        name
+      }
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `deleteCourse`
+
+Delete a course.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation DeleteCourse($courseId: ID!) {
+  deleteCourse(courseId: $courseId) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+#### `addStudentToCourse`
+
+Enroll a student in a course.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation AddStudentToCourse(
+  $courseId: ID!
+  $studentId: ID!
+  $monthlyPayment: Int!
+) {
+  addStudentToCourse(
+    courseId: $courseId
+    studentId: $studentId
+    monthlyPayment: $monthlyPayment
+  ) {
+    success
+    message
+    courseStudent {
+      id
+      course {
+        id
+        name
+      }
+      student {
+        id
+        fullname
+      }
+      monthlyPayment
+      joinedAt
+      isActive
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+#### `removeStudentFromCourse`
+
+Remove a student from a course.
+
+**Access**: ROOT, ADMIN
+
+```graphql
+mutation RemoveStudentFromCourse($courseId: ID!, $studentId: ID!) {
+  removeStudentFromCourse(courseId: $courseId, studentId: $studentId) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+### Attendance Mutations
+
+#### `setAttendance`
+
+Set attendance for a student in a course.
+
+**Access**: ROOT, ADMIN, TEACHER
+
+```graphql
+mutation SetAttendance(
+  $courseId: ID!
+  $studentId: ID!
+  $date: Date!
+  $isPresent: Boolean!
+  $notes: String
+) {
+  setAttendance(
+    courseId: $courseId
+    studentId: $studentId
+    date: $date
+    isPresent: $isPresent
+    notes: $notes
+  ) {
+    success
+    message
+    attendance {
+      id
+      date
+      isPresent
+      notes
+      course {
+        id
+        name
+      }
+      student {
+        id
+        fullname
+      }
+      createdAt
+    }
+    errors
+    timestamp
+  }
+}
+```
+
+**Note**: When attendance is set for one student, the system automatically creates attendance records for all other enrolled students (marked as absent) if they don't have records for that date.
 
 ---
 
-### 5. Type Reference
+## Types & Schemas
 
-#### Core object types
-- **`UserData`** — generic user payload returned by `login`/`me`; includes role, `createdAt`, and role-specific fields (`birthDate`, `phone`, `tgUsername`, `isActive`, `department`).
-- **`Root`** — minimal representation for root accounts (id, username, fullname, createdAt).
-- **`Admin`** — admin profile (`id`, `username`, `fullname`, `birthDate`, `phone`, `tgUsername`, `isActive`, `createdAt`).
-- **`Teacher`** — teacher profile including `gender`, optional `profilePicture`, linked `degrees`, active flag, `createdAt`.
-- **`Student`** — student profile with optional `phone`, `profilePicture`, `gender`, activity status, `isDeleted`, and timestamps.
-- **`Degree`** — academic track with `id`, `name`, linked `teachers` and `courses`, `createdAt`.
-- **`Course`** — course metadata (schedule, gender restriction, linked `CourseStudent` enrollments, `teacher`, substitute teachers, `degrees`, `createdAt`).
-- **`CourseStudent`** — enrollment join (`course`, `student`, `joinedAt`, `monthlyPayment`, `isActive`, `createdAt`).
-- **`SubstituteTeacher`** — substitute assignment with `course`, `teacher`, date range, optional `reason`.
-- **`DashboardStats`** — aggregated counts, averages, and gender distributions.
-- **`GenderDistribution`** — numeric breakdown (`male`, `female`, `child`).
+### Core Types
 
-#### Response wrappers
-- `AddAdminResponse`, `UpdateAdminResponse`, `DeleteAdminResponse`
-- `AddTeacherResponse`, `UpdateTeacherResponse`, `ChangeTeacherActiveResponse`, `DeleteTeacherResponse`
-- `AddStudentResponse`, `UpdateStudentResponse`, `ChangeStudentActiveResponse`, `DeleteStudentResponse`
-- `AddCourseResponse`
-- `LoginResponse`, `UpdateProfileResponse`, `ChangePasswordResponse`
+#### User Types
 
-All response types share the `success`, `message`, optional `errors`, and `timestamp` fields, plus the relevant entity payload.
+```graphql
+type UserData {
+  id: ID!
+  username: String!
+  fullname: String!
+  role: String!
+  birthDate: Date
+  phone: String
+  tgUsername: String
+  isActive: Boolean
+  createdAt: Date!
+}
 
-#### Custom scalars
-- **`Date`** — ISO date (`YYYY-MM-DD`).
-- **`Phone`** — validated phone numbers (international for students, +998-style for legacy admin/teacher flows).
-- **`Upload`** — file uploads (handled via `graphql-upload` middleware).
+type Root {
+  id: ID!
+  username: String!
+  fullname: String!
+  createdAt: Date!
+}
 
-#### Enums
-- **`Gender`** — `MALE`, `FEMALE`, `CHILD`.
-- **`DaysOfWeek`** — `MONDAY` … `SUNDAY`.
+type Admin {
+  id: ID!
+  username: String!
+  fullname: String!
+  birthDate: Date!
+  phone: String!
+  tgUsername: String!
+  gender: Gender!
+  isActive: Boolean!
+  createdAt: Date!
+}
+
+type Teacher {
+  id: ID!
+  username: String!
+  fullname: String!
+  birthDate: Date!
+  phone: String!
+  tgUsername: String!
+  gender: Gender!
+  profilePicture: String
+  isActive: Boolean!
+  degrees: [Degree!]!
+  createdAt: Date!
+}
+
+type Student {
+  id: ID!
+  username: String!
+  fullname: String!
+  birthDate: Date!
+  phone: String
+  tgUsername: String!
+  gender: Gender!
+  profilePicture: String
+  isActive: Boolean!
+  possibleDegrees: [Degree!]!
+  createdAt: Date!
+}
+```
+
+#### Course Types
+
+```graphql
+type Course {
+  id: ID!
+  name: String!
+  description: String
+  daysOfWeek: [DaysOfWeek!]!
+  gender: Gender!
+  startAt: Date!
+  endAt: Date
+  startTime: Date!
+  endTime: Date!
+  teacher: Teacher!
+  degrees: [Degree!]!
+  students: [CourseStudent!]!
+  createdAt: Date!
+}
+
+type CourseStudent {
+  id: ID!
+  course: Course!
+  student: Student!
+  joinedAt: Date!
+  monthlyPayment: Int!
+  isActive: Boolean!
+  createdAt: Date!
+}
+```
+
+#### Degree Type
+
+```graphql
+type Degree {
+  id: ID!
+  name: String!
+  teachers: [Teacher!]!
+  courses: [Course!]!
+  createdAt: Date!
+}
+```
+
+#### Attendance Type
+
+```graphql
+type Attendance {
+  id: ID!
+  course: Course!
+  student: Student!
+  date: Date!
+  isPresent: Boolean!
+  notes: String
+  createdAt: Date!
+}
+```
+
+#### Dashboard Type
+
+```graphql
+type DashboardStats {
+  totalStudents: Int!
+  totalTeachers: Int!
+  totalAdmins: Int!
+  activeStudents: Int!
+  activeTeachers: Int!
+  activeAdmins: Int!
+  totalUsers: Int!
+  activeUsers: Int!
+  averageStudentAge: Float
+  averageTeacherAge: Float
+  averageAdminAge: Float
+  studentGenderDistribution: GenderDistribution!
+  teacherGenderDistribution: GenderDistribution!
+}
+
+type GenderDistribution {
+  male: Int!
+  female: Int!
+  child: Int!
+}
+```
+
+### Enums
+
+```graphql
+enum Gender {
+  MALE
+  FEMALE
+  CHILD
+}
+
+enum DaysOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+```
+
+### Custom Scalars
+
+- **Date**: ISO date format `YYYY-MM-DD`
+- **Phone**: Validated phone numbers (8-17 digits, international format)
+- **Upload**: File uploads (handled via `graphql-upload` middleware)
 
 ---
 
-### 6. Permissions & Error Handling
-- Authorization uses GraphQL Shield rules (`src/permissions/index.js`). Unauthorized access returns `Not Authorised!` GraphQL errors.
-- Mutations return structured payloads with `success`, `message`, optional `errors`, and `timestamp`. Handle both GraphQL errors and payload errors in clients.
-- Soft delete pattern: `isDeleted` flags on `Student` and `Teacher`. Queries typically exclude deleted records; verify before surfacing data to end users.
+## Error Handling
+
+### Response Structure
+
+All mutations return a consistent response structure:
+
+```graphql
+type MutationResponse {
+  success: Boolean!
+  message: String!
+  errors: [String!]
+  timestamp: String
+}
+```
+
+### Error Types
+
+1. **Authentication Errors**
+   - Missing or invalid JWT token
+   - Expired token
+   - Invalid credentials
+
+2. **Authorization Errors**
+   - Insufficient permissions
+   - Role-based restrictions
+   - Gender-based restrictions
+
+3. **Validation Errors**
+   - Invalid input format
+   - Missing required fields
+   - Business rule violations
+
+4. **Not Found Errors**
+   - Resource doesn't exist
+   - Invalid ID references
+
+### Error Response Example
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    "Username already exists",
+    "Password must be at least 8 characters"
+  ],
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### GraphQL Errors
+
+GraphQL-level errors (syntax, schema violations) are returned in the standard GraphQL error format:
+
+```json
+{
+  "errors": [
+    {
+      "message": "Not Authorised!",
+      "extensions": {
+        "code": "UNAUTHENTICATED"
+      }
+    }
+  ]
+}
+```
 
 ---
 
-### 7. Testing & Tooling
-- **GraphiQL:** available at `http://localhost:4000/graphql` in development (`NODE_ENV=development`).
-- **Seed scripts:**
-  - `npm run seed:root` – ensure test root user.
-  - `node scripts/seed-students.js` – generate 100 demo students with profile pictures.
-  - `node scripts/seed-degrees-and-teachers.js` – populate degrees and teachers.
-- **Database inspection:** `npx prisma studio`.
+## Best Practices
+
+### 1. Authentication
+
+- Always include the JWT token in the `Authorization` header
+- Handle token expiration gracefully
+- Implement token refresh logic in your client
+
+### 2. Error Handling
+
+- Check both `success` field and `errors` array in mutation responses
+- Handle GraphQL errors separately from mutation payload errors
+- Display user-friendly error messages
+
+### 3. File Uploads
+
+- Use multipart requests for file uploads
+- Validate file types and sizes on the client side
+- Handle upload progress for better UX
+
+### 4. Query Optimization
+
+- Request only the fields you need
+- Use fragments for reusable field sets
+- Implement pagination for large datasets (when available)
+
+### 5. Date Handling
+
+- Always use ISO 8601 format for dates
+- Normalize dates to UTC
+- Handle timezone conversions on the client
+
+### 6. Security
+
+- Never expose JWT tokens in logs or URLs
+- Use HTTPS in production
+- Validate all user inputs on the client side
 
 ---
 
-### 8. Troubleshooting
-- **401 / Not Authorised:** confirm token presence and role permissions.
-- **400 Bad Request:** inspect `errors` array from mutation response; often validation.
-- **Schema drift:** run `npx prisma db push` if Prisma schema changes without migration.
-- **Uploads failing:** ensure client uses multipart requests and backend `graphql-upload` middleware is active (already configured in `src/app.js`).
+## Testing
+
+### GraphQL Playground
+
+Access GraphQL Playground at `http://localhost:4000/graphql` in development mode.
+
+### Seed Scripts
+
+```bash
+# Seed root user
+npm run seed:root
+
+# Seed demo data
+node scripts/seed-students.js
+node scripts/seed-degrees-and-teachers.js
+node scripts/seed-attendances.js
+```
+
+### Database Inspection
+
+```bash
+# Open Prisma Studio
+npx prisma studio
+```
 
 ---
 
-For additional operations or custom flows, check:
-- GraphQL schema files under `src/graphql/schema/`
-- Resolver logic under `src/graphql/resolvers/`
-- Permission rules under `src/permissions/index.js`
+## Additional Resources
 
+- **Examples**: See `docs/EXAMPLES.md` for complete mutation and query examples
+- **Permissions**: See `docs/PERMISSIONS_REFERENCE.md` for detailed permission rules
+- **Frontend Guide**: See `docs/FRONTEND_GUIDE.md` for frontend integration
+- **Schema Files**: Located in `src/graphql/schema/`
+- **Resolvers**: Located in `src/graphql/resolvers/`
