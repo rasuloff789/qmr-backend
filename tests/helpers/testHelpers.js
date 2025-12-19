@@ -224,16 +224,16 @@ export async function createTestCourse(data = {}) {
 			return await prisma.course.create({
 				data: {
 					name: finalName,
-					description,
-					daysOfWeek,
-					gender,
-					startAt,
-					endAt,
-					startTime,
-					endTime,
-					teacherId,
-					degrees: degreeConnect,
-				},
+			description,
+			daysOfWeek,
+			gender,
+			startAt,
+			endAt,
+			startTime,
+			endTime,
+			teacherId,
+			degrees: degreeConnect,
+		},
 			});
 		} catch (error) {
 			// Unique constraint xatosi - yangi name yaratish va qayta urinish

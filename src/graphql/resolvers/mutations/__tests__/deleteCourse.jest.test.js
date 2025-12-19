@@ -69,7 +69,7 @@ describe("deleteCourse Mutation", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.message).toContain("deleted successfully");
-
+			
 			// Course to'liq o'chirilgan bo'lishi kerak (hard delete)
 			const deleted = await prisma.course.findUnique({
 				where: { id: course.id },
