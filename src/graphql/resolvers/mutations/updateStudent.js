@@ -29,6 +29,7 @@ const updateStudent = async (
 		tgUsername,
 		password,
 		profilePicture,
+		possibleDegrees,
 		isActive,
 	}
 ) => {
@@ -186,6 +187,43 @@ const updateStudent = async (
 		// Add isActive if provided
 		if (isActive !== undefined) {
 			updateData.isActive = isActive;
+		}
+
+		// Validate and add possibleDegrees if provided
+		if (possibleDegrees !== undefined) {
+			if (!Array.isArray(possibleDegrees) || possibleDegrees.length === 0) {
+				return {
+					success: false,
+					message: "Validation failed",
+					student: null,
+					errors: ["At least one degree must be provided"],
+					timestamp: new Date().toISOString(),
+				};
+			}
+
+			// Parse and deduplicate IDs
+			const degreeIds = [...new Set(possibleDegrees.map((id) => parseInt(id)))];
+
+			// Check if all provided degrees exist
+			const existingDegrees = await prisma.degree.findMany({
+				where: {
+					id: { in: degreeIds },
+				},
+			});
+
+			if (existingDegrees.length !== degreeIds.length) {
+				return {
+					success: false,
+					message: "Validation failed",
+					student: null,
+					errors: ["One or more degree IDs are invalid"],
+					timestamp: new Date().toISOString(),
+				};
+			}
+
+			updateData.possibleDegrees = {
+				set: degreeIds.map((id) => ({ id })),
+			};
 		}
 
 		// Check if there are any fields to update

@@ -9,7 +9,34 @@ import { prisma } from "../../../database/index.js";
  */
 export const getCourses = async (_, args, context) => {
 	try {
+		const user = context?.user || null;
+		const role = String(user?.role || "").toLowerCase();
+		const teacherIdFilter =
+			role === "teacher" && user?.id ? parseInt(user.id) : null;
+
+		// ADMIN users can only see courses of their own gender + CHILD.
+		// If admin gender is missing, deny (return empty list).
+		if (role === "admin") {
+			const adminGender = user?.gender
+				? String(user.gender).toUpperCase()
+				: null;
+			if (!adminGender) return [];
+		}
+
+		const adminGenderFilter =
+			role === "admin"
+				? {
+						gender: {
+							in: [String(user.gender).toUpperCase(), "CHILD"],
+						},
+				  }
+				: null;
+
 		const courses = await prisma.course.findMany({
+			where: {
+				...(teacherIdFilter ? { teacherId: teacherIdFilter } : {}),
+				...(adminGenderFilter ? adminGenderFilter : {}),
+			},
 			select: {
 				id: true,
 				name: true,
@@ -89,8 +116,34 @@ export const getCourses = async (_, args, context) => {
  */
 export const getCourse = async (_, { id }, context) => {
 	try {
-		const course = await prisma.course.findUnique({
-			where: { id: parseInt(id) },
+		const user = context?.user || null;
+		const role = String(user?.role || "").toLowerCase();
+		const parsedId = parseInt(id);
+
+		// ADMIN users can only fetch courses of their own gender + CHILD.
+		// If admin gender is missing, deny (return null).
+		if (role === "admin") {
+			const adminGender = user?.gender
+				? String(user.gender).toUpperCase()
+				: null;
+			if (!adminGender) return null;
+		}
+
+		// Teachers can only fetch their own course; others can fetch by id.
+		const where =
+			role === "teacher" && user?.id
+				? { id: parsedId, teacherId: parseInt(user.id) }
+				: role === "admin"
+				? {
+						id: parsedId,
+						gender: {
+							in: [String(user.gender).toUpperCase(), "CHILD"],
+						},
+				  }
+				: { id: parsedId };
+
+		const course = await prisma.course.findFirst({
+			where,
 			select: {
 				id: true,
 				name: true,

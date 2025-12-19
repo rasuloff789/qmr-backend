@@ -96,6 +96,8 @@ extend type Mutation {
         password: String
         """Optional new profile picture upload."""
         profilePicture: Upload
+        """Optional possible degrees."""
+        possibleDegrees: [ID!]
         """Optional active status toggle."""
         isActive: Boolean
     ): UpdateStudentResponse!
