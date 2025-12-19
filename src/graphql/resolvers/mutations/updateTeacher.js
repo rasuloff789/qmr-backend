@@ -54,6 +54,7 @@ const updateTeacher = async (
 		if (!existingTeacher) {
 			return {
 				success: false,
+				code: "TEACHER_NOT_FOUND",
 				message: "Teacher not found",
 				teacher: null,
 				errors: ["Teacher not found"],
@@ -70,6 +71,7 @@ const updateTeacher = async (
 			if (!usernameValidation.valid) {
 				return {
 					success: false,
+					code: "TEACHER_USERNAME_INVALID",
 					message: "Validation failed",
 					teacher: null,
 					errors: [usernameValidation.reason],
@@ -88,6 +90,7 @@ const updateTeacher = async (
 			if (usernameExists) {
 				return {
 					success: false,
+					code: "TEACHER_USERNAME_TAKEN",
 					message: "Username already exists",
 					teacher: null,
 					errors: ["Username already exists"],
@@ -108,6 +111,7 @@ const updateTeacher = async (
 			if (!isValidBirthdate(birthDate)) {
 				return {
 					success: false,
+					code: "TEACHER_BIRTHDATE_INVALID",
 					message: "Validation failed",
 					teacher: null,
 					errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
@@ -124,6 +128,7 @@ const updateTeacher = async (
 			if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
 				return {
 					success: false,
+					code: "TEACHER_PHONE_INVALID",
 					message: "Validation failed",
 					teacher: null,
 					errors: [
@@ -146,6 +151,7 @@ const updateTeacher = async (
 			if (!tgValidation.valid) {
 				return {
 					success: false,
+					code: "TEACHER_TG_USERNAME_INVALID",
 					message: "Validation failed",
 					teacher: null,
 					errors: [tgValidation.reason],
@@ -160,6 +166,7 @@ const updateTeacher = async (
 			if (!isPasswordSecure(password)) {
 				return {
 					success: false,
+					code: "TEACHER_PASSWORD_WEAK",
 					message: "Validation failed",
 					teacher: null,
 					errors: [
@@ -178,6 +185,7 @@ const updateTeacher = async (
 				if (!uploadResult.success) {
 					return {
 						success: false,
+						code: "TEACHER_PROFILE_PICTURE_UPLOAD_FAILED",
 						message: "File upload failed",
 						teacher: null,
 						errors: [uploadResult.error],
@@ -204,6 +212,80 @@ const updateTeacher = async (
 
 		// Add degrees if provided
 		if (degreeIds !== undefined) {
+			// If we're changing teacher degrees, ensure we are not removing degrees
+			// required by any currently-active course taught by this teacher.
+			//
+			// "Active course" is defined as:
+			// - startAt <= now
+			// - and (endAt is null OR endAt >= now)
+			const now = new Date();
+			const activeCourses = await prisma.course.findMany({
+				where: {
+					teacherId: parseInt(id),
+					startAt: { lte: now },
+					OR: [{ endAt: null }, { endAt: { gte: now } }],
+				},
+				select: {
+					id: true,
+					name: true,
+					degrees: { select: { id: true, name: true } },
+				},
+			});
+
+			if (activeCourses.length > 0) {
+				const requiredDegreeIds = new Set();
+				const degreeIdToName = new Map();
+				const degreeIdToCourses = new Map();
+
+				for (const course of activeCourses) {
+					for (const d of course.degrees) {
+						requiredDegreeIds.add(d.id);
+						if (d?.name) degreeIdToName.set(d.id, d.name);
+						if (!degreeIdToCourses.has(d.id)) degreeIdToCourses.set(d.id, []);
+						degreeIdToCourses.get(d.id).push(course.name);
+					}
+				}
+
+				const nextDegreeIds = new Set(
+					(Array.isArray(degreeIds) ? degreeIds : [])
+						.map((x) => parseInt(x))
+						.filter((n) => !Number.isNaN(n))
+				);
+
+				const missingRequired = [...requiredDegreeIds].filter(
+					(reqId) => !nextDegreeIds.has(reqId)
+				);
+
+				if (missingRequired.length > 0) {
+					const details = missingRequired.map((degId) => {
+						const degName = degreeIdToName.get(degId);
+						const courses = (degreeIdToCourses.get(degId) || []).slice(0, 5);
+						const coursesSuffix =
+							(degreeIdToCourses.get(degId) || []).length > 5 ? " (+more)" : "";
+						return degName
+							? `Degree ${degName} (ID: ${degId}) used by active course(s): ${courses.join(
+									", "
+							  )}${coursesSuffix}`
+							: `Degree ID ${degId} used by active course(s): ${courses.join(
+									", "
+							  )}${coursesSuffix}`;
+					});
+
+					return {
+						success: false,
+						code: "TEACHER_DEGREES_CONFLICT_ACTIVE_COURSE",
+						message:
+							"Cannot update teacher degrees while teaching active courses",
+						teacher: null,
+						errors: [
+							"Remove the teacher from active courses (or update those courses' degree requirements) before removing these degree(s).",
+							...details,
+						],
+						timestamp: new Date().toISOString(),
+					};
+				}
+			}
+
 			if (degreeIds.length > 0) {
 				updateData.degrees = {
 					set: degreeIds.map((id) => ({ id: parseInt(id) })),
@@ -222,6 +304,7 @@ const updateTeacher = async (
 		if (Object.keys(updateData).length === 0) {
 			return {
 				success: false,
+				code: "NO_FIELDS_TO_UPDATE",
 				message: "No fields provided to update",
 				teacher: null,
 				errors: ["No fields provided to update"],
@@ -265,6 +348,7 @@ const updateTeacher = async (
 		console.error("Change teacher error:", error);
 		return {
 			success: false,
+			code: "TEACHER_UPDATE_FAILED",
 			message: error.message || "Failed to update teacher",
 			teacher: null,
 			errors: [error.message || "Unexpected error"],

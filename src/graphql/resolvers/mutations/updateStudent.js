@@ -42,6 +42,7 @@ const updateStudent = async (
 		if (!existingStudent) {
 			return {
 				success: false,
+				code: "STUDENT_NOT_FOUND",
 				message: "Student not found",
 				student: null,
 				errors: ["Student not found"],
@@ -58,6 +59,7 @@ const updateStudent = async (
 			if (!usernameValidation.valid) {
 				return {
 					success: false,
+					code: "STUDENT_USERNAME_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: [usernameValidation.reason],
@@ -76,6 +78,7 @@ const updateStudent = async (
 			if (usernameExists) {
 				return {
 					success: false,
+					code: "STUDENT_USERNAME_TAKEN",
 					message: "Username already exists",
 					student: null,
 					errors: ["Username already exists"],
@@ -96,6 +99,7 @@ const updateStudent = async (
 			if (!isValidBirthdate(birthDate)) {
 				return {
 					success: false,
+					code: "STUDENT_BIRTHDATE_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
@@ -111,6 +115,7 @@ const updateStudent = async (
 			if (!phoneValidation.valid) {
 				return {
 					success: false,
+					code: "STUDENT_PHONE_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: [phoneValidation.reason],
@@ -128,6 +133,7 @@ const updateStudent = async (
 			if (!tgValidation.valid) {
 				return {
 					success: false,
+					code: "STUDENT_TG_USERNAME_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: [tgValidation.reason],
@@ -142,6 +148,7 @@ const updateStudent = async (
 			if (!isPasswordSecure(password)) {
 				return {
 					success: false,
+					code: "STUDENT_PASSWORD_WEAK",
 					message: "Validation failed",
 					student: null,
 					errors: [
@@ -160,6 +167,7 @@ const updateStudent = async (
 				if (!uploadResult.success) {
 					return {
 						success: false,
+						code: "STUDENT_PROFILE_PICTURE_UPLOAD_FAILED",
 						message: "File upload failed",
 						student: null,
 						errors: [uploadResult.error],
@@ -194,6 +202,7 @@ const updateStudent = async (
 			if (!Array.isArray(possibleDegrees) || possibleDegrees.length === 0) {
 				return {
 					success: false,
+					code: "STUDENT_DEGREES_EMPTY",
 					message: "Validation failed",
 					student: null,
 					errors: ["At least one degree must be provided"],
@@ -202,7 +211,9 @@ const updateStudent = async (
 			}
 
 			// Parse and deduplicate IDs
-			const degreeIds = [...new Set(possibleDegrees.map((id) => parseInt(id)))];
+			const degreeIds = [
+				...new Set(possibleDegrees.map((id) => parseInt(id)).filter((n) => !Number.isNaN(n))),
+			];
 
 			// Check if all provided degrees exist
 			const existingDegrees = await prisma.degree.findMany({
@@ -214,11 +225,74 @@ const updateStudent = async (
 			if (existingDegrees.length !== degreeIds.length) {
 				return {
 					success: false,
+					code: "STUDENT_DEGREE_IDS_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: ["One or more degree IDs are invalid"],
 					timestamp: new Date().toISOString(),
 				};
+			}
+
+			// Guard: don't allow updating student degrees in a way that breaks active enrollments.
+			// A student must have at least one degree that matches each enrolled course's degree requirements.
+			const activeEnrollments = await prisma.courseStudent.findMany({
+				where: {
+					studentId: parseInt(id),
+					isActive: true,
+					isDeleted: false,
+				},
+				select: {
+					id: true,
+					course: {
+						select: {
+							id: true,
+							name: true,
+							degrees: { select: { id: true, name: true } },
+						},
+					},
+				},
+			});
+
+			if (activeEnrollments.length > 0) {
+				const nextDegreeIdSet = new Set(degreeIds);
+				const blocking = [];
+
+				for (const enrollment of activeEnrollments) {
+					const courseDegreeIds = (enrollment.course?.degrees || []).map((d) => d.id);
+					const hasMatch = courseDegreeIds.some((degId) => nextDegreeIdSet.has(degId));
+					if (!hasMatch) {
+						blocking.push({
+							courseId: enrollment.course?.id,
+							courseName: enrollment.course?.name,
+							requiredDegrees: (enrollment.course?.degrees || []).map((d) => ({
+								id: d.id,
+								name: d.name,
+							})),
+						});
+					}
+				}
+
+				if (blocking.length > 0) {
+					const details = blocking.map((b) => {
+						const req = (b.requiredDegrees || [])
+							.map((d) => (d?.name ? `${d.name} (ID: ${d.id})` : `ID: ${d.id}`))
+							.join(", ");
+						return `Course "${b.courseName}" (ID: ${b.courseId}) requires at least one of: ${req}`;
+					});
+
+					return {
+						success: false,
+						code: "STUDENT_DEGREES_CONFLICT_ACTIVE_ENROLLMENT",
+						message:
+							"Cannot update student degrees while enrolled in active courses",
+						student: null,
+						errors: [
+							"Remove the student from those course enrollments (or update course degree requirements) before removing these degree(s).",
+							...details,
+						],
+						timestamp: new Date().toISOString(),
+					};
+				}
 			}
 
 			updateData.possibleDegrees = {
@@ -230,6 +304,7 @@ const updateStudent = async (
 		if (Object.keys(updateData).length === 0) {
 			return {
 				success: false,
+				code: "NO_FIELDS_TO_UPDATE",
 				message: "No fields provided to update",
 				student: null,
 				errors: ["No fields provided to update"],
@@ -254,6 +329,7 @@ const updateStudent = async (
 	} catch (error) {
 		return {
 			success: false,
+			code: "STUDENT_UPDATE_FAILED",
 			message: error.message || "Failed to update student",
 			student: null,
 			errors: [error.message || "Unexpected error"],
