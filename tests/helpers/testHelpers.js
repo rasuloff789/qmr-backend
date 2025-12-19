@@ -193,7 +193,9 @@ export async function createTestCourse(data = {}) {
 	// Unique course name yaratish
 	const uniqueId = `${Date.now()}${Math.random().toString(36).substring(2, 9)}${process.pid}`;
 	const {
-		name = `Course${uniqueId.slice(-20)}`, // Unique course name
+		// If caller provides a name, we still make it unique to avoid test flakiness
+		// when Jest runs test files in parallel (Course.name is UNIQUE).
+		name,
 		description = "Test course description",
 		daysOfWeek = ["MONDAY", "WEDNESDAY"],
 		gender = "MALE",
@@ -213,21 +215,47 @@ export async function createTestCourse(data = {}) {
 		? { connect: degreeIds.map(id => ({ id })) }
 		: {};
 
-	return await prisma.course.upsert({
-		where: { name },
-		update: {
-			description,
-			daysOfWeek,
-			gender,
-			startAt,
-			endAt,
-			startTime,
-			endTime,
-			teacherId,
-			degrees: degreeConnect,
-		},
-		create: {
-			name,
+	const baseName = name || `Course${uniqueId.slice(-20)}`;
+	let finalName = `${baseName}-${uniqueId.slice(-12)}`;
+	let attempts = 0;
+
+	while (attempts < 5) {
+		try {
+			return await prisma.course.create({
+				data: {
+					name: finalName,
+					description,
+					daysOfWeek,
+					gender,
+					startAt,
+					endAt,
+					startTime,
+					endTime,
+					teacherId,
+					degrees: degreeConnect,
+				},
+			});
+		} catch (error) {
+			// Unique constraint xatosi - yangi name yaratish va qayta urinish
+			if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+				attempts++;
+				finalName = `${baseName}-${Date.now()}${Math.random().toString(36).substring(2, 9)}${process.pid}${attempts}`.slice(
+					0,
+					255
+				);
+				continue;
+			}
+			throw error;
+		}
+	}
+
+	// Oxirgi urinish: baribir create qilib ko'ramiz (xato bo'lsa yuqoriga tashlanadi)
+	return await prisma.course.create({
+		data: {
+			name: `${baseName}-${Date.now()}${Math.random().toString(36).substring(2, 9)}${process.pid}`.slice(
+				0,
+				255
+			),
 			description,
 			daysOfWeek,
 			gender,
