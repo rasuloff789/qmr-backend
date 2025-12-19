@@ -223,6 +223,44 @@ query GetCourses {
 }
 ```
 
+### Attendance (Teacher)
+
+See: `docs/TEACHER_ATTENDANCE_GUIDE.md`
+
+### Attendance (Admin / Root)
+
+See: `docs/ADMIN_ROOT_ATTENDANCE_QUERIES.md`
+
+### Delete Course
+
+See full guide: `docs/DELETE_COURSE_FRONTEND_GUIDE.md`
+
+```graphql
+mutation DeleteCourse($courseId: ID!) {
+  deleteCourse(courseId: $courseId) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
+### Remove Student From Course
+
+See full guide: `docs/REMOVE_STUDENT_FROM_COURSE_GUIDE.md`
+
+```graphql
+mutation RemoveStudentFromCourse($courseId: ID!, $studentId: ID!) {
+  removeStudentFromCourse(courseId: $courseId, studentId: $studentId) {
+    success
+    message
+    errors
+    timestamp
+  }
+}
+```
+
 ### Create Student
 
 ```graphql
@@ -395,10 +433,12 @@ function handleGraphQLErrors(error) {
 
 ```javascript
 function handleMutationResponse(response) {
-  const { success, message, errors } = response.data.mutationName;
+  const { success, code, message, errors } = response.data.mutationName;
 
   if (!success) {
     // Handle mutation-level errors
+    // Prefer switching on `code` (machine-readable) instead of parsing strings.
+    // See: docs/ERROR_CODES.md
     errors.forEach(error => {
       console.error('Error:', error);
       // Show error to user

@@ -29,7 +29,6 @@ The `setAttendance` mutation allows authorized users to mark students as present
 ### Access Control
 
 - **ROOT**: Can set attendance for any course
-- **ADMIN**: Can set attendance for any course
 - **TEACHER**: Can only set attendance for courses they are assigned to teach
 
 ---
