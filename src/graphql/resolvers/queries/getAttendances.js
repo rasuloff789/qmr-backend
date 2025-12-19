@@ -52,6 +52,31 @@ const getAttendances = async (
 		// Build where clause dynamically based on provided filters
 		const where = {};
 
+		// Gender-based scoping for ADMIN:
+		// - FEMALE admin -> FEMALE + CHILD students
+		// - MALE admin   -> MALE + CHILD students
+		// - ROOT         -> all students
+		//
+		// NOTE: This is enforced at query time to avoid leaking attendance data.
+		const role = String(user?.role || "").trim().toLowerCase();
+		if (role === "admin") {
+			const adminGender = String(user?.gender || "").trim().toUpperCase();
+			let allowedGenders = [];
+
+			if (adminGender === "MALE" || adminGender === "FEMALE") {
+				allowedGenders = [adminGender, "CHILD"];
+			} else if (adminGender === "CHILD") {
+				allowedGenders = ["CHILD"];
+			} else {
+				// If admin gender is unknown/missing, return nothing (safe default).
+				allowedGenders = [];
+			}
+
+			where.student = {
+				gender: { in: allowedGenders },
+			};
+		}
+
 		if (courseId) {
 			where.courseId = parseInt(courseId);
 		}

@@ -40,6 +40,18 @@ describe("getAttendances Query", () => {
 		});
 		testData.students.push(student);
 
+		const femaleStudent = await createTestStudent({
+			gender: "FEMALE",
+			degreeIds: [degree.id],
+		});
+		testData.students.push(femaleStudent);
+
+		const childStudent = await createTestStudent({
+			gender: "CHILD",
+			degreeIds: [degree.id],
+		});
+		testData.students.push(childStudent);
+
 		const course = await createTestCourse({
 			name: `Test Course ${Date.now()}`,
 			teacherId: teacher.id,
@@ -53,15 +65,42 @@ describe("getAttendances Query", () => {
 		});
 		testData.enrollments.push(enrollment);
 
+		const femaleEnrollment = await createTestEnrollment({
+			courseId: course.id,
+			studentId: femaleStudent.id,
+		});
+		testData.enrollments.push(femaleEnrollment);
+
+		const childEnrollment = await createTestEnrollment({
+			courseId: course.id,
+			studentId: childStudent.id,
+		});
+		testData.enrollments.push(childEnrollment);
+
 		// Attendance yaratish - agar table mavjud bo'lsa
 		try {
-			await prisma.attendance.create({
-				data: {
-					courseId: course.id,
-					studentId: student.id,
-					date: new Date(),
-					isPresent: true,
-				},
+			const today = new Date();
+			await prisma.attendance.createMany({
+				data: [
+					{
+						courseId: course.id,
+						studentId: student.id,
+						date: today,
+						isPresent: true,
+					},
+					{
+						courseId: course.id,
+						studentId: femaleStudent.id,
+						date: today,
+						isPresent: true,
+					},
+					{
+						courseId: course.id,
+						studentId: childStudent.id,
+						date: today,
+						isPresent: true,
+					},
+				],
 			});
 		} catch (error) {
 			// Agar table mavjud bo'lmasa, test skip qilinadi
@@ -115,6 +154,65 @@ describe("getAttendances Query", () => {
 			result.forEach((att) => {
 				expect(att.course.id).toBe(testData.courses[0].id);
 			});
+		});
+	});
+
+	describe("Role-based scoping (ADMIN/ROOT)", () => {
+		it("ADMIN FEMALE faqat FEMALE va CHILD student attendancelarini ko'rishi kerak", async () => {
+			const context = createMockContext({
+				id: 1,
+				role: "admin",
+				gender: "FEMALE",
+			});
+			const result = await getAttendances(
+				null,
+				{ courseId: String(testData.courses[0].id) },
+				context
+			);
+
+			expect(Array.isArray(result)).toBe(true);
+			expect(result.length).toBeGreaterThanOrEqual(1);
+			expect(result.every((a) => ["FEMALE", "CHILD"].includes(a.student.gender))).toBe(
+				true
+			);
+		});
+
+		it("ADMIN MALE faqat MALE va CHILD student attendancelarini ko'rishi kerak", async () => {
+			const context = createMockContext({
+				id: 1,
+				role: "admin",
+				gender: "MALE",
+			});
+			const result = await getAttendances(
+				null,
+				{ courseId: String(testData.courses[0].id) },
+				context
+			);
+
+			expect(Array.isArray(result)).toBe(true);
+			expect(result.length).toBeGreaterThanOrEqual(1);
+			expect(result.every((a) => ["MALE", "CHILD"].includes(a.student.gender))).toBe(
+				true
+			);
+		});
+
+		it("ROOT barcha student attendancelarini ko'rishi kerak", async () => {
+			const context = createMockContext({
+				id: 1,
+				role: "root",
+			});
+			const result = await getAttendances(
+				null,
+				{ courseId: String(testData.courses[0].id) },
+				context
+			);
+
+			expect(Array.isArray(result)).toBe(true);
+			// We created MALE + FEMALE + CHILD attendance rows for this course/date.
+			const genders = new Set(result.map((a) => a.student.gender));
+			expect(genders.has("MALE")).toBe(true);
+			expect(genders.has("FEMALE")).toBe(true);
+			expect(genders.has("CHILD")).toBe(true);
 		});
 	});
 });
