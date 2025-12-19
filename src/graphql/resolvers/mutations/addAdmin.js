@@ -42,6 +42,7 @@ const addAdmin = async (
 		if (!usernameValidation.valid) {
 			return {
 				success: false,
+				code: "ADMIN_USERNAME_INVALID",
 				message: "Validation failed",
 				admin: null,
 				errors: [usernameValidation.reason],
@@ -52,6 +53,7 @@ const addAdmin = async (
 		if (!isPasswordSecure(password)) {
 			return {
 				success: false,
+				code: "ADMIN_PASSWORD_WEAK",
 				message: "Validation failed",
 				admin: null,
 				errors: [
@@ -66,6 +68,7 @@ const addAdmin = async (
 		if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
 			return {
 				success: false,
+				code: "ADMIN_PHONE_INVALID",
 				message: "Validation failed",
 				admin: null,
 				errors: [
@@ -79,6 +82,7 @@ const addAdmin = async (
 		if (!tgValidation.valid) {
 			return {
 				success: false,
+				code: "ADMIN_TG_USERNAME_INVALID",
 				message: "Validation failed",
 				admin: null,
 				errors: [tgValidation.reason],
@@ -89,6 +93,7 @@ const addAdmin = async (
 		if (!isValidBirthdate(birthDate)) {
 			return {
 				success: false,
+				code: "ADMIN_BIRTHDATE_INVALID",
 				message: "Validation failed",
 				admin: null,
 				errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
@@ -104,6 +109,7 @@ const addAdmin = async (
 		if (existingAdmin) {
 			return {
 				success: false,
+				code: "ADMIN_USERNAME_TAKEN",
 				message: "Username already exists",
 				admin: null,
 				errors: [`Username '${username}' is already in use`],
@@ -151,6 +157,7 @@ const addAdmin = async (
 		console.error("Add admin error:", error);
 		return {
 			success: false,
+			code: "ADMIN_CREATE_FAILED",
 			message: "Failed to create admin user",
 			admin: null,
 			errors: [error.message || "An unexpected error occurred"],

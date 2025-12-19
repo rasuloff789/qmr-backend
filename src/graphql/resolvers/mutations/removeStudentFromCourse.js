@@ -15,6 +15,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (!courseId || !studentId) {
 			return {
 				success: false,
+				code: "ENROLLMENT_REQUIRED_FIELDS",
 				message: "Validation failed",
 				errors: ["Course ID and Student ID are required"],
 				timestamp: new Date().toISOString(),
@@ -27,6 +28,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (isNaN(parsedCourseId) || isNaN(parsedStudentId)) {
 			return {
 				success: false,
+				code: "ENROLLMENT_IDS_INVALID",
 				message: "Validation failed",
 				errors: ["Invalid course ID or student ID"],
 				timestamp: new Date().toISOString(),
@@ -41,6 +43,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (!course) {
 			return {
 				success: false,
+				code: "COURSE_NOT_FOUND",
 				message: "Course not found",
 				errors: [`Course with ID ${courseId} not found`],
 				timestamp: new Date().toISOString(),
@@ -55,6 +58,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (!student) {
 			return {
 				success: false,
+				code: "STUDENT_NOT_FOUND",
 				message: "Student not found",
 				errors: [`Student with ID ${studentId} not found`],
 				timestamp: new Date().toISOString(),
@@ -74,6 +78,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (!enrollment) {
 			return {
 				success: false,
+				code: "ENROLLMENT_NOT_FOUND",
 				message: "Enrollment not found",
 				errors: [
 					`Student is not enrolled in this course (Course ID: ${courseId}, Student ID: ${studentId})`,
@@ -86,6 +91,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		if (enrollment.isDeleted) {
 			return {
 				success: false,
+				code: "ENROLLMENT_ALREADY_REMOVED",
 				message: "Student already removed",
 				errors: [
 					`Student has already been removed from this course (Enrollment ID: ${enrollment.id})`,
@@ -119,6 +125,7 @@ const removeStudentFromCourse = async (_parent, { courseId, studentId }) => {
 		console.error("Remove student from course error:", error);
 		return {
 			success: false,
+			code: "ENROLLMENT_REMOVE_FAILED",
 			message: "Failed to remove student from course",
 			errors: [error.message || "An unexpected error occurred"],
 			timestamp: new Date().toISOString(),

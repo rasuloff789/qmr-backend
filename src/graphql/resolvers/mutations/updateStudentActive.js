@@ -19,6 +19,7 @@ export const updateStudentActive = async (parent, args, context) => {
 		if (!existingStudent) {
 			return {
 				success: false,
+				code: "STUDENT_NOT_FOUND",
 				message: "Student not found",
 				student: null,
 				errors: ["Student with the provided ID does not exist"],
@@ -55,6 +56,7 @@ export const updateStudentActive = async (parent, args, context) => {
 		console.error("Error changing student active status:", error);
 		return {
 			success: false,
+			code: "STUDENT_ACTIVE_UPDATE_FAILED",
 			message: "Failed to change student active status",
 			student: null,
 			errors: ["Internal server error"],

@@ -45,8 +45,9 @@ const ATTENDANCE_INCLUDE = {
 /**
  * Helper function to create error response
  */
-const createErrorResponse = (message, errors, attendance = null) => ({
+const createErrorResponse = (code, message, errors, attendance = null) => ({
 	success: false,
+	code,
 	message,
 	attendance,
 	errors: Array.isArray(errors) ? errors : [errors],
@@ -73,6 +74,7 @@ const formatDate = (date) => date.toISOString().split("T")[0];
 const validateInput = (courseId, studentId, date, isPresent) => {
 	if (!courseId || !studentId || !date) {
 		return createErrorResponse(
+			"ATTENDANCE_REQUIRED_FIELDS",
 			"Validation failed",
 			"Course ID, Student ID, and date are required"
 		);
@@ -80,6 +82,7 @@ const validateInput = (courseId, studentId, date, isPresent) => {
 
 	if (typeof isPresent !== "boolean") {
 		return createErrorResponse(
+			"ATTENDANCE_IS_PRESENT_INVALID",
 			"Validation failed",
 			"isPresent must be a boolean value"
 		);
@@ -94,6 +97,7 @@ const validateInput = (courseId, studentId, date, isPresent) => {
 const validateAuthorization = (user, course) => {
 	if (!user) {
 		return createErrorResponse(
+			"AUTH_REQUIRED",
 			"Authentication required",
 			"You must be logged in to set attendance"
 		);
@@ -109,6 +113,7 @@ const validateAuthorization = (user, course) => {
 		const teacherId = parseInt(user.id);
 		if (course.teacherId !== teacherId) {
 			return createErrorResponse(
+				"ATTENDANCE_UNAUTHORIZED_NOT_COURSE_TEACHER",
 				"Unauthorized",
 				"You can only set attendance for courses you are assigned to teach"
 			);
@@ -118,6 +123,7 @@ const validateAuthorization = (user, course) => {
 
 	// Other roles are not allowed
 	return createErrorResponse(
+		"ATTENDANCE_UNAUTHORIZED_ROLE",
 		"Unauthorized",
 		"Only teachers and root users can set attendance"
 	);
@@ -132,6 +138,7 @@ const validateAttendanceDate = (attendanceDate, course) => {
 	// Check if date falls on a scheduled day
 	if (!course.daysOfWeek.includes(attendanceDayOfWeek)) {
 		return createErrorResponse(
+			"ATTENDANCE_DATE_NOT_ON_SCHEDULE",
 			"Invalid attendance date",
 			`The attendance date (${attendanceDayOfWeek}) does not match any of the course's scheduled days: ${course.daysOfWeek.join(
 				", "
@@ -145,6 +152,7 @@ const validateAttendanceDate = (attendanceDate, course) => {
 
 	if (attendanceDateOnly < courseStartDate) {
 		return createErrorResponse(
+			"ATTENDANCE_DATE_BEFORE_COURSE_START",
 			"Invalid attendance date",
 			`The attendance date cannot be before the course start date (${formatDate(
 				courseStartDate
@@ -158,6 +166,7 @@ const validateAttendanceDate = (attendanceDate, course) => {
 
 		if (attendanceDateOnly > courseEndDate) {
 			return createErrorResponse(
+				"ATTENDANCE_DATE_AFTER_COURSE_END",
 				"Invalid attendance date",
 				`The attendance date cannot be after the course end date (${formatDate(
 					courseEndDate
@@ -295,6 +304,7 @@ const setAttendance = async (
 
 		if (!course) {
 			return createErrorResponse(
+				"COURSE_NOT_FOUND",
 				"Course not found",
 				`Course with ID ${courseId} not found`
 			);
@@ -339,6 +349,7 @@ const setAttendance = async (
 		// Validate student
 		if (!student) {
 			return createErrorResponse(
+				"STUDENT_NOT_FOUND_OR_INACTIVE",
 				"Student not found or inactive",
 				`Student with ID ${studentId} not found, inactive, or deleted`
 			);
@@ -347,6 +358,7 @@ const setAttendance = async (
 		// Validate enrollment
 		if (!enrollment || !enrollment.isActive || enrollment.isDeleted) {
 			return createErrorResponse(
+				"STUDENT_NOT_ENROLLED_OR_INACTIVE",
 				"Student not enrolled",
 				"Student is not enrolled in this course or enrollment is inactive"
 			);
@@ -401,6 +413,7 @@ const setAttendance = async (
 	} catch (error) {
 		console.error("Set attendance error:", error);
 		return createErrorResponse(
+			"ATTENDANCE_SET_FAILED",
 			"Failed to set attendance",
 			error.message || "An unexpected error occurred"
 		);

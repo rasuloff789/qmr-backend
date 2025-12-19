@@ -19,6 +19,7 @@ const addStudentToCourse = async (
 		if (!courseId || !studentId) {
 			return {
 				success: false,
+				code: "ENROLLMENT_REQUIRED_FIELDS",
 				message: "Validation failed",
 				courseStudent: null,
 				errors: ["Course ID and Student ID are required"],
@@ -29,6 +30,7 @@ const addStudentToCourse = async (
 		if (!monthlyPayment || monthlyPayment <= 0) {
 			return {
 				success: false,
+				code: "ENROLLMENT_MONTHLY_PAYMENT_INVALID",
 				message: "Validation failed",
 				courseStudent: null,
 				errors: ["Monthly payment must be a positive number"],
@@ -50,6 +52,7 @@ const addStudentToCourse = async (
 		if (!course) {
 			return {
 				success: false,
+				code: "COURSE_NOT_FOUND",
 				message: "Course not found",
 				courseStudent: null,
 				errors: [`Course with ID ${courseId} not found`],
@@ -72,6 +75,7 @@ const addStudentToCourse = async (
 		if (!student) {
 			return {
 				success: false,
+				code: "STUDENT_NOT_FOUND_OR_INACTIVE",
 				message: "Student not found or inactive",
 				courseStudent: null,
 				errors: [
@@ -85,6 +89,7 @@ const addStudentToCourse = async (
 		if (student.gender !== course.gender) {
 			return {
 				success: false,
+				code: "ENROLLMENT_GENDER_MISMATCH",
 				message: "Gender mismatch",
 				courseStudent: null,
 				errors: [
@@ -104,6 +109,7 @@ const addStudentToCourse = async (
 		if (!hasMatchingDegree) {
 			return {
 				success: false,
+				code: "ENROLLMENT_DEGREE_MISMATCH",
 				message: "Degree mismatch",
 				courseStudent: null,
 				errors: [
@@ -154,6 +160,7 @@ const addStudentToCourse = async (
 			// If enrollment exists and is active, return error
 			return {
 				success: false,
+				code: "ENROLLMENT_ALREADY_EXISTS",
 				message: "Student already enrolled",
 				courseStudent: null,
 				errors: [
@@ -214,6 +221,7 @@ const addStudentToCourse = async (
 		console.error("Add student to course error:", error);
 		return {
 			success: false,
+			code: "ENROLLMENT_CREATE_FAILED",
 			message: "Failed to add student to course",
 			courseStudent: null,
 			errors: [error.message || "An unexpected error occurred"],

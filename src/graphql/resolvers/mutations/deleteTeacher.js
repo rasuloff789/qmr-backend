@@ -14,6 +14,7 @@ const deleteTeacher = async (_parent, { id }, context) => {
 		if (isNaN(teacherId)) {
 			return {
 				success: false,
+				code: "TEACHER_ID_INVALID",
 				message: "Invalid teacher ID.",
 				teacher: null,
 				errors: ["Invalid teacher ID."],
@@ -29,6 +30,7 @@ const deleteTeacher = async (_parent, { id }, context) => {
 		if (!existingTeacher) {
 			return {
 				success: false,
+				code: "TEACHER_NOT_FOUND",
 				message: "Teacher not found.",
 				teacher: null,
 				errors: ["Teacher not found."],
@@ -72,6 +74,7 @@ const deleteTeacher = async (_parent, { id }, context) => {
 		console.error("Delete teacher error:", error);
 		return {
 			success: false,
+			code: "TEACHER_DELETE_FAILED",
 			message: error.message || "Failed to delete teacher",
 			teacher: null,
 			errors: [error.message || "An unexpected error occurred"],

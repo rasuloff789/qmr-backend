@@ -151,6 +151,7 @@ const updateAdmin = async (
 		console.error("Change admin error:", error);
 		return {
 			success: false,
+			code: error.message === "No fields provided to update" ? "NO_FIELDS_TO_UPDATE" : "ADMIN_UPDATE_FAILED",
 			message: error.message || "Failed to update admin user",
 			admin: null,
 			errors: [error.message || "An unexpected error occurred"],

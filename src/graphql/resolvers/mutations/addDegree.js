@@ -22,6 +22,7 @@ const addDegree = async (_parent, { name }) => {
 		if (!name || name.trim().length === 0) {
 			return {
 				success: false,
+				code: "DEGREE_NAME_REQUIRED",
 				message: "Validation failed",
 				degree: null,
 				errors: ["Degree name is required"],
@@ -37,6 +38,7 @@ const addDegree = async (_parent, { name }) => {
 		if (existingDegree) {
 			return {
 				success: false,
+				code: "DEGREE_NAME_TAKEN",
 				message: "Degree name already exists",
 				degree: null,
 				errors: [`Degree '${name.trim()}' already exists`],
@@ -123,6 +125,7 @@ const addDegree = async (_parent, { name }) => {
 		console.error("Add degree error:", error);
 		return {
 			success: false,
+			code: "DEGREE_CREATE_FAILED",
 			message: "Failed to create degree",
 			degree: null,
 			errors: [error.message || "An unexpected error occurred"],
@@ -150,6 +153,7 @@ const updateDegree = async (_parent, { id, name }) => {
 		if (!existingDegree) {
 			return {
 				success: false,
+				code: "DEGREE_NOT_FOUND",
 				message: "Degree not found",
 				degree: null,
 				errors: [`Degree with ID ${id} not found`],
@@ -164,6 +168,7 @@ const updateDegree = async (_parent, { id, name }) => {
 			if (!name || name.trim().length === 0) {
 				return {
 					success: false,
+					code: "DEGREE_NAME_EMPTY",
 					message: "Validation failed",
 					degree: null,
 					errors: ["Degree name cannot be empty"],
@@ -182,6 +187,7 @@ const updateDegree = async (_parent, { id, name }) => {
 			if (nameExists) {
 				return {
 					success: false,
+					code: "DEGREE_NAME_TAKEN",
 					message: "Degree name already exists",
 					degree: null,
 					errors: [`Degree '${name.trim()}' already exists`],
@@ -196,6 +202,7 @@ const updateDegree = async (_parent, { id, name }) => {
 		if (Object.keys(updateData).length === 0) {
 			return {
 				success: false,
+				code: "NO_FIELDS_TO_UPDATE",
 				message: "No fields provided to update",
 				degree: null,
 				errors: ["No fields provided to update"],
@@ -281,6 +288,7 @@ const updateDegree = async (_parent, { id, name }) => {
 		console.error("Update degree error:", error);
 		return {
 			success: false,
+			code: "DEGREE_UPDATE_FAILED",
 			message: "Failed to update degree",
 			degree: null,
 			errors: [error.message || "An unexpected error occurred"],
@@ -310,6 +318,7 @@ const deleteDegree = async (_parent, { id }) => {
 		if (!existingDegree) {
 			return {
 				success: false,
+				code: "DEGREE_NOT_FOUND",
 				message: "Degree not found",
 				degree: null,
 				errors: [`Degree with ID ${id} not found`],
@@ -343,6 +352,7 @@ const deleteDegree = async (_parent, { id }) => {
 		console.error("Delete degree error:", error);
 		return {
 			success: false,
+			code: "DEGREE_DELETE_FAILED",
 			message: "Failed to delete degree",
 			degree: null,
 			errors: [error.message || "An unexpected error occurred"],

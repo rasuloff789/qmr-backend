@@ -35,6 +35,7 @@ const addTeacher = async (
 		if (!usernameValidation.valid) {
 			return {
 				success: false,
+				code: "TEACHER_USERNAME_INVALID",
 				message: "Validation failed",
 				teacher: null,
 				errors: [usernameValidation.reason],
@@ -46,6 +47,7 @@ const addTeacher = async (
 		if (!isPasswordSecure(password)) {
 			return {
 				success: false,
+				code: "TEACHER_PASSWORD_WEAK",
 				message: "Validation failed",
 				teacher: null,
 				errors: [
@@ -61,6 +63,7 @@ const addTeacher = async (
 		if (!uzPhone.valid && !trPhone.valid) {
 			return {
 				success: false,
+				code: "TEACHER_PHONE_INVALID",
 				message: "Validation failed",
 				teacher: null,
 				errors: [
@@ -75,6 +78,7 @@ const addTeacher = async (
 		if (!tg.valid) {
 			return {
 				success: false,
+				code: "TEACHER_TG_USERNAME_INVALID",
 				message: "Validation failed",
 				teacher: null,
 				errors: [tg.reason],
@@ -86,6 +90,7 @@ const addTeacher = async (
 		if (!isValidBirthdate(birthDate)) {
 			return {
 				success: false,
+				code: "TEACHER_BIRTHDATE_INVALID",
 				message: "Validation failed",
 				teacher: null,
 				errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
@@ -97,6 +102,7 @@ const addTeacher = async (
 		if (!Array.isArray(degreeIds) || degreeIds.length === 0) {
 			return {
 				success: false,
+				code: "TEACHER_DEGREES_REQUIRED",
 				message: "Validation failed",
 				teacher: null,
 				errors: ["Teacher must have at least one degree"],
@@ -109,6 +115,7 @@ const addTeacher = async (
 		if (existing) {
 			return {
 				success: false,
+				code: "TEACHER_USERNAME_TAKEN",
 				message: "Username already exists",
 				teacher: null,
 				errors: [`Username '${username}' is already in use`],
@@ -124,6 +131,7 @@ const addTeacher = async (
 			if (!uploaded.success) {
 				return {
 					success: false,
+					code: "TEACHER_PROFILE_PICTURE_UPLOAD_FAILED",
 					message: "File upload failed",
 					teacher: null,
 					errors: [uploaded.error],
@@ -180,6 +188,7 @@ const addTeacher = async (
 		console.error("❌ addTeacher error:", error.message);
 		return {
 			success: false,
+			code: "TEACHER_CREATE_FAILED",
 			message: "Failed to create teacher user",
 			teacher: null,
 			errors: [error.message || "An unexpected error occurred"],

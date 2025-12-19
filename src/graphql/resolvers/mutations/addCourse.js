@@ -37,6 +37,7 @@ const addCourse = async (
 		if (!name || name.trim().length === 0) {
 			return {
 				success: false,
+				code: "COURSE_NAME_REQUIRED",
 				message: "Validation failed",
 				course: null,
 				errors: ["Course name is required"],
@@ -47,6 +48,7 @@ const addCourse = async (
 		if (!daysOfWeek || daysOfWeek.length === 0) {
 			return {
 				success: false,
+				code: "COURSE_DAYS_OF_WEEK_REQUIRED",
 				message: "Validation failed",
 				course: null,
 				errors: ["At least one day of week is required"],
@@ -57,6 +59,7 @@ const addCourse = async (
 		if (!teacherId || !degreeIds || degreeIds.length === 0) {
 			return {
 				success: false,
+				code: "COURSE_REQUIRED_FIELDS",
 				message: "Validation failed",
 				course: null,
 				errors: ["Teacher and at least one degree are required"],
@@ -72,6 +75,7 @@ const addCourse = async (
 		if (existingCourse) {
 			return {
 				success: false,
+				code: "COURSE_NAME_TAKEN",
 				message: "Course name already exists",
 				course: null,
 				errors: [`Course '${name.trim()}' already exists`],
@@ -96,6 +100,7 @@ const addCourse = async (
 		if (!teacher) {
 			return {
 				success: false,
+				code: "TEACHER_NOT_FOUND",
 				message: "Teacher not found",
 				course: null,
 				errors: [`Teacher with ID ${teacherId} not found`],
@@ -107,6 +112,7 @@ const addCourse = async (
 		if (!teacher.isActive || teacher.isDeleted) {
 			return {
 				success: false,
+				code: "TEACHER_NOT_ACTIVE",
 				message: "Teacher is not active",
 				course: null,
 				errors: [`Teacher with ID ${teacherId} is inactive or deleted`],
@@ -126,6 +132,7 @@ const addCourse = async (
 		if (!teacherCanTeachCourseGender) {
 			return {
 				success: false,
+				code: "COURSE_TEACHER_GENDER_MISMATCH",
 				message: "Gender mismatch",
 				course: null,
 				errors: [
@@ -145,6 +152,7 @@ const addCourse = async (
 		if (!hasMatchingDegree) {
 			return {
 				success: false,
+				code: "COURSE_TEACHER_DEGREE_MISMATCH",
 				message: "Teacher degree mismatch",
 				course: null,
 				errors: [
@@ -216,6 +224,7 @@ const addCourse = async (
 		});
 		return {
 			success: false,
+			code: "COURSE_CREATE_FAILED",
 			message: "Failed to create course",
 			course: null,
 			errors: [error.message || "An unexpected error occurred"],

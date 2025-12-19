@@ -20,6 +20,7 @@ const updateAdminActive = async (_parent, { adminId, isActive }, context) => {
 		if (typeof isActive !== "boolean") {
 			return {
 				success: false,
+				code: "ADMIN_IS_ACTIVE_INVALID",
 				message: "The 'isActive' field must be a boolean.",
 				admin: null,
 				errors: ["The 'isActive' field must be a boolean."],
@@ -30,6 +31,7 @@ const updateAdminActive = async (_parent, { adminId, isActive }, context) => {
 		if (isNaN(id)) {
 			return {
 				success: false,
+				code: "ADMIN_ID_INVALID",
 				message: "Invalid admin ID.",
 				admin: null,
 				errors: ["Invalid admin ID."],
@@ -43,6 +45,7 @@ const updateAdminActive = async (_parent, { adminId, isActive }, context) => {
 		if (!existingAdmin) {
 			return {
 				success: false,
+				code: "ADMIN_NOT_FOUND",
 				message: "Admin not found.",
 				admin: null,
 				errors: ["Admin not found."],
@@ -75,6 +78,7 @@ const updateAdminActive = async (_parent, { adminId, isActive }, context) => {
 		console.error("Change admin active error:", error);
 		return {
 			success: false,
+			code: "ADMIN_ACTIVE_UPDATE_FAILED",
 			message: error.message || "Failed to update admin status",
 			admin: null,
 			errors: [error.message || "An unexpected error occurred"],

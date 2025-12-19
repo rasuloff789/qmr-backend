@@ -14,6 +14,7 @@ const deleteAdmin = async (_parent, { adminId }, context) => {
 		if (isNaN(id)) {
 			return {
 				success: false,
+				code: "ADMIN_ID_INVALID",
 				message: "Invalid admin ID.",
 				admin: null,
 				errors: ["Invalid admin ID."],
@@ -29,6 +30,7 @@ const deleteAdmin = async (_parent, { adminId }, context) => {
 		if (!existingAdmin) {
 			return {
 				success: false,
+				code: "ADMIN_NOT_FOUND",
 				message: "Admin not found.",
 				admin: null,
 				errors: ["Admin not found."],
@@ -64,6 +66,7 @@ const deleteAdmin = async (_parent, { adminId }, context) => {
 		console.error("Delete admin error:", error);
 		return {
 			success: false,
+			code: "ADMIN_DELETE_FAILED",
 			message: error.message || "Failed to delete admin",
 			admin: null,
 			errors: [error.message || "An unexpected error occurred"],

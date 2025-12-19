@@ -21,6 +21,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 		if (!user) {
 			return {
 				success: false,
+				code: "AUTH_REQUIRED",
 				message: "Authentication required",
 				user: null,
 				errors: ["You must be logged in to update your profile"],
@@ -34,6 +35,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 			if (tgUsername !== undefined || phone !== undefined) {
 				return {
 					success: false,
+					code: "ROOT_PROFILE_UPDATE_FORBIDDEN",
 					message: "Root users cannot update telegram username or phone",
 					user: null,
 					errors: ["Root users can only update basic profile information"],
@@ -52,6 +54,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 			if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
 				return {
 					success: false,
+					code: "PHONE_INVALID",
 					message: "Validation failed",
 					user: null,
 					errors: [
@@ -74,6 +77,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 			if (!tgValidation.valid) {
 				return {
 					success: false,
+					code: "TG_USERNAME_INVALID",
 					message: "Validation failed",
 					user: null,
 					errors: [tgValidation.reason],
@@ -87,6 +91,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 		if (Object.keys(updateData).length === 0) {
 			return {
 				success: false,
+				code: "NO_FIELDS_TO_UPDATE",
 				message: "No fields provided to update",
 				user: null,
 				errors: ["At least one field must be provided for update"],
@@ -105,6 +110,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 			// For now, we'll return an error that root users can't update their profile
 			return {
 				success: false,
+				code: "ROOT_PROFILE_UPDATE_FORBIDDEN",
 				message: "Root users cannot update their profile",
 				user: null,
 				errors: ["Root users have a fixed profile that cannot be updated"],
@@ -178,6 +184,7 @@ const updateProfile = async (_parent, { tgUsername, phone }, { user }) => {
 		console.error("Update profile error:", error);
 		return {
 			success: false,
+			code: "PROFILE_UPDATE_FAILED",
 			message: "Failed to update profile",
 			user: null,
 			errors: [error.message || "An unexpected error occurred"],

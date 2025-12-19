@@ -25,6 +25,7 @@ const updatePassword = async (
 		if (!user) {
 			return {
 				success: false,
+				code: "AUTH_REQUIRED",
 				message: "Authentication required",
 				errors: ["You must be logged in to change your password"],
 				timestamp: new Date().toISOString(),
@@ -35,6 +36,7 @@ const updatePassword = async (
 		if (!isPasswordSecure(newPassword)) {
 			return {
 				success: false,
+				code: "PASSWORD_WEAK",
 				message: "Validation failed",
 				errors: [
 					"Password must be at least 8 characters with uppercase, lowercase, and number.",
@@ -47,6 +49,7 @@ const updatePassword = async (
 		if (currentPassword === newPassword) {
 			return {
 				success: false,
+				code: "PASSWORD_SAME_AS_CURRENT",
 				message: "Validation failed",
 				errors: ["New password must be different from current password"],
 				timestamp: new Date().toISOString(),
@@ -77,6 +80,7 @@ const updatePassword = async (
 		if (!currentUser) {
 			return {
 				success: false,
+				code: "USER_NOT_FOUND",
 				message: "User not found",
 				errors: ["User account not found"],
 				timestamp: new Date().toISOString(),
@@ -91,6 +95,7 @@ const updatePassword = async (
 		if (!isCurrentPasswordValid) {
 			return {
 				success: false,
+				code: "CURRENT_PASSWORD_INCORRECT",
 				message: "Authentication failed",
 				errors: ["Current password is incorrect"],
 				timestamp: new Date().toISOString(),
@@ -128,6 +133,7 @@ const updatePassword = async (
 		console.error("Change password error:", error);
 		return {
 			success: false,
+			code: "PASSWORD_UPDATE_FAILED",
 			message: "Failed to change password",
 			errors: [error.message || "An unexpected error occurred"],
 			timestamp: new Date().toISOString(),

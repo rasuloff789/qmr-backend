@@ -23,6 +23,7 @@ export const updateTeacherActive = async (parent, args, context) => {
 		if (!existingTeacher) {
 			return {
 				success: false,
+				code: "TEACHER_NOT_FOUND",
 				message: "Teacher not found",
 				teacher: null,
 				errors: ["Teacher with the provided ID does not exist"],
@@ -77,6 +78,7 @@ export const updateTeacherActive = async (parent, args, context) => {
 		console.error("Error changing teacher active status:", error);
 		return {
 			success: false,
+			code: "TEACHER_ACTIVE_UPDATE_FAILED",
 			message: "Failed to change teacher active status",
 			teacher: null,
 			errors: ["Internal server error"],

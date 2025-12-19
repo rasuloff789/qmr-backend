@@ -33,6 +33,7 @@ const updateCourse = async (
 		if (!courseId) {
 			return {
 				success: false,
+				code: "COURSE_ID_REQUIRED",
 				message: "Validation failed",
 				course: null,
 				errors: ["Course ID is required"],
@@ -45,6 +46,7 @@ const updateCourse = async (
 		if (isNaN(parsedCourseId)) {
 			return {
 				success: false,
+				code: "COURSE_ID_INVALID",
 				message: "Validation failed",
 				course: null,
 				errors: ["Invalid course ID"],
@@ -60,6 +62,7 @@ const updateCourse = async (
 		if (!existingCourse) {
 			return {
 				success: false,
+				code: "COURSE_NOT_FOUND",
 				message: "Course not found",
 				course: null,
 				errors: [`Course with ID ${courseId} not found`],
@@ -75,6 +78,7 @@ const updateCourse = async (
 			if (!name || name.trim().length === 0) {
 				return {
 					success: false,
+					code: "COURSE_NAME_EMPTY",
 					message: "Validation failed",
 					course: null,
 					errors: ["Course name cannot be empty"],
@@ -93,6 +97,7 @@ const updateCourse = async (
 			if (nameExists) {
 				return {
 					success: false,
+					code: "COURSE_NAME_TAKEN",
 					message: "Course name already exists",
 					course: null,
 					errors: [`Course '${name.trim()}' already exists`],
@@ -113,6 +118,7 @@ const updateCourse = async (
 			if (!daysOfWeek || daysOfWeek.length === 0) {
 				return {
 					success: false,
+					code: "COURSE_DAYS_OF_WEEK_REQUIRED",
 					message: "Validation failed",
 					course: null,
 					errors: ["At least one day of week is required"],
@@ -138,6 +144,7 @@ const updateCourse = async (
 			if (isNaN(parsedTeacherId)) {
 				return {
 					success: false,
+					code: "TEACHER_ID_INVALID",
 					message: "Validation failed",
 					course: null,
 					errors: ["Invalid teacher ID"],
@@ -160,6 +167,7 @@ const updateCourse = async (
 			if (!teacher) {
 				return {
 					success: false,
+					code: "TEACHER_NOT_FOUND_OR_INACTIVE",
 					message: "Teacher not found or inactive",
 					course: null,
 					errors: [
@@ -182,6 +190,7 @@ const updateCourse = async (
 			if (!teacherCanTeachCourseGender) {
 				return {
 					success: false,
+					code: "COURSE_TEACHER_GENDER_MISMATCH",
 					message: "Gender mismatch",
 					course: null,
 					errors: [
@@ -199,6 +208,7 @@ const updateCourse = async (
 			if (!degreeIds || degreeIds.length === 0) {
 				return {
 					success: false,
+					code: "COURSE_DEGREES_REQUIRED",
 					message: "Validation failed",
 					course: null,
 					errors: ["At least one degree is required"],
@@ -213,6 +223,7 @@ const updateCourse = async (
 			if (parsedDegreeIds.length === 0) {
 				return {
 					success: false,
+					code: "COURSE_DEGREE_IDS_INVALID",
 					message: "Validation failed",
 					course: null,
 					errors: ["Invalid degree IDs"],
@@ -233,6 +244,7 @@ const updateCourse = async (
 				const missingIds = parsedDegreeIds.filter((id) => !foundIds.includes(id));
 				return {
 					success: false,
+					code: "COURSE_DEGREE_IDS_NOT_FOUND",
 					message: "Invalid degree IDs",
 					course: null,
 					errors: [`Degrees with IDs ${missingIds.join(", ")} not found`],
@@ -259,6 +271,7 @@ const updateCourse = async (
 					if (!hasMatchingDegree) {
 						return {
 							success: false,
+							code: "COURSE_TEACHER_DEGREE_MISMATCH",
 							message: "Teacher degree mismatch",
 							course: null,
 							errors: [
@@ -280,6 +293,7 @@ const updateCourse = async (
 		if (Object.keys(updateData).length === 0) {
 			return {
 				success: false,
+				code: "NO_FIELDS_TO_UPDATE",
 				message: "No fields provided to update",
 				course: null,
 				errors: ["No fields provided to update"],
@@ -319,6 +333,7 @@ const updateCourse = async (
 	} catch (error) {
 		return {
 			success: false,
+			code: "COURSE_UPDATE_FAILED",
 			message: "Failed to update course",
 			course: null,
 			errors: [error.message || "An unexpected error occurred"],

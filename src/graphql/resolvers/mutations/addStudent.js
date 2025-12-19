@@ -35,6 +35,7 @@ const addStudent = async (
 		if (!usernameValidation.valid) {
 			return {
 				success: false,
+				code: "STUDENT_USERNAME_INVALID",
 				message: "Validation failed",
 				student: null,
 				errors: [usernameValidation.reason],
@@ -46,6 +47,7 @@ const addStudent = async (
 		if (!isPasswordSecure(password)) {
 			return {
 				success: false,
+				code: "STUDENT_PASSWORD_WEAK",
 				message: "Validation failed",
 				student: null,
 				errors: [
@@ -62,6 +64,7 @@ const addStudent = async (
 			if (!phoneValidation.valid) {
 				return {
 					success: false,
+					code: "STUDENT_PHONE_INVALID",
 					message: "Validation failed",
 					student: null,
 					errors: [phoneValidation.reason],
@@ -76,6 +79,7 @@ const addStudent = async (
 		if (!tg.valid) {
 			return {
 				success: false,
+				code: "STUDENT_TG_USERNAME_INVALID",
 				message: "Validation failed",
 				student: null,
 				errors: [tg.reason],
@@ -87,6 +91,7 @@ const addStudent = async (
 		if (!isValidBirthdate(birthDate)) {
 			return {
 				success: false,
+				code: "STUDENT_BIRTHDATE_INVALID",
 				message: "Validation failed",
 				student: null,
 				errors: ["Invalid birth date format. Expected: YYYY-MM-DD"],
@@ -99,6 +104,7 @@ const addStudent = async (
 		if (existing) {
 			return {
 				success: false,
+				code: "STUDENT_USERNAME_TAKEN",
 				message: "Username already exists",
 				student: null,
 				errors: [`Username '${username}' is already in use`],
@@ -114,6 +120,7 @@ const addStudent = async (
 			if (!uploaded.success) {
 				return {
 					success: false,
+					code: "STUDENT_PROFILE_PICTURE_UPLOAD_FAILED",
 					message: "File upload failed",
 					student: null,
 					errors: [uploaded.error],
@@ -155,6 +162,7 @@ const addStudent = async (
 		console.error("❌ addStudent error:", error.message);
 		return {
 			success: false,
+			code: "STUDENT_CREATE_FAILED",
 			message: "Failed to create student user",
 			student: null,
 			errors: [error.message || "An unexpected error occurred"],

@@ -17,6 +17,7 @@ const login = async (_parent, { username, password, userType }) => {
 	if (!username || !password || !userType) {
 		const errorResponse = {
 			success: false,
+			code: "LOGIN_MISSING_FIELDS",
 			message:
 				"Missing required fields: username, password, and userType are required",
 			token: null,
@@ -42,6 +43,7 @@ const login = async (_parent, { username, password, userType }) => {
 	});
 	const loginResponse = {
 		success: false,
+		code: "LOGIN_INVALID_CREDENTIALS",
 		message: `Incorrect username or password for ${userType} login`,
 		token: null,
 		user: null,
@@ -49,6 +51,7 @@ const login = async (_parent, { username, password, userType }) => {
 
 	// Validate user type
 	if (!["root", "admin", "teacher"].includes(userType)) {
+		loginResponse.code = "LOGIN_USER_TYPE_INVALID";
 		loginResponse.message = `Invalid user type: ${userType}`;
 
 		// Console log invalid user type
@@ -93,6 +96,7 @@ const login = async (_parent, { username, password, userType }) => {
 
 			// Check if admin is active
 			if (user && !user.isActive) {
+				loginResponse.code = "LOGIN_ACCOUNT_DEACTIVATED";
 				loginResponse.message = "Account is deactivated";
 
 				// Console log deactivated admin account
@@ -125,6 +129,7 @@ const login = async (_parent, { username, password, userType }) => {
 
 			// Check if teacher is active
 			if (user && !user.isActive) {
+				loginResponse.code = "LOGIN_ACCOUNT_DEACTIVATED";
 				loginResponse.message = "Account is deactivated";
 
 				// Console log deactivated teacher account
@@ -141,6 +146,7 @@ const login = async (_parent, { username, password, userType }) => {
 		}
 
 		if (!user) {
+			loginResponse.code = "LOGIN_USER_NOT_FOUND";
 			// Console log user not found
 			console.log("❌ LOGIN FAILED - User Not Found:", {
 				userType,
@@ -155,6 +161,7 @@ const login = async (_parent, { username, password, userType }) => {
 		// Verify password
 		const isValid = await verifyPassword(password, user.password);
 		if (!isValid) {
+			loginResponse.code = "LOGIN_INVALID_CREDENTIALS";
 			// Console log invalid password
 			console.log("❌ LOGIN FAILED - Invalid Password:", {
 				userType,
@@ -252,6 +259,7 @@ const safeLogin = async (parent, args, context) => {
 
 		return {
 			success: false,
+			code: "LOGIN_SERVER_ERROR",
 			message: "Login failed due to unexpected server error",
 			token: null,
 			user: null,
