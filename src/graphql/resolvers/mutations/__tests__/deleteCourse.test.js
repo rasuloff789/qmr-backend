@@ -287,8 +287,8 @@ async function runTests() {
 		}
 	});
 
-	// Test 2: Prevent deletion with active enrollments
-	await test("Should prevent deletion when course has active enrollments", async () => {
+	// Test 2: Prevent deletion with any enrollments (active or inactive)
+	await test("Should prevent deletion when course has enrollments", async () => {
 		const result = await deleteCourse(
 			null,
 			{ courseId: String(testData.courseWithEnrollments.id) },
@@ -296,12 +296,12 @@ async function runTests() {
 		);
 
 		if (result.success) {
-			throw new Error("Expected failure for course with active enrollments");
+			throw new Error("Expected failure for course with enrollments");
 		}
 
-		if (!result.message.includes("active enrollments")) {
+		if (!result.message.includes("enrollments")) {
 			throw new Error(
-				`Expected 'active enrollments' message but got: ${result.message}`
+				`Expected 'enrollments' message but got: ${result.message}`
 			);
 		}
 

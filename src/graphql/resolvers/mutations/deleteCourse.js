@@ -14,6 +14,7 @@ const deleteCourse = async (_parent, { courseId }, context) => {
 		if (!courseId) {
 			return {
 				success: false,
+				code: "COURSE_ID_REQUIRED",
 				message: "Validation failed",
 				errors: ["Course ID is required"],
 				timestamp: new Date().toISOString(),
@@ -25,6 +26,7 @@ const deleteCourse = async (_parent, { courseId }, context) => {
 		if (isNaN(parsedCourseId)) {
 			return {
 				success: false,
+				code: "COURSE_ID_INVALID",
 				message: "Validation failed",
 				errors: ["Invalid course ID"],
 				timestamp: new Date().toISOString(),
@@ -48,27 +50,37 @@ const deleteCourse = async (_parent, { courseId }, context) => {
 		if (!course) {
 			return {
 				success: false,
+				code: "COURSE_NOT_FOUND",
 				message: "Course not found",
 				errors: [`Course with ID ${courseId} not found`],
 				timestamp: new Date().toISOString(),
 			};
 		}
 
-		// Check if there are active student enrollments
-		const activeEnrollments = course.students.filter(
-			(enrollment) => enrollment.isActive && !enrollment.isDeleted
-		);
+		// Block deletion if the course still has any enrolled students.
+		//
+		// Note: `course.students` is CourseStudent rows filtered by `isDeleted: false`,
+		// so any row here means the student is still considered enrolled.
+		const existingEnrollments = course.students;
 
-		if (activeEnrollments.length > 0) {
+		if (existingEnrollments.length > 0) {
 			return {
 				success: false,
-				message: "Cannot delete course with active enrollments",
+				code: "COURSE_DELETE_BLOCKED_ENROLLMENTS",
+				message: "Cannot delete course with enrollments",
 				errors: [
-					`Course has ${activeEnrollments.length} active student enrollment(s). Please remove students from the course first.`,
+					`Course has ${existingEnrollments.length} student enrollment(s). Please remove students from the course first.`,
 				],
 				timestamp: new Date().toISOString(),
 			};
 		}
+
+		// Delete attendances first to satisfy FK constraints.
+		await prisma.attendance.deleteMany({
+			where: {
+				courseId: parsedCourseId,
+			},
+		});
 
 		// Delete all student enrollments (hard delete since course is being deleted)
 		await prisma.courseStudent.deleteMany({
@@ -113,6 +125,7 @@ const deleteCourse = async (_parent, { courseId }, context) => {
 		console.error("Delete course error:", error);
 		return {
 			success: false,
+			code: "COURSE_DELETE_FAILED",
 			message: "Failed to delete course",
 			errors: [error.message || "An unexpected error occurred"],
 			timestamp: new Date().toISOString(),
