@@ -39,6 +39,8 @@ type UserData {
 type LoginResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """JWT token issued for the session."""

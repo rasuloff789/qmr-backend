@@ -2,6 +2,8 @@
 type AddDegreeResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the result."""
     message: String!
     """Degree record returned when successful."""
@@ -16,6 +18,8 @@ type AddDegreeResponse {
 type UpdateDegreeResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the result."""
     message: String!
     """Degree record returned when successful."""

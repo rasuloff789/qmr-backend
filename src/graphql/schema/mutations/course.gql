@@ -2,6 +2,8 @@
 type AddCourseResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Course record produced by the operation."""
@@ -16,6 +18,8 @@ type AddCourseResponse {
 type AddStudentToCourseResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """CourseStudent enrollment record produced by the operation."""
@@ -30,6 +34,8 @@ type AddStudentToCourseResponse {
 type RemoveStudentFromCourseResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Validation or domain errors, if any."""
@@ -42,6 +48,8 @@ type RemoveStudentFromCourseResponse {
 type UpdateCourseResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Course record produced by the operation."""
@@ -56,6 +64,8 @@ type UpdateCourseResponse {
 type DeleteCourseResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Validation or domain errors, if any."""
@@ -68,6 +78,8 @@ type DeleteCourseResponse {
 type SetAttendanceResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Attendance record produced by the operation."""

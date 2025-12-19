@@ -2,6 +2,8 @@
 type AddAdminResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Administrator record produced by the operation."""
@@ -16,6 +18,8 @@ type AddAdminResponse {
 type UpdateAdminResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Administrator record produced by the operation."""
@@ -30,6 +34,8 @@ type UpdateAdminResponse {
 type DeleteAdminResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Administrator record impacted by the operation."""

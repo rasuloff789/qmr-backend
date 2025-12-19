@@ -2,6 +2,8 @@
 type UpdateProfileResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable message describing the outcome."""
     message: String!
     """Updated user data when the operation succeeds."""
@@ -16,6 +18,8 @@ type UpdateProfileResponse {
 type UpdatePasswordResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable message describing the outcome."""
     message: String!
     """List of validation or domain errors."""

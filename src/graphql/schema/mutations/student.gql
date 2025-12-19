@@ -2,6 +2,8 @@
 type AddStudentResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Student record produced by the operation."""
@@ -16,6 +18,8 @@ type AddStudentResponse {
 type UpdateStudentResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Student record produced by the operation."""
@@ -30,6 +34,8 @@ type UpdateStudentResponse {
 type UpdateStudentActiveResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Student record produced by the operation."""
@@ -44,6 +50,8 @@ type UpdateStudentActiveResponse {
 type DeleteStudentResponse {
     """Operation success flag."""
     success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
     """Human-readable summary of the outcome."""
     message: String!
     """Student record impacted by the operation."""
