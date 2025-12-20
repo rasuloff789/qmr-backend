@@ -19,5 +19,13 @@ extend type Query {
         """Invoice ID."""
         id: ID!
     ): Invoice
+    
+    """Get students with outstanding debt (unpaid or partially paid invoices)."""
+    getDebtorStudents(
+        """Filter by course ID."""
+        courseId: ID
+        """Include only students with debt above this amount."""
+        minDebt: Int
+    ): [DebtorStudent!]!
 }
 

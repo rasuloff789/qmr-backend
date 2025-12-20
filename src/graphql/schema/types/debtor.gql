@@ -1,0 +1,12 @@
+"""Student with outstanding debt information."""
+type DebtorStudent {
+    """Student information."""
+    student: Student!
+    """Total outstanding debt amount across all invoices."""
+    totalDebt: Int!
+    """Number of unpaid/partially paid invoices."""
+    invoiceCount: Int!
+    """List of outstanding invoices."""
+    invoices: [Invoice!]!
+}
+

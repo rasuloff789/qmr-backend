@@ -22,6 +22,7 @@ import me from "./me.js";
 import getDashboardStats from "./getDashboardStats.js";
 import getInvoices from "./getInvoices.js";
 import getInvoice from "./getInvoice.js";
+import getDebtorStudents from "./getDebtorStudents.js";
 
 export {
 	getAdmins,
@@ -40,4 +41,5 @@ export {
 	getDashboardStats,
 	getInvoices,
 	getInvoice,
+	getDebtorStudents,
 };
