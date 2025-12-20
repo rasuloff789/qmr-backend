@@ -35,6 +35,7 @@ import { generateInvoicesForMonth } from "./generateInvoicesForMonth.js";
 import { updateCoursePrice } from "./updateCoursePrice.js";
 import { updateEnrollmentPrice } from "./updateEnrollmentPrice.js";
 import { deleteInvoice } from "./deleteInvoice.js";
+import { addPartialPayment } from "./addPartialPayment.js";
 import { markInvoicePaid } from "./markInvoicePaid.js";
 import { recalculateInvoice } from "./recalculateInvoice.js";
 
@@ -68,6 +69,7 @@ export {
 	updateCoursePrice,
 	updateEnrollmentPrice,
 	markInvoicePaid,
+	addPartialPayment,
 	recalculateInvoice,
 	deleteInvoice,
 };

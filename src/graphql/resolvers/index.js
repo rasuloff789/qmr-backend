@@ -28,6 +28,7 @@ import {
 	getDashboardStats,
 	getInvoices,
 	getInvoice,
+	getDebtorStudents,
 } from "./queries/index.js";
 
 // Import mutation resolvers
@@ -61,6 +62,7 @@ import {
 	updateCoursePrice,
 	updateEnrollmentPrice,
 	markInvoicePaid,
+	addPartialPayment,
 	recalculateInvoice,
 	deleteInvoice,
 } from "./mutations/index.js";
@@ -88,6 +90,7 @@ const Query = {
 	getDashboardStats,
 	getInvoices,
 	getInvoice,
+	getDebtorStudents,
 };
 
 /**
@@ -123,6 +126,7 @@ const Mutation = {
 	updateCoursePrice,
 	updateEnrollmentPrice,
 	markInvoicePaid,
+	addPartialPayment,
 	recalculateInvoice,
 	deleteInvoice,
 };

@@ -468,6 +468,7 @@ export const permissions = shield(
 			// Invoice queries - Only ADMIN and ROOT can view invoices
 			getInvoices: isAdminOrRootRule,
 			getInvoice: isAdminOrRootRule,
+			getDebtorStudents: isAdminOrRootRule,
 		},
 
 		// ====================================================================
@@ -744,6 +745,7 @@ export const permissions = shield(
 			updateCoursePrice: isAdminOrRootRule,
 			updateEnrollmentPrice: isAdminOrRootRule,
 			markInvoicePaid: isAdminOrRootRule,
+			addPartialPayment: isAdminOrRootRule,
 			recalculateInvoice: isAdminOrRootRule,
 			deleteInvoice: isAdminOrRootRule,
 		},
@@ -765,6 +767,7 @@ export const permissions = shield(
 		Invoice: allow,
 		InvoiceBreakdownItem: allow,
 		PriceChangeHistory: allow,
+		DebtorStudent: allow,
 		CourseStudent: allow,
 		SubstituteTeacher: allow,
 		Attendance: allow,
@@ -789,6 +792,7 @@ export const permissions = shield(
 		UpdateCoursePriceResponse: allow,
 		UpdateEnrollmentPriceResponse: allow,
 		MarkInvoicePaidResponse: allow,
+		AddPartialPaymentResponse: allow,
 		RecalculateInvoiceResponse: allow,
 		DeleteInvoiceResponse: allow,
 		AddAdminResponse: allow,

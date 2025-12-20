@@ -2,6 +2,8 @@
 enum InvoiceStatus {
     """Invoice is pending payment."""
     PENDING
+    """Invoice has been partially paid."""
+    PARTIALLY_PAID
     """Invoice has been paid."""
     PAID
     """Invoice has been cancelled."""
@@ -36,6 +38,10 @@ type Invoice {
     invoiceDate: Date!
     """Total amount due."""
     totalAmount: Int!
+    """Amount that has been paid."""
+    paidAmount: Int!
+    """Remaining amount to be paid."""
+    remainingAmount: Int!
     """Total days in the billing period."""
     daysInPeriod: Int!
     """Average daily rate."""

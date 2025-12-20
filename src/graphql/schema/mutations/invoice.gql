@@ -80,6 +80,22 @@ type MarkInvoicePaidResponse {
     timestamp: String
 }
 
+"""Response payload returned when adding a partial payment."""
+type AddPartialPaymentResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Updated invoice record."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 """Response payload returned when recalculating an invoice."""
 type RecalculateInvoiceResponse {
     """Operation success flag."""
@@ -148,11 +164,19 @@ extend type Mutation {
         newPrice: Int!
     ): UpdateEnrollmentPriceResponse!
     
-    """Mark an invoice as paid."""
+    """Mark an invoice as paid (full payment)."""
     markInvoicePaid(
         """Invoice ID."""
         invoiceId: ID!
     ): MarkInvoicePaidResponse!
+    
+    """Add a partial payment to an invoice."""
+    addPartialPayment(
+        """Invoice ID."""
+        invoiceId: ID!
+        """Payment amount to add."""
+        amount: Int!
+    ): AddPartialPaymentResponse!
     
     """Recalculate an existing invoice."""
     recalculateInvoice(

@@ -70,10 +70,13 @@ const markInvoicePaid = async (_parent, { invoiceId }, context) => {
 			};
 		}
 		
-		// Update invoice status
+		// Update invoice status and set paidAmount to totalAmount
 		const updatedInvoice = await prisma.invoice.update({
 			where: { id: parsedInvoiceId },
-			data: { status: "PAID" },
+			data: {
+				status: "PAID",
+				paidAmount: invoice.totalAmount, // Mark as fully paid
+			},
 			include: {
 				courseStudent: {
 					include: {

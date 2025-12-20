@@ -50,6 +50,7 @@ export async function generateInvoice(courseStudent, month, year, calculations) 
 			billingPeriodEnd: calculations.billingPeriodEnd,
 			invoiceDate: invoiceDate,
 			totalAmount: calculations.totalAmount,
+			paidAmount: 0, // Initialize with no payments
 			daysInPeriod: calculations.daysInPeriod,
 			dailyRate: calculations.dailyRate,
 			breakdown: breakdown,

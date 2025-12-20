@@ -32,6 +32,17 @@ export const Invoice = {
 		}
 		return [];
 	},
+	
+	/**
+	 * Calculate remaining amount to be paid
+	 * @param {Object} parent - The Invoice object
+	 * @returns {number} - Remaining amount (totalAmount - paidAmount)
+	 */
+	remainingAmount: (parent) => {
+		const total = parent.totalAmount || 0;
+		const paid = parent.paidAmount || 0;
+		return Math.max(0, total - paid);
+	},
 };
 
 /**
