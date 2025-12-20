@@ -16,6 +16,8 @@ type Student {
     gender: Gender!
     """Possible degrees."""
     possibleDegrees: [Degree!]!
+    """Courses the student is enrolled in."""
+    courses: [CourseStudent!]!
     """Optional profile picture path."""
     profilePicture: String
     """Indicates whether the student is currently active."""

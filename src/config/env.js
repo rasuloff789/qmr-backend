@@ -27,7 +27,9 @@ const config = {
 
 	// Database
 	DATABASE_URL: process.env.DATABASE_URL,
-	
+	DB_CONNECTION_LIMIT: parseInt(process.env.DB_CONNECTION_LIMIT) || 5,
+	DB_POOL_TIMEOUT: parseInt(process.env.DB_POOL_TIMEOUT) || 10,
+
 	// JWT
 	JWT_SECRET: process.env.JWT_SECRET,
 	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",

@@ -20,6 +20,8 @@ import { getCourses, getCourse } from "./getCourses.js";
 import getAttendances from "./getAttendances.js";
 import me from "./me.js";
 import getDashboardStats from "./getDashboardStats.js";
+import getInvoices from "./getInvoices.js";
+import getInvoice from "./getInvoice.js";
 
 export {
 	getAdmins,
@@ -36,4 +38,6 @@ export {
 	getAttendances,
 	me,
 	getDashboardStats,
+	getInvoices,
+	getInvoice,
 };

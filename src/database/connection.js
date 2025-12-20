@@ -11,6 +11,32 @@ import { PrismaClient } from "@prisma/client";
 import config from "../config/env.js";
 
 /**
+ * Build optimized DATABASE_URL with connection pool parameters
+ */
+const buildDatabaseUrl = () => {
+	const baseUrl = config.DATABASE_URL;
+	
+	// Check if URL already has query parameters
+	const hasQueryParams = baseUrl.includes("?");
+	const separator = hasQueryParams ? "&" : "?";
+	
+	// Build query parameters (only add if not already present)
+	let queryParams = [];
+	
+	if (!baseUrl.includes("connection_limit=")) {
+		queryParams.push(`connection_limit=${config.DB_CONNECTION_LIMIT}`);
+	}
+	if (!baseUrl.includes("pool_timeout=")) {
+		queryParams.push(`pool_timeout=${config.DB_POOL_TIMEOUT}`);
+	}
+	
+	// Return URL with added parameters
+	return queryParams.length > 0 
+		? `${baseUrl}${separator}${queryParams.join("&")}`
+		: baseUrl;
+};
+
+/**
  * Prisma Client Configuration
  */
 const prisma = new PrismaClient({
@@ -19,7 +45,7 @@ const prisma = new PrismaClient({
 		: ["error"],
 	datasources: {
 		db: {
-			url: config.DATABASE_URL,
+			url: buildDatabaseUrl(),
 		},
 	},
 });
@@ -30,7 +56,7 @@ const prisma = new PrismaClient({
 prisma
 	.$connect()
 	.then(() => {
-		console.log("✅ Database connected successfully");
+		console.log(`✅ Database connected successfully (pool: ${config.DB_CONNECTION_LIMIT} connections)`);
 	})
 	.catch((error) => {
 		console.error("❌ Database connection failed:", error);

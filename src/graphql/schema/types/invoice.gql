@@ -1,0 +1,70 @@
+"""Invoice status enumeration."""
+enum InvoiceStatus {
+    """Invoice is pending payment."""
+    PENDING
+    """Invoice has been paid."""
+    PAID
+    """Invoice has been cancelled."""
+    CANCELLED
+}
+
+"""Billing period breakdown item."""
+type InvoiceBreakdownItem {
+    """Period start date."""
+    start: Date!
+    """Period end date."""
+    end: Date!
+    """Price applied during this period."""
+    price: Int!
+    """Number of days in this period."""
+    days: Int!
+    """Amount charged for this period."""
+    amount: Int!
+}
+
+"""Invoice record for course enrollment billing."""
+type Invoice {
+    """Unique identifier."""
+    id: ID!
+    """Course enrollment this invoice belongs to."""
+    courseStudent: CourseStudent!
+    """Start date of the billing period."""
+    billingPeriodStart: Date!
+    """End date of the billing period."""
+    billingPeriodEnd: Date!
+    """Date when the invoice was generated."""
+    invoiceDate: Date!
+    """Total amount due."""
+    totalAmount: Int!
+    """Total days in the billing period."""
+    daysInPeriod: Int!
+    """Average daily rate."""
+    dailyRate: Float!
+    """Breakdown of billing periods (for price changes)."""
+    breakdown: [InvoiceBreakdownItem!]!
+    """Current status of the invoice."""
+    status: InvoiceStatus!
+    """Creation timestamp."""
+    createdAt: Date!
+    """Last update timestamp."""
+    updatedAt: Date!
+}
+
+"""Price change history record."""
+type PriceChangeHistory {
+    """Unique identifier."""
+    id: ID!
+    """Course enrollment this price change applies to."""
+    courseStudent: CourseStudent!
+    """Previous monthly price."""
+    oldPrice: Int!
+    """New monthly price."""
+    newPrice: Int!
+    """Date when the price was changed."""
+    changedAt: Date!
+    """ID of the user who made the change (admin/root)."""
+    changedBy: Int!
+    """Creation timestamp."""
+    createdAt: Date!
+}
+

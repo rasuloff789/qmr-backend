@@ -464,6 +464,10 @@ export const permissions = shield(
 			getCourse: isAuthenticatedRule,
 			getAttendances: isAuthenticatedRule,
 			getDashboardStats: isAuthenticatedRule,
+
+			// Invoice queries - Only ADMIN and ROOT can view invoices
+			getInvoices: isAdminOrRootRule,
+			getInvoice: isAdminOrRootRule,
 		},
 
 		// ====================================================================
@@ -733,6 +737,15 @@ export const permissions = shield(
 			addStudentToCourse: isAdminOrRootRule,
 			removeStudentFromCourse: isAdminOrRootRule,
 			setAttendance: createRoleRule([ROLES.ROOT, ROLES.TEACHER]),
+
+			// Invoice mutations - Only ADMIN and ROOT can manage invoices
+			generateInvoice: isAdminOrRootRule,
+			generateInvoicesForMonth: isAdminOrRootRule,
+			updateCoursePrice: isAdminOrRootRule,
+			updateEnrollmentPrice: isAdminOrRootRule,
+			markInvoicePaid: isAdminOrRootRule,
+			recalculateInvoice: isAdminOrRootRule,
+			deleteInvoice: isAdminOrRootRule,
 		},
 
 		// ====================================================================
@@ -747,6 +760,11 @@ export const permissions = shield(
 		// Course Types - All fields allowed
 		Degree: allow,
 		Course: allow,
+
+		// Invoice Types - All fields allowed for authenticated users
+		Invoice: allow,
+		InvoiceBreakdownItem: allow,
+		PriceChangeHistory: allow,
 		CourseStudent: allow,
 		SubstituteTeacher: allow,
 		Attendance: allow,
@@ -764,6 +782,15 @@ export const permissions = shield(
 		SetAttendanceResponse: allow,
 		LoginResponse: allow,
 		UserData: allow,
+
+		// Invoice Response Types - All fields allowed
+		GenerateInvoiceResponse: allow,
+		GenerateInvoicesForMonthResponse: allow,
+		UpdateCoursePriceResponse: allow,
+		UpdateEnrollmentPriceResponse: allow,
+		MarkInvoicePaidResponse: allow,
+		RecalculateInvoiceResponse: allow,
+		DeleteInvoiceResponse: allow,
 		AddAdminResponse: allow,
 		UpdateAdminResponse: allow,
 		DeleteAdminResponse: allow,

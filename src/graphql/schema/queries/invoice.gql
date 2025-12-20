@@ -1,0 +1,23 @@
+# Invoice queries
+extend type Query {
+    """Fetch invoices with optional filters."""
+    getInvoices(
+        """Filter by course enrollment ID."""
+        courseStudentId: ID
+        """Filter by course ID."""
+        courseId: ID
+        """Filter by invoice status."""
+        status: InvoiceStatus
+        """Filter by billing month (1-12)."""
+        month: Int
+        """Filter by billing year."""
+        year: Int
+    ): [Invoice!]!
+    
+    """Fetch a specific invoice by ID."""
+    getInvoice(
+        """Invoice ID."""
+        id: ID!
+    ): Invoice
+}
+

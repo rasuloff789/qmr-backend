@@ -129,9 +129,12 @@ model CourseStudent {
   studentId     Int
   joinedAt      DateTime @default(now())
   monthlyPayment Int
+  lastBilledDate DateTime?
   isActive      Boolean  @default(true)
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
+  invoices      Invoice[]
+  priceChanges  PriceChangeHistory[]
 
   @@unique([courseId, studentId])
 }
@@ -148,5 +151,45 @@ model Attendance {
   createdAt DateTime @default(now())
 
   @@unique([courseId, studentId, date])
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Invoice {
+  id                Int           @id @default(autoincrement())
+  courseStudent     CourseStudent @relation(fields: [courseStudentId], references: [id])
+  courseStudentId   Int
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  invoiceDate       DateTime      @default(now())
+  totalAmount       Int
+  daysInPeriod      Int
+  dailyRate         Float
+  breakdown         Json
+  status            InvoiceStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([courseStudentId])
+  @@index([status])
+  @@index([billingPeriodStart, billingPeriodEnd])
+}
+
+model PriceChangeHistory {
+  id            Int           @id @default(autoincrement())
+  courseStudent CourseStudent @relation(fields: [courseStudentId], references: [id])
+  courseStudentId Int
+  oldPrice      Int
+  newPrice      Int
+  changedAt     DateTime      @default(now())
+  changedBy     Int
+  createdAt     DateTime      @default(now())
+
+  @@index([courseStudentId])
+  @@index([changedAt])
 }
 

@@ -1,0 +1,169 @@
+"""Response payload returned when generating an invoice."""
+type GenerateInvoiceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Invoice record produced by the operation."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when generating invoices for a month."""
+type GenerateInvoicesForMonthResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Number of invoices generated."""
+    count: Int!
+    """Generated invoice records."""
+    invoices: [Invoice!]!
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when updating a course price."""
+type UpdateCoursePriceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Number of enrollments updated."""
+    updatedCount: Int!
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when updating an enrollment price."""
+type UpdateEnrollmentPriceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Updated enrollment record."""
+    courseStudent: CourseStudent
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when updating invoice status."""
+type MarkInvoicePaidResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Updated invoice record."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when recalculating an invoice."""
+type RecalculateInvoiceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Recalculated invoice record."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when deleting an invoice."""
+type DeleteInvoiceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Deleted invoice record (before deletion)."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+# Invoice mutations
+extend type Mutation {
+    """Generate an invoice for a specific enrollment and month."""
+    generateInvoice(
+        """Course enrollment ID."""
+        courseStudentId: ID!
+        """Billing month (1-12)."""
+        month: Int!
+        """Billing year."""
+        year: Int!
+    ): GenerateInvoiceResponse!
+    
+    """Generate invoices for all active enrollments in a given month."""
+    generateInvoicesForMonth(
+        """Billing month (1-12)."""
+        month: Int!
+        """Billing year."""
+        year: Int!
+    ): GenerateInvoicesForMonthResponse!
+    
+    """Update the monthly price for all active enrollments in a course."""
+    updateCoursePrice(
+        """Course ID."""
+        courseId: ID!
+        """New monthly price."""
+        newPrice: Int!
+    ): UpdateCoursePriceResponse!
+    
+    """Update the monthly price for a specific enrollment."""
+    updateEnrollmentPrice(
+        """Course enrollment ID."""
+        courseStudentId: ID!
+        """New monthly price."""
+        newPrice: Int!
+    ): UpdateEnrollmentPriceResponse!
+    
+    """Mark an invoice as paid."""
+    markInvoicePaid(
+        """Invoice ID."""
+        invoiceId: ID!
+    ): MarkInvoicePaidResponse!
+    
+    """Recalculate an existing invoice."""
+    recalculateInvoice(
+        """Invoice ID."""
+        invoiceId: ID!
+    ): RecalculateInvoiceResponse!
+    
+    """Delete an invoice."""
+    deleteInvoice(
+        """Invoice ID."""
+        invoiceId: ID!
+    ): DeleteInvoiceResponse!
+}
+

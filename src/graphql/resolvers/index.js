@@ -26,6 +26,8 @@ import {
 	getAttendances,
 	me,
 	getDashboardStats,
+	getInvoices,
+	getInvoice,
 } from "./queries/index.js";
 
 // Import mutation resolvers
@@ -54,10 +56,17 @@ import {
 	removeStudentFromCourse,
 	setAttendance,
 	updateProfile,
+	generateInvoice,
+	generateInvoicesForMonth,
+	updateCoursePrice,
+	updateEnrollmentPrice,
+	markInvoicePaid,
+	recalculateInvoice,
+	deleteInvoice,
 } from "./mutations/index.js";
 
 // Import type resolvers
-import { Course } from "./types/index.js";
+import { Course, Student, Teacher, Invoice, PriceChangeHistory } from "./types/index.js";
 
 /**
  * Query resolvers
@@ -77,6 +86,8 @@ const Query = {
 	getCourse,
 	getAttendances,
 	getDashboardStats,
+	getInvoices,
+	getInvoice,
 };
 
 /**
@@ -107,6 +118,13 @@ const Mutation = {
 	removeStudentFromCourse,
 	setAttendance,
 	updateProfile,
+	generateInvoice,
+	generateInvoicesForMonth,
+	updateCoursePrice,
+	updateEnrollmentPrice,
+	markInvoicePaid,
+	recalculateInvoice,
+	deleteInvoice,
 };
 
 /**
@@ -117,6 +135,10 @@ export const resolvers = {
 	Query,
 	Mutation,
 	Course,
+	Student,
+	Teacher,
+	Invoice,
+	PriceChangeHistory,
 };
 
 export default resolvers;

@@ -30,6 +30,13 @@ import { deleteTeacher } from "./deleteTeacher.js";
 import { deleteStudent } from "./deleteStudent.js";
 import { login } from "./login.js";
 import { updateProfile } from "./updateProfile.js";
+import { generateInvoice } from "./generateInvoice.js";
+import { generateInvoicesForMonth } from "./generateInvoicesForMonth.js";
+import { updateCoursePrice } from "./updateCoursePrice.js";
+import { updateEnrollmentPrice } from "./updateEnrollmentPrice.js";
+import { deleteInvoice } from "./deleteInvoice.js";
+import { markInvoicePaid } from "./markInvoicePaid.js";
+import { recalculateInvoice } from "./recalculateInvoice.js";
 
 export {
 	addAdmin,
@@ -56,4 +63,11 @@ export {
 	deleteStudent,
 	login,
 	updateProfile,
+	generateInvoice,
+	generateInvoicesForMonth,
+	updateCoursePrice,
+	updateEnrollmentPrice,
+	markInvoicePaid,
+	recalculateInvoice,
+	deleteInvoice,
 };

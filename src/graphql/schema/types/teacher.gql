@@ -18,6 +18,8 @@ type Teacher {
     profilePicture: String
     """Degrees the teacher is qualified to teach."""
     degrees: [Degree!]!
+    """Courses the teacher is teaching."""
+    courses: [Course!]!
     """Indicates whether the teacher account is active."""
     isActive: Boolean!
     """Creation timestamp."""

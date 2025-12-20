@@ -11,6 +11,7 @@
 import app from "./app.js";
 import config from "./config/env.js";
 import { initializeBot, stopBot } from "./utils/telegram/bot.js";
+import { initializeInvoiceScheduler } from "./utils/billing/scheduler.js";
 
 const PORT = config.PORT;
 
@@ -19,6 +20,9 @@ const PORT = config.PORT;
 // if (!telegramBot) {
 // 	console.warn("⚠️ Telegram bot initialization failed");
 // }
+
+// Initialize Invoice Generation Scheduler
+initializeInvoiceScheduler();
 
 /**
  * Start Server

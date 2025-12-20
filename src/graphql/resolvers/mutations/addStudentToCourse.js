@@ -132,6 +132,11 @@ const addStudentToCourse = async (
 		if (existingEnrollment) {
 			// If enrollment exists but is deleted, reactivate it
 			if (existingEnrollment.isDeleted) {
+				// Set joinedAt appropriately when reactivating
+				const now = new Date();
+				const courseStart = new Date(course.startAt);
+				const joinedAt = now > courseStart ? now : courseStart;
+				
 				const reactivatedEnrollment = await prisma.courseStudent.update({
 					where: {
 						id: existingEnrollment.id,
@@ -140,7 +145,7 @@ const addStudentToCourse = async (
 						isDeleted: false,
 						isActive: true,
 						monthlyPayment: monthlyPayment,
-						joinedAt: new Date(),
+						joinedAt: joinedAt,
 					},
 					include: {
 						course: true,
@@ -171,11 +176,17 @@ const addStudentToCourse = async (
 		}
 
 		// Create new enrollment
+		// Set joinedAt to current date (or course start date if course hasn't started yet)
+		const now = new Date();
+		const courseStart = new Date(course.startAt);
+		const joinedAt = now > courseStart ? now : courseStart;
+		
 		const newEnrollment = await prisma.courseStudent.create({
 			data: {
 				courseId: parsedCourseId,
 				studentId: parsedStudentId,
 				monthlyPayment: monthlyPayment,
+				joinedAt: joinedAt,
 				isActive: true,
 				isDeleted: false,
 			},

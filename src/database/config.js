@@ -11,22 +11,17 @@ import config from "../config/env.js";
 
 /**
  * Database Configuration
+ * 
+ * Note: Prisma manages its own connection pool via DATABASE_URL query parameters.
+ * Pool settings are configured in src/database/connection.js using:
+ * - connection_limit: Maximum number of connections (default: 5)
+ * - pool_timeout: Connection timeout in seconds (default: 10)
  */
 export const databaseConfig = {
 	url: config.DATABASE_URL,
 	environment: config.NODE_ENV,
-	
-	// Connection pool settings
-	pool: {
-		min: 2,
-		max: 10,
-		acquireTimeoutMillis: 30000,
-		createTimeoutMillis: 30000,
-		destroyTimeoutMillis: 5000,
-		idleTimeoutMillis: 30000,
-		reapIntervalMillis: 1000,
-		createRetryIntervalMillis: 200,
-	},
+	connectionLimit: config.DB_CONNECTION_LIMIT,
+	poolTimeout: config.DB_POOL_TIMEOUT,
 	
 	// Logging configuration
 	logging: {

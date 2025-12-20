@@ -9,5 +9,8 @@
  */
 
 import { Course } from "./course.js";
+import { Student } from "./student.js";
+import { Teacher } from "./teacher.js";
+import { Invoice, PriceChangeHistory } from "./invoice.js";
 
-export { Course };
+export { Course, Student, Teacher, Invoice, PriceChangeHistory };
