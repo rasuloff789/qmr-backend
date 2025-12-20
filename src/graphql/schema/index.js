@@ -29,6 +29,7 @@ const studentTypes = loadSchemaFile("types/student.gql");
 const dashboardTypes = loadSchemaFile("types/dashboard.gql");
 const courseTypes = loadSchemaFile("types/course.gql");
 const invoiceTypes = loadSchemaFile("types/invoice.gql");
+const debtorTypes = loadSchemaFile("types/debtor.gql");
 
 const userQueries = loadSchemaFile("queries/user.gql");
 const adminQueries = loadSchemaFile("queries/admin.gql");
@@ -59,6 +60,7 @@ const schemaString = `
 	${dashboardTypes}
 	${courseTypes}
 	${invoiceTypes}
+	${debtorTypes}
 	${userQueries}
 	${adminQueries}
 	${teacherQueries}

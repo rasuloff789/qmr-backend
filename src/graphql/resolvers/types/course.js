@@ -152,6 +152,82 @@ export const Course = {
 	},
 
 	/**
+	 * Resolve invoices field for Course
+	 * Returns all invoices for enrollments in this course
+	 * Always returns an array (empty if no invoices) to satisfy non-nullable requirement
+	 * @param {Object} parent - The Course object
+	 * @param {Object} args - Query arguments (unused)
+	 * @param {Object} context - GraphQL context
+	 * @param {Object} info - GraphQL info (unused)
+	 * @returns {Promise<Array>} - Array of Invoice records
+	 */
+	invoices: async (parent, args, context, info) => {
+		if (!parent.id) return [];
+		
+		try {
+			const user = context?.user || null;
+			const role = String(user?.role || "").toLowerCase();
+			const userGender = String(user?.gender || "").toUpperCase();
+			
+			// Build where clause for enrollments
+			const enrollmentWhere = {
+				courseId: parent.id,
+				isDeleted: false,
+			};
+			
+			// Gender filtering for admins: MALE admin sees MALE+CHILD, FEMALE admin sees FEMALE+CHILD
+			// ROOT can see all invoices
+			if (role === "admin") {
+				if (userGender !== "MALE" && userGender !== "FEMALE") {
+					return []; // Admin without valid gender can't see invoices
+				}
+				enrollmentWhere.student = {
+					gender: {
+						in: [userGender, "CHILD"],
+					},
+				};
+			}
+			
+			// Get all enrollments for this course (with gender filter if admin)
+			const enrollments = await prisma.courseStudent.findMany({
+				where: enrollmentWhere,
+				select: {
+					id: true,
+				},
+			});
+			
+			const enrollmentIds = enrollments.map((e) => e.id);
+			
+			if (enrollmentIds.length === 0) return [];
+			
+			// Get all invoices for these enrollments
+			const invoices = await prisma.invoice.findMany({
+				where: {
+					courseStudentId: {
+						in: enrollmentIds,
+					},
+				},
+				include: {
+					courseStudent: {
+						include: {
+							course: true,
+							student: true,
+						},
+					},
+				},
+				orderBy: {
+					billingPeriodStart: "desc",
+				},
+			});
+			
+			return invoices;
+		} catch (error) {
+			console.error("Error loading course invoices:", error);
+			return [];
+		}
+	},
+
+	/**
 	 * Resolve degrees field for Course
 	 * Always returns an array (empty if none) to satisfy non-nullable requirement
 	 * @param {Object} parent - The Course object

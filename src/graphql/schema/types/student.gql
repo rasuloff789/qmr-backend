@@ -18,6 +18,8 @@ type Student {
     possibleDegrees: [Degree!]!
     """Courses the student is enrolled in."""
     courses: [CourseStudent!]!
+    """Invoices for this student."""
+    invoices: [Invoice!]!
     """Optional profile picture path."""
     profilePicture: String
     """Indicates whether the student is currently active."""

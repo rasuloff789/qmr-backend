@@ -20,6 +20,8 @@ type Course {
     endTime: Date!
     """Enrollments associated with this course."""
     students: [CourseStudent!]!
+    """Invoices for this course."""
+    invoices: [Invoice!]!
     """Primary teacher responsible for the course."""
     teacher: Teacher!
     """Substitute teacher assignments for the course."""
