@@ -19,6 +19,10 @@ import { prisma } from "../../../database/index.js";
  */
 export default async function (_, { id }, context) {
 	try {
+		const user = context?.user || null;
+		const role = String(user?.role || "").toLowerCase();
+		const userGender = String(user?.gender || "").toUpperCase();
+		
 		const invoice = await prisma.invoice.findUnique({
 			where: { id: parseInt(id) },
 			include: {
@@ -30,6 +34,22 @@ export default async function (_, { id }, context) {
 				},
 			},
 		});
+		
+		if (!invoice) {
+			return null;
+		}
+		
+		// Gender filtering for admins: MALE admin sees MALE+CHILD, FEMALE admin sees FEMALE+CHILD
+		// ROOT can see all invoices
+		if (role === "admin") {
+			if (userGender !== "MALE" && userGender !== "FEMALE") {
+				return null; // Admin without valid gender can't see invoices
+			}
+			const studentGender = invoice.courseStudent?.student?.gender;
+			if (studentGender !== userGender && studentGender !== "CHILD") {
+				return null; // Admin can't see invoices for different gender students
+			}
+		}
 		
 		return invoice;
 	} catch (error) {

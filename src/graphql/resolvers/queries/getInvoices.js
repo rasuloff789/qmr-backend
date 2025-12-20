@@ -24,6 +24,9 @@ import { prisma } from "../../../database/index.js";
 export default async function (_, args, context) {
 	try {
 		const { courseStudentId, courseId, status, month, year } = args;
+		const user = context?.user || null;
+		const role = String(user?.role || "").toLowerCase();
+		const userGender = String(user?.gender || "").toUpperCase();
 		
 		const where = {};
 		
@@ -51,6 +54,24 @@ export default async function (_, args, context) {
 			};
 			where.billingPeriodEnd = {
 				gte: monthStart,
+			};
+		}
+		
+		// Gender filtering for admins: MALE admin sees MALE+CHILD, FEMALE admin sees FEMALE+CHILD
+		// ROOT can see all invoices
+		if (role === "admin") {
+			if (userGender !== "MALE" && userGender !== "FEMALE") {
+				throw new Error("Admin gender is required to view invoices");
+			}
+			// Merge with existing courseStudent filter if it exists
+			const existingCourseStudentFilter = where.courseStudent || {};
+			where.courseStudent = {
+				...existingCourseStudentFilter,
+				student: {
+					gender: {
+						in: [userGender, "CHILD"],
+					},
+				},
 			};
 		}
 		
