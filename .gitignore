@@ -62,5 +62,3 @@ docker-compose.override.yml
 keys/
 /src/generated/prisma
 uploads/
-
-scripts/
