@@ -38,6 +38,7 @@
     "seed:teachers": "node scripts/seed-degrees-and-teachers.js",
     "seed:students-degrees": "node scripts/add-degrees-to-students.js",
     "seed:attendances": "node scripts/seed-attendances.js",
+    "db:clean": "node scripts/clean-database.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
