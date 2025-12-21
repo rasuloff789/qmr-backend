@@ -71,7 +71,7 @@ const formatDate = (date) => date.toISOString().split("T")[0];
 /**
  * Validate input parameters
  */
-const validateInput = (courseId, studentId, date, isPresent) => {
+const validateInput = (courseId, studentId, date, isPresent, point) => {
 	if (!courseId || !studentId || !date) {
 		return createErrorResponse(
 			"ATTENDANCE_REQUIRED_FIELDS",
@@ -86,6 +86,18 @@ const validateInput = (courseId, studentId, date, isPresent) => {
 			"Validation failed",
 			"isPresent must be a boolean value"
 		);
+	}
+
+	// Validate point if provided
+	if (point !== null && point !== undefined) {
+		const pointNum = parseInt(point);
+		if (isNaN(pointNum) || pointNum < 1 || pointNum > 10) {
+			return createErrorResponse(
+				"ATTENDANCE_POINT_INVALID",
+				"Validation failed",
+				"Point must be a number between 1 and 10"
+			);
+		}
 	}
 
 	return null;
@@ -237,6 +249,7 @@ const ensureAllStudentsHaveAttendance = async (
 		studentId: studentId,
 		date: attendanceDate,
 		isPresent: false,
+		point: null, // No point for absent students
 		notes: null,
 	}));
 
@@ -270,6 +283,7 @@ const ensureAllStudentsHaveAttendance = async (
  * @param {string} args.studentId - Student ID
  * @param {Date} args.date - Date of attendance
  * @param {boolean} args.isPresent - Whether student was present
+ * @param {number} args.point - Optional assessment point (1-10)
  * @param {string} args.notes - Optional notes
  * @param {Object} context - GraphQL context
  * @param {Object} context.user - Authenticated user
@@ -277,12 +291,12 @@ const ensureAllStudentsHaveAttendance = async (
  */
 const setAttendance = async (
 	_parent,
-	{ courseId, studentId, date, isPresent, notes },
+	{ courseId, studentId, date, isPresent, point, notes },
 	{ user }
 ) => {
 	try {
 		// Input validation
-		const inputError = validateInput(courseId, studentId, date, isPresent);
+		const inputError = validateInput(courseId, studentId, date, isPresent, point);
 		if (inputError) return inputError;
 
 		const parsedCourseId = parseInt(courseId);
@@ -364,9 +378,25 @@ const setAttendance = async (
 			);
 		}
 
+		// Determine point value
+		let pointValue = null;
+		if (isPresent) {
+			// If point is provided, use it; otherwise auto-set to 10
+			if (point !== null && point !== undefined) {
+				pointValue = parseInt(point);
+			} else {
+				// Auto-set point to 10 when student is present and no point provided
+				pointValue = 10;
+			}
+		} else {
+			// If student is not present, point should be null
+			pointValue = null;
+		}
+
 		// Create or update attendance record
 		const attendanceData = {
 			isPresent,
+			point: pointValue,
 			notes: notes?.trim() || null,
 		};
 

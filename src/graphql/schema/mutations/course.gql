@@ -170,6 +170,8 @@ extend type Mutation {
         date: Date!
         """Whether the student was present."""
         isPresent: Boolean!
+        """Optional assessment point (1-10) when student is present."""
+        point: Int
         """Optional notes about the attendance."""
         notes: String
     ): SetAttendanceResponse!

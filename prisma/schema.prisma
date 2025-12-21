@@ -147,6 +147,7 @@ model Attendance {
   studentId Int
   date      DateTime
   isPresent Boolean  @default(true)
+  point     Int?
   notes     String?
   createdAt DateTime @default(now())
 
@@ -193,5 +194,33 @@ model PriceChangeHistory {
 
   @@index([courseStudentId])
   @@index([changedAt])
+}
+
+model AuditLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  userRole      String   // "admin", "teacher", "root"
+  username      String?
+  fullname      String?
+  action        String   // e.g., "create_student", "update_course", "delete_invoice"
+  resource      String   // e.g., "student", "course", "invoice"
+  resourceId    String?
+  level         String   @default("info") // "info", "warning", "error", "security"
+  category      String   @default("system") // "authentication", "authorization", "data_access", "data_modification", "system", "security"
+  success       Boolean  @default(true)
+  errorMessage  String?
+  details       Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([userRole])
+  @@index([action])
+  @@index([resource])
+  @@index([level])
+  @@index([category])
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 

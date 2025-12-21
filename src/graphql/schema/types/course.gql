@@ -80,6 +80,8 @@ type Attendance {
     date: Date!
     """Whether the student was present."""
     isPresent: Boolean!
+    """Assessment point (1-10) when student is present."""
+    point: Int
     """Optional notes about the attendance."""
     notes: String
     """Creation timestamp."""
