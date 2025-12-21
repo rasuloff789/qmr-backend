@@ -463,12 +463,17 @@ export const permissions = shield(
 			getCourses: isAuthenticatedRule,
 			getCourse: isAuthenticatedRule,
 			getAttendances: isAuthenticatedRule,
-			getDashboardStats: isAuthenticatedRule,
+
+			// Dashboard statistics - Only ADMIN and ROOT can view
+			getDashboardStats: isAdminOrRootRule,
 
 			// Invoice queries - Only ADMIN and ROOT can view invoices
 			getInvoices: isAdminOrRootRule,
 			getInvoice: isAdminOrRootRule,
 			getDebtorStudents: isAdminOrRootRule,
+
+			// Audit log queries - Only ROOT can view audit logs
+			getAuditLogs: isRoot,
 		},
 
 		// ====================================================================
@@ -775,6 +780,15 @@ export const permissions = shield(
 		// Dashboard Types - All fields allowed
 		DashboardStats: allow,
 		GenderDistribution: allow,
+		AttendanceSummary: allow,
+		DayAttendance: allow,
+		MonthAttendance: allow,
+		PointsDistribution: allow,
+		StudentPerformance: allow,
+		CourseStats: allow,
+		CoursePerformance: allow,
+		MonthRevenue: allow,
+		TrendData: allow,
 
 		// Response Types - All fields allowed
 		AddCourseResponse: allow,
