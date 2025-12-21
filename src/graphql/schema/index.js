@@ -30,6 +30,7 @@ const dashboardTypes = loadSchemaFile("types/dashboard.gql");
 const courseTypes = loadSchemaFile("types/course.gql");
 const invoiceTypes = loadSchemaFile("types/invoice.gql");
 const debtorTypes = loadSchemaFile("types/debtor.gql");
+const auditTypes = loadSchemaFile("types/audit.gql");
 
 const userQueries = loadSchemaFile("queries/user.gql");
 const adminQueries = loadSchemaFile("queries/admin.gql");
@@ -39,6 +40,7 @@ const degreeQueries = loadSchemaFile("queries/degree.gql");
 const courseQueries = loadSchemaFile("queries/course.gql");
 const dashboardQueries = loadSchemaFile("queries/dashboard.gql");
 const invoiceQueries = loadSchemaFile("queries/invoice.gql");
+const auditQueries = loadSchemaFile("queries/audit.gql");
 
 const authMutations = loadSchemaFile("mutations/auth.gql");
 const adminMutations = loadSchemaFile("mutations/admin.gql");
@@ -61,6 +63,7 @@ const schemaString = `
 	${courseTypes}
 	${invoiceTypes}
 	${debtorTypes}
+	${auditTypes}
 	${userQueries}
 	${adminQueries}
 	${teacherQueries}
@@ -69,6 +72,7 @@ const schemaString = `
 	${courseQueries}
 	${dashboardQueries}
 	${invoiceQueries}
+	${auditQueries}
 	${authMutations}
 	${adminMutations}
 	${teacherMutations}

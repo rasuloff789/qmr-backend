@@ -1,0 +1,15 @@
+# Audit log queries
+extend type Query {
+    """Get audit logs with filtering, sorting, and pagination. Only accessible by root users."""
+    getAuditLogs(
+        """Filter options."""
+        filter: AuditLogFilter
+        """Sort options."""
+        sort: AuditLogSort
+        """Page number (1-based)."""
+        page: Int = 1
+        """Number of items per page."""
+        pageSize: Int = 50
+    ): GetAuditLogsResponse!
+}
+

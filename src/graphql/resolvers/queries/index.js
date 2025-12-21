@@ -23,6 +23,7 @@ import getDashboardStats from "./getDashboardStats.js";
 import getInvoices from "./getInvoices.js";
 import getInvoice from "./getInvoice.js";
 import getDebtorStudents from "./getDebtorStudents.js";
+import getAuditLogs from "./getAuditLogs.js";
 
 export {
 	getAdmins,
@@ -42,4 +43,5 @@ export {
 	getInvoices,
 	getInvoice,
 	getDebtorStudents,
+	getAuditLogs,
 };

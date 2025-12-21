@@ -1,0 +1,82 @@
+"""Audit log entry for tracking admin actions."""
+type AuditLog {
+    """Unique identifier."""
+    id: ID!
+    """User ID who performed the action."""
+    userId: Int!
+    """Role of the user (admin, teacher, root)."""
+    userRole: String!
+    """Username of the user."""
+    username: String
+    """Full name of the user."""
+    fullname: String
+    """Action performed (e.g., 'create_student', 'update_course')."""
+    action: String!
+    """Resource type (e.g., 'student', 'course', 'invoice')."""
+    resource: String!
+    """ID of the affected resource (if applicable)."""
+    resourceId: String
+    """Log level (info, warning, error, security)."""
+    level: String!
+    """Category of the action."""
+    category: String!
+    """Whether the action was successful."""
+    success: Boolean!
+    """Error message if action failed."""
+    errorMessage: String
+    """Additional details about the action."""
+    details: Json
+    """IP address from which the action was performed."""
+    ipAddress: String
+    """User agent string."""
+    userAgent: String
+    """Timestamp when the action was performed."""
+    createdAt: Date!
+}
+
+"""Response payload for audit log queries."""
+type GetAuditLogsResponse {
+    """List of audit log entries."""
+    logs: [AuditLog!]!
+    """Total count of matching logs."""
+    totalCount: Int!
+    """Current page number."""
+    page: Int!
+    """Number of items per page."""
+    pageSize: Int!
+    """Total number of pages."""
+    totalPages: Int!
+}
+
+"""Filter options for audit log queries."""
+input AuditLogFilter {
+    """Filter by user ID."""
+    userId: ID
+    """Filter by user role."""
+    userRole: String
+    """Filter by action."""
+    action: String
+    """Filter by resource type."""
+    resource: String
+    """Filter by log level."""
+    level: String
+    """Filter by category."""
+    category: String
+    """Filter by success status."""
+    success: Boolean
+    """Filter by start date."""
+    startDate: Date
+    """Filter by end date."""
+    endDate: Date
+    """Search in username or fullname."""
+    search: String
+}
+
+"""Sort options for audit log queries."""
+input AuditLogSort {
+    """Field to sort by."""
+    field: String! # "createdAt", "action", "resource", etc.
+    """Sort direction."""
+    direction: String! # "asc" or "desc"
+}
+
