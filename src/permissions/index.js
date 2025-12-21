@@ -790,6 +790,10 @@ export const permissions = shield(
 		MonthRevenue: allow,
 		TrendData: allow,
 
+		// Audit Log Types - All fields allowed (only root can query)
+		AuditLog: allow,
+		GetAuditLogsResponse: allow,
+
 		// Response Types - All fields allowed
 		AddCourseResponse: allow,
 		UpdateCourseResponse: allow,
