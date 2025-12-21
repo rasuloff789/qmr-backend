@@ -29,6 +29,7 @@ import {
 	getInvoices,
 	getInvoice,
 	getDebtorStudents,
+	getAuditLogs,
 } from "./queries/index.js";
 
 // Import mutation resolvers
@@ -91,6 +92,7 @@ const Query = {
 	getInvoices,
 	getInvoice,
 	getDebtorStudents,
+	getAuditLogs,
 };
 
 /**
@@ -132,10 +134,31 @@ const Mutation = {
 };
 
 /**
+ * JSON scalar resolver
+ * Accepts any JSON value and returns it as-is
+ */
+const Json = {
+	parseValue: (value) => value, // Parse from variable
+	serialize: (value) => value, // Serialize to response
+	parseLiteral: (ast) => {
+		// Parse from literal in query
+		if (ast.kind === "StringValue") {
+			try {
+				return JSON.parse(ast.value);
+			} catch {
+				return ast.value;
+			}
+		}
+		return null;
+	},
+};
+
+/**
  * Combined resolvers
  */
 export const resolvers = {
 	Upload: GraphQLUpload,
+	Json,
 	Query,
 	Mutation,
 	Course,

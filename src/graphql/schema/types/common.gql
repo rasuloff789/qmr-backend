@@ -7,6 +7,9 @@ scalar Phone
 """File upload scalar backed by multipart requests."""
 scalar Upload
 
+"""JSON scalar type for arbitrary JSON values."""
+scalar Json
+
 """Generic success payload containing a message."""
 type SuccessResponse {
     """Operation success flag."""
