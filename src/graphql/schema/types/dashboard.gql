@@ -1,5 +1,6 @@
 """Aggregated statistics for the admin dashboard."""
 type DashboardStats {
+    # User Statistics (Current)
     """Total number of student records."""
     totalStudents: Int!
     """Total number of teacher records."""
@@ -26,6 +27,104 @@ type DashboardStats {
     studentGenderDistribution: GenderDistribution!
     """Gender breakdown for teachers."""
     teacherGenderDistribution: GenderDistribution!
+    
+    # Course Statistics
+    """Total number of courses."""
+    totalCourses: Int!
+    """Number of currently active courses."""
+    activeCourses: Int!
+    """Number of courses starting in next 30 days."""
+    upcomingCourses: Int!
+    """Number of completed courses."""
+    completedCourses: Int!
+    """Total student enrollments across all courses."""
+    totalEnrollments: Int!
+    """Average number of students per course."""
+    averageStudentsPerCourse: Float!
+    """Top 10 courses by enrollment count."""
+    mostPopularCourses: [CourseStats!]!
+    
+    # Attendance Statistics
+    """Total number of attendance records."""
+    totalAttendanceRecords: Int!
+    """Today's attendance summary."""
+    todayAttendance: AttendanceSummary!
+    """This week's attendance summary."""
+    thisWeekAttendance: AttendanceSummary!
+    """This month's attendance summary."""
+    thisMonthAttendance: AttendanceSummary!
+    """Overall attendance rate (percentage)."""
+    overallAttendanceRate: Float!
+    """Average daily attendance count."""
+    averageDailyAttendance: Float!
+    """Attendance breakdown by day of week."""
+    attendanceByDayOfWeek: [DayAttendance!]!
+    """Attendance trends by month (last 12 months)."""
+    attendanceByMonth: [MonthAttendance!]!
+    
+    # Performance Statistics (Points)
+    """Total points awarded to all students."""
+    totalPointsAwarded: Int!
+    """Average points per student."""
+    averagePointsPerStudent: Float!
+    """Average points per attendance record."""
+    averagePointsPerAttendance: Float!
+    """Distribution of students by point ranges."""
+    pointsDistribution: PointsDistribution!
+    """Top 10 students by average points."""
+    topPerformers: [StudentPerformance!]!
+    """Performance statistics by course."""
+    performanceByCourse: [CoursePerformance!]!
+    
+    # Financial Statistics
+    """Total revenue from all paid invoices."""
+    totalRevenue: Float!
+    """Revenue for current month."""
+    monthlyRevenue: Float!
+    """Total revenue for current year."""
+    revenueThisYear: Float!
+    """Average monthly revenue."""
+    averageMonthlyRevenue: Float!
+    """Total number of invoices."""
+    totalInvoices: Int!
+    """Number of fully paid invoices."""
+    paidInvoices: Int!
+    """Number of pending/partially paid invoices."""
+    pendingInvoices: Int!
+    """Number of overdue invoices."""
+    overdueInvoices: Int!
+    """Percentage of invoices fully paid."""
+    collectionRate: Float!
+    """Total outstanding debt."""
+    totalDebt: Float!
+    """Number of students with outstanding payments."""
+    numberOfDebtors: Int!
+    """Average debt per debtor student."""
+    averageDebtPerStudent: Float!
+    """Revenue breakdown by month (last 12 months)."""
+    revenueByMonth: [MonthRevenue!]!
+    
+    # Activity Statistics
+    """New students added this month."""
+    newStudentsThisMonth: Int!
+    """New enrollments this month."""
+    newEnrollmentsThisMonth: Int!
+    """New courses created this month."""
+    newCoursesThisMonth: Int!
+    """Attendance records created today."""
+    attendanceRecordsToday: Int!
+    """Total points awarded today."""
+    pointsAwardedToday: Int!
+    
+    # Trends
+    """Attendance trend data."""
+    attendanceTrend: TrendData!
+    """Revenue trend data."""
+    revenueTrend: TrendData!
+    """Enrollment trend data."""
+    enrollmentTrend: TrendData!
+    """Performance trend data."""
+    performanceTrend: TrendData!
 }
 
 """Numeric distribution of entities across gender values."""
@@ -36,5 +135,117 @@ type GenderDistribution {
     female: Int!
     """Number of child records."""
     child: Int!
+}
+
+"""Summary of attendance for a time period."""
+type AttendanceSummary {
+    """Number of present records."""
+    present: Int!
+    """Number of absent records."""
+    absent: Int!
+    """Total attendance records."""
+    total: Int!
+    """Attendance rate as percentage."""
+    rate: Float!
+}
+
+"""Attendance statistics for a specific day of week."""
+type DayAttendance {
+    """Day of week (MONDAY, TUESDAY, etc.)."""
+    day: String!
+    """Number of present records."""
+    present: Int!
+    """Number of absent records."""
+    absent: Int!
+    """Attendance rate as percentage."""
+    rate: Float!
+}
+
+"""Attendance statistics for a specific month."""
+type MonthAttendance {
+    """Month identifier (YYYY-MM format)."""
+    month: String!
+    """Number of present records."""
+    present: Int!
+    """Number of absent records."""
+    absent: Int!
+    """Attendance rate as percentage."""
+    rate: Float!
+}
+
+"""Distribution of students by point ranges."""
+type PointsDistribution {
+    """Students with 9-10 average points."""
+    excellent: Int!
+    """Students with 7-8 average points."""
+    good: Int!
+    """Students with 5-6 average points."""
+    average: Int!
+    """Students with 1-4 average points."""
+    belowAverage: Int!
+}
+
+"""Student performance statistics."""
+type StudentPerformance {
+    """Student identifier."""
+    studentId: ID!
+    """Student full name."""
+    studentName: String!
+    """Average points across all attendances."""
+    averagePoints: Float!
+    """Total points awarded."""
+    totalPoints: Int!
+    """Number of attendance records with points."""
+    attendanceCount: Int!
+}
+
+"""Course statistics."""
+type CourseStats {
+    """Course identifier."""
+    courseId: ID!
+    """Course name."""
+    courseName: String!
+    """Number of enrolled students."""
+    enrollmentCount: Int!
+    """Average points for students in this course."""
+    averagePoints: Float!
+    """Attendance rate for this course."""
+    attendanceRate: Float!
+}
+
+"""Course performance statistics."""
+type CoursePerformance {
+    """Course identifier."""
+    courseId: ID!
+    """Course name."""
+    courseName: String!
+    """Average points for this course."""
+    averagePoints: Float!
+    """Total points awarded in this course."""
+    totalPoints: Int!
+    """Number of students in this course."""
+    studentCount: Int!
+}
+
+"""Revenue statistics for a specific month."""
+type MonthRevenue {
+    """Month identifier (YYYY-MM format)."""
+    month: String!
+    """Total revenue for the month."""
+    revenue: Float!
+    """Number of invoices for the month."""
+    invoiceCount: Int!
+}
+
+"""Trend data showing direction and change."""
+type TrendData {
+    """Trend direction: 'up', 'down', or 'stable'."""
+    direction: String!
+    """Percentage change from previous period."""
+    percentageChange: Float!
+    """Current period value."""
+    currentValue: Float!
+    """Previous period value."""
+    previousValue: Float!
 }
 
