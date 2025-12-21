@@ -28,11 +28,10 @@ const executableSchema = makeExecutableSchema({
 
 /**
  * Create audit logging middleware object for graphql-middleware
- * This will automatically log all admin actions
+ * This will automatically log all admin mutations (not queries)
  */
 const auditLoggingMiddleware = {
 	Mutation: auditMiddleware,
-	Query: auditMiddleware, // Also log queries for audit purposes
 };
 
 /**

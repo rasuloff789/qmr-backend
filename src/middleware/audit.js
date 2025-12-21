@@ -1,8 +1,9 @@
 /**
  * QMR Backend - Audit Logging Middleware
  *
- * Automatically logs all admin actions for audit purposes.
- * Only logs actions performed by administrators (not root or teachers).
+ * Automatically logs all admin mutations for audit purposes.
+ * Only logs mutations performed by administrators (not root or teachers).
+ * Queries are not logged.
  *
  * @author QMR Development Team
  * @version 1.0.0
