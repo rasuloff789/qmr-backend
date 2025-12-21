@@ -16,6 +16,7 @@ import { shield } from "graphql-shield";
 import { schema } from "./schema/index.js";
 import { resolvers } from "./resolvers/index.js";
 import { permissions } from "../permissions/index.js";
+import { auditMiddleware } from "../middleware/audit.js";
 
 /**
  * Create executable GraphQL schema
@@ -26,9 +27,19 @@ const executableSchema = makeExecutableSchema({
 });
 
 /**
- * Apply GraphQL Shield middleware for permissions
+ * Create audit logging middleware object for graphql-middleware
+ * This will automatically log all admin actions
  */
-const schemaWithPermissions = applyMiddleware(executableSchema, permissions);
+const auditLoggingMiddleware = {
+	Mutation: auditMiddleware,
+	Query: auditMiddleware, // Also log queries for audit purposes
+};
+
+/**
+ * Apply middleware: first audit logging, then permissions
+ */
+const schemaWithAudit = applyMiddleware(executableSchema, auditLoggingMiddleware);
+const schemaWithPermissions = applyMiddleware(schemaWithAudit, permissions);
 
 /**
  * Export the complete GraphQL setup

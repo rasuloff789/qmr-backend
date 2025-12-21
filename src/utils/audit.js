@@ -84,8 +84,9 @@ export class AuditLogger {
 			// Add to in-memory logs
 			this.logs.push(entry);
 
-			// Store in database if configured
-			if (process.env.AUDIT_DATABASE_ENABLED === "true") {
+			// Always store admin actions in database (for audit purposes)
+			// Database storage is enabled by default for admin actions
+			if (entry.userRole === "admin") {
 				await this._storeInDatabase(entry);
 			}
 
@@ -202,9 +203,54 @@ export class AuditLogger {
 	 * Store audit entry in database
 	 */
 	async _storeInDatabase(entry) {
-		// This would require an audit_logs table in your database
-		// For now, we'll just log to console
-		console.log("Audit entry:", JSON.stringify(entry, null, 2));
+		try {
+			// Only log admin actions (root can view all admin actions)
+			if (entry.userRole !== "admin") {
+				return; // Only log admin actions for audit purposes
+			}
+
+			// Get user details if available
+			let username = null;
+			let fullname = null;
+
+			if (entry.userId) {
+				try {
+					const admin = await prisma.admin.findUnique({
+						where: { id: parseInt(entry.userId) },
+						select: { username: true, fullname: true },
+					});
+					if (admin) {
+						username = admin.username;
+						fullname = admin.fullname;
+					}
+				} catch (error) {
+					// User might not exist, continue without user details
+					console.error("Error fetching admin details for audit log:", error);
+				}
+			}
+
+			await prisma.auditLog.create({
+				data: {
+					userId: entry.userId ? parseInt(entry.userId) : 0,
+					userRole: entry.userRole || "unknown",
+					username: username,
+					fullname: fullname,
+					action: entry.action || "unknown",
+					resource: entry.resource || "unknown",
+					resourceId: entry.resourceId ? String(entry.resourceId) : null,
+					level: entry.level || "info",
+					category: entry.category || "system",
+					success: entry.success !== false,
+					errorMessage: entry.errorMessage || null,
+					details: entry.details || {},
+					ipAddress: entry.ipAddress || null,
+					userAgent: entry.userAgent || null,
+				},
+			});
+		} catch (error) {
+			// Don't fail the main operation if audit logging fails
+			console.error("Error storing audit log in database:", error);
+		}
 	}
 
 	/**
