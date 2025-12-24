@@ -4,10 +4,9 @@ import {
 	isPasswordSecure,
 } from "../../../utils/auth/password.js";
 import {
-	checkUzPhoneInt,
+	checkInternationalPhone,
 	checkTelegramUsername,
 	checkUsername,
-	checkTurkeyPhoneInt,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
 import {
@@ -63,31 +62,33 @@ const addAdmin = async (
 			};
 		}
 
-		const uzPhoneValidation = checkUzPhoneInt(phone);
-		const trPhoneValidation = checkTurkeyPhoneInt(phone);
-		if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
+		const phoneValidation = checkInternationalPhone(phone);
+		if (!phoneValidation.valid) {
 			return {
 				success: false,
 				code: "ADMIN_PHONE_INVALID",
 				message: "Validation failed",
 				admin: null,
-				errors: [
-					"Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)",
-				],
+				errors: [phoneValidation.reason],
 				timestamp: new Date().toISOString(),
 			};
 		}
 
-		const tgValidation = checkTelegramUsername(tgUsername);
-		if (!tgValidation.valid) {
-			return {
-				success: false,
-				code: "ADMIN_TG_USERNAME_INVALID",
-				message: "Validation failed",
-				admin: null,
-				errors: [tgValidation.reason],
-				timestamp: new Date().toISOString(),
-			};
+		// Handle empty string as null (don't validate, just skip)
+		let normalizedTgUsername = null;
+		if (tgUsername && tgUsername.trim() !== "") {
+			const tgValidation = checkTelegramUsername(tgUsername);
+			if (!tgValidation.valid) {
+				return {
+					success: false,
+					code: "ADMIN_TG_USERNAME_INVALID",
+					message: "Validation failed",
+					admin: null,
+					errors: [tgValidation.reason],
+					timestamp: new Date().toISOString(),
+				};
+			}
+			normalizedTgUsername = tgValidation.normalized;
 		}
 
 		if (!isValidBirthdate(birthDate)) {
@@ -118,10 +119,7 @@ const addAdmin = async (
 		}
 
 		// Normalize phone number
-		const normalizedPhone = uzPhoneValidation.valid
-			? uzPhoneValidation.normalized
-			: trPhoneValidation.normalized;
-		const normalizedTgUsername = tgValidation.normalized;
+		const normalizedPhone = phoneValidation.normalized;
 
 		// Create a new admin in the database
 		const newAdmin = await prisma.admin.create({

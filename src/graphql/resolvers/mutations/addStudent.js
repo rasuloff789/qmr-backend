@@ -74,15 +74,34 @@ const addStudent = async (
 			normalizedPhone = phoneValidation.normalized;
 		}
 
-		// Validate telegram username
-		const tg = checkTelegramUsername(tgUsername);
-		if (!tg.valid) {
+		// Validate telegram username if provided (optional field)
+		// Treat empty string as null (don't validate, just skip)
+		let normalizedTg = null;
+		if (tgUsername && tgUsername.trim() !== "") {
+			const tg = checkTelegramUsername(tgUsername);
+			if (!tg.valid) {
+				return {
+					success: false,
+					code: "STUDENT_TG_USERNAME_INVALID",
+					message: "Validation failed",
+					student: null,
+					errors: [tg.reason],
+					timestamp: new Date().toISOString(),
+				};
+			}
+			normalizedTg = tg.normalized;
+		}
+
+		// Require either phone or tgUsername (empty string counts as not provided)
+		const hasPhone = phone && phone.trim() !== "";
+		const hasTgUsername = tgUsername && tgUsername.trim() !== "";
+		if (!hasPhone && !hasTgUsername) {
 			return {
 				success: false,
-				code: "STUDENT_TG_USERNAME_INVALID",
+				code: "STUDENT_CONTACT_REQUIRED",
 				message: "Validation failed",
 				student: null,
-				errors: [tg.reason],
+				errors: ["Either phone number or Telegram username must be provided"],
 				timestamp: new Date().toISOString(),
 			};
 		}
@@ -129,9 +148,6 @@ const addStudent = async (
 			}
 			profilePictureUrl = uploaded.url;
 		}
-
-		// Normalize inputs
-		const normalizedTg = tg.normalized;
 
 		// Persist
 		const newStudent = await prisma.student.create({

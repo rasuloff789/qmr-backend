@@ -5,8 +5,7 @@ import {
 } from "../../../utils/auth/password.js";
 import {
 	checkUsername,
-	checkUzPhoneInt,
-	checkTurkeyPhoneInt,
+	checkInternationalPhone,
 	checkTelegramUsername,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
@@ -57,33 +56,35 @@ const addTeacher = async (
 			};
 		}
 
-		// Validate phone (UZ or TR format)
-		const uzPhone = checkUzPhoneInt(phone);
-		const trPhone = checkTurkeyPhoneInt(phone);
-		if (!uzPhone.valid && !trPhone.valid) {
+		// Validate phone (international format)
+		const phoneValidation = checkInternationalPhone(phone);
+		if (!phoneValidation.valid) {
 			return {
 				success: false,
 				code: "TEACHER_PHONE_INVALID",
 				message: "Validation failed",
 				teacher: null,
-				errors: [
-					"Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)",
-				],
+				errors: [phoneValidation.reason],
 				timestamp: new Date().toISOString(),
 			};
 		}
 
-		// Validate telegram username
-		const tg = checkTelegramUsername(tgUsername);
-		if (!tg.valid) {
-			return {
-				success: false,
-				code: "TEACHER_TG_USERNAME_INVALID",
-				message: "Validation failed",
-				teacher: null,
-				errors: [tg.reason],
-				timestamp: new Date().toISOString(),
-			};
+		// Validate telegram username if provided (optional)
+		// Treat empty string as null (don't validate, just skip)
+		let normalizedTg = null;
+		if (tgUsername && tgUsername.trim() !== "") {
+			const tg = checkTelegramUsername(tgUsername);
+			if (!tg.valid) {
+				return {
+					success: false,
+					code: "TEACHER_TG_USERNAME_INVALID",
+					message: "Validation failed",
+					teacher: null,
+					errors: [tg.reason],
+					timestamp: new Date().toISOString(),
+				};
+			}
+			normalizedTg = tg.normalized;
 		}
 
 		// Validate birth date
@@ -142,10 +143,7 @@ const addTeacher = async (
 		}
 
 		// Normalize inputs
-		const normalizedPhone = uzPhone.valid
-			? uzPhone.normalized
-			: trPhone.normalized;
-		const normalizedTg = tg.normalized;
+		const normalizedPhone = phoneValidation.normalized;
 		const degreesConnection =
 			{ connect: degreeIds.map((id) => ({ id: parseInt(id) })) };
 
