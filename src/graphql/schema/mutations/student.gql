@@ -75,7 +75,7 @@ extend type Mutation {
         """Possible degrees."""
         possibleDegrees: [ID!]!
         """Telegram username for contact."""
-        tgUsername: String!
+        tgUsername: String
         """Date of birth (used for age stats)."""
         birthDate: Date!
         """Optional international phone number."""

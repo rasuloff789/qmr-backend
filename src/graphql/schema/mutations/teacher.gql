@@ -73,7 +73,7 @@ extend type Mutation {
         """Full display name."""
         fullname: String!
         """Telegram username for contact."""
-        tgUsername: String!
+        tgUsername: String
         """Date of birth."""
         birthDate: Date!
         """Primary phone number."""
