@@ -1,56 +1,4 @@
 /**
- * Validate and normalize Uzbekistan phone numbers
- * @param {string|number} input - Phone number to validate
- * @returns {Object} - Validation result with valid flag and normalized number
- */
-function checkUzPhoneInt(input) {
-	const digits = input.toString().replace(/\D/g, ""); // Remove non-digits
-
-	if (digits.length === 9) {
-		// Local format: add 998 prefix
-		const normalized = "998" + digits;
-		return { valid: true, normalized };
-	}
-
-	if (digits.length === 12 && digits.startsWith("998")) {
-		// International format
-		return { valid: true, normalized: digits };
-	}
-
-	return {
-		valid: false,
-		reason:
-			"Invalid phone format. Expected: 9-digit local or 12-digit international starting with 998.",
-	};
-}
-
-/**
- * Validate and normalize Turkey phone numbers
- * @param {string|number} input - Phone number to validate
- * @returns {Object} - Validation result with valid flag and normalized number
- */
-function checkTurkeyPhoneInt(input) {
-	const digits = input.toString().replace(/\D/g, ""); // Remove non-digits
-
-	// Local format: 10 digits starting with 5
-	if (digits.length === 10 && digits.startsWith("5")) {
-		const normalized = "90" + digits;
-		return { valid: true, normalized };
-	}
-
-	// International format: 12 digits starting with 90
-	if (digits.length === 12 && digits.startsWith("90")) {
-		return { valid: true, normalized: digits };
-	}
-
-	return {
-		valid: false,
-		reason:
-			"Invalid phone format. Expected: 10-digit local (5XXXXXXXXX) or 12-digit international (90XXXXXXXXXX).",
-	};
-}
-
-/**
  * Validate and normalize Telegram username
  * @param {string} username - Telegram username to validate
  * @returns {Object} - Validation result with valid flag and normalized username
@@ -150,8 +98,6 @@ function isValidPassword(password) {
 
 export {
 	checkTelegramUsername,
-	checkUzPhoneInt,
-	checkTurkeyPhoneInt,
 	checkInternationalPhone,
 	checkUsername,
 	isValidBirthdate,
