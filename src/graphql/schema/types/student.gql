@@ -11,7 +11,7 @@ type Student {
     """Optional phone number (international format)."""
     phone: String
     """Telegram username used for contact."""
-    tgUsername: String!
+    tgUsername: String
     """Gender classification."""
     gender: Gender!
     """Possible degrees."""

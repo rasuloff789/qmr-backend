@@ -11,7 +11,7 @@ type Teacher {
     """Primary phone number."""
     phone: String!
     """Telegram username used for contact."""
-    tgUsername: String!
+    tgUsername: String
     """Gender classification, used for course assignment."""
     gender: Gender!
     """Optional profile picture path."""
