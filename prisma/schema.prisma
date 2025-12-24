@@ -36,7 +36,7 @@ model Teacher {
   password          String
   birthDate         DateTime
   phone             String
-  tgUsername        String
+  tgUsername        String?
   degrees           Degree[]             @relation("TeacherDegrees")
   teacherCourses    Course[]             @relation("CourseTeachers")
   substituteTeachers SubstituteTeacher[]
@@ -63,7 +63,7 @@ model Student {
   password        String
   birthDate       DateTime
   phone           String?
-  tgUsername      String
+  tgUsername      String?
   gender          Gender         @default(MALE)
   possibleDegrees Degree[]       @relation("StudentDegrees")
   courses         CourseStudent[]
