@@ -4,10 +4,9 @@ import {
 	isPasswordSecure,
 } from "../../../utils/auth/password.js";
 import {
-	checkUzPhoneInt,
+	checkInternationalPhone,
 	checkTelegramUsername,
 	checkUsername,
-	checkTurkeyPhoneInt,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
 
@@ -80,28 +79,27 @@ const updateAdmin = async (
 
 		// Validate and add phone if provided
 		if (phone !== undefined) {
-			const uzPhoneValidation = checkUzPhoneInt(phone);
-			const trPhoneValidation = checkTurkeyPhoneInt(phone);
-			if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
-				throw new Error(
-					"Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)"
-				);
+			const phoneValidation = checkInternationalPhone(phone);
+			if (!phoneValidation.valid) {
+				throw new Error(phoneValidation.reason);
 			}
 
 			// Normalize phone number
-			const normalizedPhone = uzPhoneValidation.valid
-				? uzPhoneValidation.normalized
-				: trPhoneValidation.normalized;
-			updateData.phone = normalizedPhone;
+			updateData.phone = phoneValidation.normalized;
 		}
 
 		// Validate and add tgUsername if provided
 		if (tgUsername !== undefined) {
-			const tgValidation = checkTelegramUsername(tgUsername);
-			if (!tgValidation.valid) {
-				throw new Error(tgValidation.reason);
+			if (tgUsername === null || tgUsername === "") {
+				// Remove tgUsername from database (treat empty string as null)
+				updateData.tgUsername = null;
+			} else {
+				const tgValidation = checkTelegramUsername(tgUsername);
+				if (!tgValidation.valid) {
+					throw new Error(tgValidation.reason);
+				}
+				updateData.tgUsername = tgValidation.normalized;
 			}
-			updateData.tgUsername = tgValidation.normalized;
 		}
 
 		// Validate and add password if provided

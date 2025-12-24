@@ -111,36 +111,98 @@ const updateStudent = async (
 
 		// Validate and add phone if provided
 		if (phone !== undefined) {
-			const phoneValidation = checkInternationalPhone(phone);
-			if (!phoneValidation.valid) {
-				return {
-					success: false,
-					code: "STUDENT_PHONE_INVALID",
-					message: "Validation failed",
-					student: null,
-					errors: [phoneValidation.reason],
-					timestamp: new Date().toISOString(),
-				};
+			if (phone === null || phone === "") {
+				// User is trying to remove phone - check if tgUsername will still exist
+				// Treat empty string as null
+				const hasTgUsername = tgUsername !== undefined 
+					? (tgUsername && tgUsername.trim() !== "")
+					: (existingStudent.tgUsername && existingStudent.tgUsername.trim() !== "");
+				
+				if (!hasTgUsername) {
+					return {
+						success: false,
+						code: "STUDENT_CONTACT_REQUIRED",
+						message: "Validation failed",
+						student: null,
+						errors: ["Cannot remove phone number. Either phone number or Telegram username must be provided."],
+						timestamp: new Date().toISOString(),
+					};
+				}
+				updateData.phone = null;
+			} else {
+				const phoneValidation = checkInternationalPhone(phone);
+				if (!phoneValidation.valid) {
+					return {
+						success: false,
+						code: "STUDENT_PHONE_INVALID",
+						message: "Validation failed",
+						student: null,
+						errors: [phoneValidation.reason],
+						timestamp: new Date().toISOString(),
+					};
+				}
+				// Normalize phone number
+				updateData.phone = phoneValidation.normalized;
 			}
-
-			// Normalize phone number
-			updateData.phone = phoneValidation.normalized;
 		}
 
 		// Validate and add tgUsername if provided
 		if (tgUsername !== undefined) {
-			const tgValidation = checkTelegramUsername(tgUsername);
-			if (!tgValidation.valid) {
-				return {
-					success: false,
-					code: "STUDENT_TG_USERNAME_INVALID",
-					message: "Validation failed",
-					student: null,
-					errors: [tgValidation.reason],
-					timestamp: new Date().toISOString(),
-				};
+			if (tgUsername === null || tgUsername === "") {
+				// User is trying to remove tgUsername - check if phone will still exist
+				// Use updateData.phone if phone was updated, otherwise use existing value
+				const finalPhone = updateData.phone !== undefined 
+					? updateData.phone 
+					: existingStudent.phone;
+				
+				if (!finalPhone) {
+					return {
+						success: false,
+						code: "STUDENT_CONTACT_REQUIRED",
+						message: "Validation failed",
+						student: null,
+						errors: ["Cannot remove Telegram username. Either phone number or Telegram username must be provided."],
+						timestamp: new Date().toISOString(),
+					};
+				}
+				updateData.tgUsername = null;
+			} else {
+				const tgValidation = checkTelegramUsername(tgUsername);
+				if (!tgValidation.valid) {
+					return {
+						success: false,
+						code: "STUDENT_TG_USERNAME_INVALID",
+						message: "Validation failed",
+						student: null,
+						errors: [tgValidation.reason],
+						timestamp: new Date().toISOString(),
+					};
+				}
+				updateData.tgUsername = tgValidation.normalized;
 			}
-			updateData.tgUsername = tgValidation.normalized;
+		}
+
+		// Final validation: ensure at least one contact method exists after update
+		const finalPhone = updateData.phone !== undefined 
+			? updateData.phone 
+			: existingStudent.phone;
+		const finalTgUsername = updateData.tgUsername !== undefined 
+			? updateData.tgUsername 
+			: existingStudent.tgUsername;
+
+		// Check if both are null or empty strings
+		const hasPhone = finalPhone && finalPhone.trim() !== "";
+		const hasTgUsername = finalTgUsername && finalTgUsername.trim() !== "";
+
+		if (!hasPhone && !hasTgUsername) {
+			return {
+				success: false,
+				code: "STUDENT_CONTACT_REQUIRED",
+				message: "Validation failed",
+				student: null,
+				errors: ["Either phone number or Telegram username must be provided."],
+				timestamp: new Date().toISOString(),
+			};
 		}
 
 		// Validate and add password if provided

@@ -4,10 +4,9 @@ import {
 	isPasswordSecure,
 } from "../../../utils/auth/password.js";
 import {
-	checkUzPhoneInt,
+	checkInternationalPhone,
 	checkTelegramUsername,
 	checkUsername,
-	checkTurkeyPhoneInt,
 	isValidBirthdate,
 } from "../../../utils/regex.js";
 import {
@@ -123,42 +122,41 @@ const updateTeacher = async (
 
 		// Validate and add phone if provided
 		if (phone !== undefined) {
-			const uzPhoneValidation = checkUzPhoneInt(phone);
-			const trPhoneValidation = checkTurkeyPhoneInt(phone);
-			if (!uzPhoneValidation.valid && !trPhoneValidation.valid) {
+			const phoneValidation = checkInternationalPhone(phone);
+			if (!phoneValidation.valid) {
 				return {
 					success: false,
 					code: "TEACHER_PHONE_INVALID",
 					message: "Validation failed",
 					teacher: null,
-					errors: [
-						"Invalid phone number format. Supported: Uzbekistan (998XXXXXXXXX) or Turkey (90XXXXXXXXXX)",
-					],
+					errors: [phoneValidation.reason],
 					timestamp: new Date().toISOString(),
 				};
 			}
 
 			// Normalize phone number
-			const normalizedPhone = uzPhoneValidation.valid
-				? uzPhoneValidation.normalized
-				: trPhoneValidation.normalized;
-			updateData.phone = normalizedPhone;
+			updateData.phone = phoneValidation.normalized;
 		}
 
 		// Validate and add tgUsername if provided
 		if (tgUsername !== undefined) {
-			const tgValidation = checkTelegramUsername(tgUsername);
-			if (!tgValidation.valid) {
-				return {
-					success: false,
-					code: "TEACHER_TG_USERNAME_INVALID",
-					message: "Validation failed",
-					teacher: null,
-					errors: [tgValidation.reason],
-					timestamp: new Date().toISOString(),
-				};
+			if (tgUsername === null || tgUsername === "") {
+				// Remove tgUsername from database (treat empty string as null)
+				updateData.tgUsername = null;
+			} else {
+				const tgValidation = checkTelegramUsername(tgUsername);
+				if (!tgValidation.valid) {
+					return {
+						success: false,
+						code: "TEACHER_TG_USERNAME_INVALID",
+						message: "Validation failed",
+						teacher: null,
+						errors: [tgValidation.reason],
+						timestamp: new Date().toISOString(),
+					};
+				}
+				updateData.tgUsername = tgValidation.normalized;
 			}
-			updateData.tgUsername = tgValidation.normalized;
 		}
 
 		// Validate and add password if provided
