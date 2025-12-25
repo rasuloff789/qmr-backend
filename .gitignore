@@ -63,3 +63,7 @@ keys/
 /src/generated/prisma
 uploads/
 docs/
+
+# Runtime data files
+data/*.json
+!data/.gitkeep
