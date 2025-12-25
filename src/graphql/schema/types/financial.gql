@@ -1,0 +1,10 @@
+"""Financial admin with metadata."""
+type FinancialAdmin {
+    """Financial admin ID (same as admin ID)."""
+    id: ID!
+    """Admin user details."""
+    admin: Admin!
+    """ISO timestamp when admin was added to financial admins list."""
+    addedAt: String!
+}
+

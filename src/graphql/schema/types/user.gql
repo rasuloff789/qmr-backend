@@ -32,6 +32,8 @@ type UserData {
     isActive: Boolean
     """Gender classification (admins and teachers only)."""
     gender: Gender
+    """Indicates whether the admin has access to financial operations (admins only)."""
+    isFinancialAdmin: Boolean
 
 }
 

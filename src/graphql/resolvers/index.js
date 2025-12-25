@@ -30,6 +30,7 @@ import {
 	getInvoice,
 	getDebtorStudents,
 	getAuditLogs,
+	getFinancialAdmins,
 } from "./queries/index.js";
 
 // Import mutation resolvers
@@ -66,10 +67,20 @@ import {
 	addPartialPayment,
 	recalculateInvoice,
 	deleteInvoice,
+	addToFinance,
+	removeFromFinance,
 } from "./mutations/index.js";
 
 // Import type resolvers
-import { Course, Student, Teacher, Invoice, PriceChangeHistory } from "./types/index.js";
+import {
+	Course,
+	Student,
+	Teacher,
+	Invoice,
+	PriceChangeHistory,
+	Admin,
+	UserData,
+} from "./types/index.js";
 
 /**
  * Query resolvers
@@ -93,6 +104,7 @@ const Query = {
 	getInvoice,
 	getDebtorStudents,
 	getAuditLogs,
+	getFinancialAdmins,
 };
 
 /**
@@ -131,6 +143,8 @@ const Mutation = {
 	addPartialPayment,
 	recalculateInvoice,
 	deleteInvoice,
+	addToFinance,
+	removeFromFinance,
 };
 
 /**
@@ -166,6 +180,8 @@ export const resolvers = {
 	Teacher,
 	Invoice,
 	PriceChangeHistory,
+	Admin,
+	UserData,
 };
 
 export default resolvers;

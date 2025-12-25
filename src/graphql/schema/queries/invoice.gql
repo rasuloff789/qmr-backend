@@ -27,5 +27,8 @@ extend type Query {
         """Include only students with debt above this amount."""
         minDebt: Int
     ): [DebtorStudent!]!
+    
+    """Get list of financial admins (admins with access to invoice/debtor operations)."""
+    getFinancialAdmins: [FinancialAdmin!]!
 }
 

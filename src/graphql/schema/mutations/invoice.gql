@@ -128,6 +128,38 @@ type DeleteInvoiceResponse {
     timestamp: String
 }
 
+"""Response payload returned when adding an admin to financial admins list."""
+type AddToFinanceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Admin record that was added."""
+    admin: Admin
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
+"""Response payload returned when removing an admin from financial admins list."""
+type RemoveFromFinanceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Admin record that was removed."""
+    admin: Admin
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 # Invoice mutations
 extend type Mutation {
     """Generate an invoice for a specific enrollment and month."""
@@ -189,5 +221,17 @@ extend type Mutation {
         """Invoice ID."""
         invoiceId: ID!
     ): DeleteInvoiceResponse!
+    
+    """Add an admin to the financial admins list."""
+    addToFinance(
+        """Admin ID to add to financial admins list."""
+        adminId: ID!
+    ): AddToFinanceResponse!
+    
+    """Remove an admin from the financial admins list."""
+    removeFromFinance(
+        """Admin ID to remove from financial admins list."""
+        adminId: ID!
+    ): RemoveFromFinanceResponse!
 }
 

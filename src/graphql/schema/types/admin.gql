@@ -16,4 +16,8 @@ type Admin {
     isActive: Boolean!
     """Creation timestamp."""
     createdAt: Date!
+    """Role of the user (always 'admin' for Admin type)."""
+    role: String!
+    """Indicates whether the admin has access to financial operations (invoices/debtors)."""
+    isFinancialAdmin: Boolean!
 }

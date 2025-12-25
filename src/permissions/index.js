@@ -9,6 +9,7 @@ import {
 	getCacheStats,
 } from "../utils/permissions.js";
 import { logPermission, logSecurity } from "../utils/audit.js";
+import { isFinancialAdmin } from "../utils/financialAdmins.js";
 
 // ============================================================================
 // CONSTANTS
@@ -103,6 +104,24 @@ const createRoleRule = (allowedRoles) =>
  * Create a simple authenticated user rule
  */
 const isAuthenticated = rule()(async (_parent, _args, { user }) => !!user);
+
+/**
+ * Check if user can access financial operations (invoice/debtor)
+ * - ROOT users always have access
+ * - ADMIN users must be in the financial admins whitelist
+ */
+const canAccessFinancialOperations = rule()(
+	async (_parent, _args, { user }) => {
+		if (!user) return false;
+		// ROOT users always have access
+		if (isRootUser(user)) return true;
+		// ADMIN users must be in financial admins list
+		if (hasRole(user, ROLES.ADMIN)) {
+			return await isFinancialAdmin(user.id);
+		}
+		return false;
+	}
+);
 
 /**
  * Extract resource type from mutation name
@@ -467,10 +486,13 @@ export const permissions = shield(
 			// Dashboard statistics - Only ADMIN and ROOT can view
 			getDashboardStats: isAdminOrRootRule,
 
-			// Invoice queries - Only ADMIN and ROOT can view invoices
-			getInvoices: isAdminOrRootRule,
-			getInvoice: isAdminOrRootRule,
-			getDebtorStudents: isAdminOrRootRule,
+			// Invoice queries - Only ROOT and financial admins can view invoices
+			getInvoices: canAccessFinancialOperations,
+			getInvoice: canAccessFinancialOperations,
+			getDebtorStudents: canAccessFinancialOperations,
+
+			// Financial admins query - Only ROOT can view
+			getFinancialAdmins: isRoot,
 
 			// Audit log queries - Only ROOT can view audit logs
 			getAuditLogs: isRoot,
@@ -744,15 +766,19 @@ export const permissions = shield(
 			removeStudentFromCourse: isAdminOrRootRule,
 			setAttendance: createRoleRule([ROLES.ROOT, ROLES.TEACHER]),
 
-			// Invoice mutations - Only ADMIN and ROOT can manage invoices
-			generateInvoice: isAdminOrRootRule,
-			generateInvoicesForMonth: isAdminOrRootRule,
-			updateCoursePrice: isAdminOrRootRule,
-			updateEnrollmentPrice: isAdminOrRootRule,
-			markInvoicePaid: isAdminOrRootRule,
-			addPartialPayment: isAdminOrRootRule,
-			recalculateInvoice: isAdminOrRootRule,
-			deleteInvoice: isAdminOrRootRule,
+			// Invoice mutations - Only ROOT and financial admins can manage invoices
+			generateInvoice: canAccessFinancialOperations,
+			generateInvoicesForMonth: canAccessFinancialOperations,
+			updateCoursePrice: canAccessFinancialOperations,
+			updateEnrollmentPrice: canAccessFinancialOperations,
+			markInvoicePaid: canAccessFinancialOperations,
+			addPartialPayment: canAccessFinancialOperations,
+			recalculateInvoice: canAccessFinancialOperations,
+			deleteInvoice: canAccessFinancialOperations,
+
+			// Financial admin management mutations - Only ROOT can manage
+			addToFinance: isRoot,
+			removeFromFinance: isRoot,
 		},
 
 		// ====================================================================
@@ -763,6 +789,7 @@ export const permissions = shield(
 		Admin: allow,
 		Teacher: allow,
 		Student: allow,
+		UserData: allow,
 
 		// Course Types - All fields allowed
 		Degree: allow,
@@ -813,6 +840,11 @@ export const permissions = shield(
 		AddPartialPaymentResponse: allow,
 		RecalculateInvoiceResponse: allow,
 		DeleteInvoiceResponse: allow,
+		AddToFinanceResponse: allow,
+		RemoveFromFinanceResponse: allow,
+
+		// Financial Types - All fields allowed
+		FinancialAdmin: allow,
 		AddAdminResponse: allow,
 		UpdateAdminResponse: allow,
 		DeleteAdminResponse: allow,

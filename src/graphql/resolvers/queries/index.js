@@ -24,6 +24,7 @@ import getInvoices from "./getInvoices.js";
 import getInvoice from "./getInvoice.js";
 import getDebtorStudents from "./getDebtorStudents.js";
 import getAuditLogs from "./getAuditLogs.js";
+import getFinancialAdmins from "./getFinancialAdmins.js";
 
 export {
 	getAdmins,
@@ -44,4 +45,5 @@ export {
 	getInvoice,
 	getDebtorStudents,
 	getAuditLogs,
+	getFinancialAdmins,
 };

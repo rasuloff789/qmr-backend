@@ -12,5 +12,15 @@ import { Course } from "./course.js";
 import { Student } from "./student.js";
 import { Teacher } from "./teacher.js";
 import { Invoice, PriceChangeHistory } from "./invoice.js";
+import { Admin } from "./admin.js";
+import { UserData } from "./userData.js";
 
-export { Course, Student, Teacher, Invoice, PriceChangeHistory };
+export {
+	Course,
+	Student,
+	Teacher,
+	Invoice,
+	PriceChangeHistory,
+	Admin,
+	UserData,
+};
