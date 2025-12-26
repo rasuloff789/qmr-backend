@@ -18,15 +18,7 @@ const GRAPHQL_PATH = "/graphql";
 ========================= */
 
 const corsOptions = {
-	origin: [
-		"https://admin.elli.uz",
-		"https://root.elli.uz",
-		"https://teacher.elli.uz",
-		"https://qomar.elli.uz",
-		"https://studio.apollographql.com",
-		"http://localhost:5173",
-		"http://localhost:5174",
-	],
+	origin: config.CORS_ORIGINS,
 	credentials: true,
 	methods: ["GET", "POST", "OPTIONS"],
 	allowedHeaders: [

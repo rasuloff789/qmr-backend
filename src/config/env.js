@@ -35,7 +35,18 @@ const config = {
 	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 
 	// CORS
-	CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
+	// Support comma-separated origins or single origin
+	CORS_ORIGINS: process.env.CORS_ORIGINS
+		? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+		: [
+				"https://admin.elli.uz",
+				"https://root.elli.uz",
+				"https://teacher.elli.uz",
+				"https://qomar.elli.uz",
+				"https://studio.apollographql.com",
+				"http://localhost:5173",
+				"http://localhost:5174",
+			],
 
 	// GraphiQL
 	GRAPHIQL_ENABLED: parseBoolean(process.env.GRAPHIQL_ENABLED),

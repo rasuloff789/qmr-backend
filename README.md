@@ -66,7 +66,8 @@ JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 JWT_EXPIRES_IN="10d"
 
 # CORS Configuration
-CORS_ORIGIN="http://localhost:5173"
+# Comma-separated list of allowed origins (defaults to production origins if not set)
+CORS_ORIGINS="https://admin.elli.uz,https://root.elli.uz,https://teacher.elli.uz,https://qomar.elli.uz,https://studio.apollographql.com,http://localhost:5173,http://localhost:5174"
 
 # Security
 BCRYPT_ROUNDS=10
