@@ -96,19 +96,31 @@ async function cleanDatabase() {
 		// Reset sequences for auto-increment IDs
 		console.log("\n🔄 Resetting auto-increment sequences...");
 		
-		// Note: Prisma doesn't have direct sequence reset, so we use raw SQL
-		await prisma.$executeRawUnsafe(`
-			SELECT setval(pg_get_serial_sequence('"Admin"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Teacher"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Student"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Degree"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Course"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"CourseStudent"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Attendance"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"SubstituteTeacher"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"Invoice"', 'id'), 1, false);
-			SELECT setval(pg_get_serial_sequence('"PriceChangeHistory"', 'id'), 1, false);
-		`);
+		// Note: Execute each sequence reset separately (PostgreSQL doesn't allow multiple commands in one statement)
+		const sequences = [
+			{ table: 'Admin', column: 'id' },
+			{ table: 'Teacher', column: 'id' },
+			{ table: 'Student', column: 'id' },
+			{ table: 'Degree', column: 'id' },
+			{ table: 'Course', column: 'id' },
+			{ table: 'CourseStudent', column: 'id' },
+			{ table: 'Attendance', column: 'id' },
+			{ table: 'SubstituteTeacher', column: 'id' },
+			{ table: 'Invoice', column: 'id' },
+			{ table: 'PriceChangeHistory', column: 'id' },
+		];
+		
+		for (const seq of sequences) {
+			try {
+				// Execute each sequence reset separately
+				await prisma.$executeRawUnsafe(
+					`SELECT setval(pg_get_serial_sequence('"${seq.table}"', '${seq.column}'), 1, false)`
+				);
+			} catch (error) {
+				// Ignore errors for tables that don't exist or don't have sequences
+				console.log(`  ⚠️  Could not reset sequence for ${seq.table}.${seq.column}: ${error.message}`);
+			}
+		}
 		console.log("  ✅ Sequences reset");
 		
 		// Verify cleanup
