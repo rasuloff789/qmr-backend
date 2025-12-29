@@ -41,6 +41,7 @@
     "seed:all": "node scripts/seed-all-mock-data.js",
     "db:clean": "node scripts/clean-database.js",
     "audit:delete-all": "node scripts/delete-all-audit-logs.js",
+    "invoices:delete-all": "node scripts/delete-all-invoices.js",
     "find:payment-changes": "node scripts/find-monthly-payment-changes.js",
     "update:enrollments-date": "node scripts/update-enrollments-joined-date.js",
     "update:courses-dates": "node scripts/update-courses-dates.js",
