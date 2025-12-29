@@ -43,6 +43,7 @@
     "audit:delete-all": "node scripts/delete-all-audit-logs.js",
     "find:payment-changes": "node scripts/find-monthly-payment-changes.js",
     "update:enrollments-date": "node scripts/update-enrollments-joined-date.js",
+    "update:courses-dates": "node scripts/update-courses-dates.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
