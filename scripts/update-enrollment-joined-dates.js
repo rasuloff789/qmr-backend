@@ -6,39 +6,11 @@ const prisma = new PrismaClient({
 
 // Mapping of usernames to their joinedAt dates
 const joinedAtDecember = {
-	marvarid1: "2025-12-13",
-	shoxsanam1: "2025-12-08",
-	sarvinoz1: "2025-12-23",
-	qilicheva1: "2025-12-15",
-	egamova1: "2025-12-06",
-	sevinchxon1: "2025-12-21",
-	lola1: "2025-12-23",
-	ismanova1: "2025-12-23",
-	oygul1: "2025-12-05",
-	odilxon1: "2025-12-04",
-	roziyev1: "2025-12-08",
-	jalolova1: "2025-12-06",
-	malik1: "2025-12-07",
-	shaxboz1: "2025-12-24",
-	anvar1: "2025-12-20",
-	yunus1: "2025-12-23",
-	abror1: "2025-12-20",
-	jorabek1: "2025-12-25",
-	umarqulov1: "2025-12-25",
-	asadbek1: "2025-12-22",
-	qurbonov1: "2025-12-28",
-	yakubjanov1: "2025-12-29",
-	farmanova1: "2025-12-23",
-	nozanin1: "2025-12-28",
-	xolida1: "2025-12-23",
-	malikahon1: "2025-12-08",
-	qilich1: "2025-12-22",
-	yasmin1: "2025-12-29",
-	ramazon1: "2025-12-29",
-	solih1: "2025-12-29",
-	mahkam1: "2025-12-30",
-	ravsha1: "2025-12-04",
-	robiyaxon1: "2025-12-03",
+	robiya1: "2025-12-26", // Robiya Fatxullayeva
+	artiqova1: "2025-12-28", // Nargiza Artiqova
+	sodiqov79: "2025-12-29", // Ibrohim Sodiqov
+	parvina1: "2025-12-24", // Parvina Mamatqosimova
+	giyosjon1: "2025-12-18", // Giyosjon Axadov
 };
 
 /**
