@@ -47,6 +47,7 @@
     "update:courses-dates": "node scripts/update-courses-dates.js",
     "recalculate:invoices": "node scripts/recalculate-all-invoices.js",
     "filter:usernames-in-courses": "node scripts/filter-usernames-in-courses.js",
+    "update:enrollment-dates": "node scripts/update-enrollment-joined-dates.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
