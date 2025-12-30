@@ -4,13 +4,26 @@ const prisma = new PrismaClient({
 	log: ["warn", "error"],
 });
 
-// Mapping of usernames to their joinedAt dates
+// Mapping of usernames to their joinedAt dates and optional course selection
+// Format: { username: { date: "YYYY-MM-DD", courseId?: number, courseName?: string } }
+// If courseId or courseName is specified, only that enrollment will be updated
+// If not specified and student has multiple enrollments, an error will be shown
 const joinedAtDecember = {
-	robiya1: "2025-12-26", // Robiya Fatxullayeva
-	artiqova1: "2025-12-28", // Nargiza Artiqova
-	sodiqov79: "2025-12-29", // Ibrohim Sodiqov
-	parvina1: "2025-12-24", // Parvina Mamatqosimova
-	giyosjon1: "2025-12-18", // Giyosjon Axadov
+	karimova1: {
+		date: "2025-12-26",
+		courseId: 43, // Optional: specify course ID to update only this enrollment
+		// OR use courseName: "Ummu Huzayfa 3 kunlik"
+		// If neither is specified and student has multiple enrollments, script will show error
+	},
+	// Example with courseName:
+	// parvina1: {
+	// 	date: "2025-12-24",
+	// 	courseName: "Ummu Huzayfa 3 kunlik"
+	// },
+	// Example without course selection (only works if student has exactly one enrollment):
+	// robiya1: {
+	// 	date: "2025-12-26"
+	// },
 };
 
 /**
@@ -28,8 +41,22 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 		const notFound = [];
 
 		// Process each username
-		for (const [username, dateString] of Object.entries(joinedAtDecember)) {
+		for (const [username, config] of Object.entries(joinedAtDecember)) {
 			try {
+				// Handle both old format (string) and new format (object)
+				let dateString, courseId, courseName;
+				if (typeof config === "string") {
+					// Old format: just a date string
+					dateString = config;
+					courseId = null;
+					courseName = null;
+				} else {
+					// New format: object with date and optional course selection
+					dateString = config.date;
+					courseId = config.courseId || null;
+					courseName = config.courseName || null;
+				}
+
 				// Parse the date
 				const newDate = new Date(dateString + "T00:00:00.000Z");
 
@@ -74,8 +101,64 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 					continue;
 				}
 
-				// Update each enrollment
-				for (const enrollment of enrollments) {
+				// Determine which enrollment(s) to update
+				let enrollmentsToUpdate = [];
+
+				if (courseId) {
+					// Find enrollment by course ID
+					const enrollment = enrollments.find((e) => e.course.id === courseId);
+					if (enrollment) {
+						enrollmentsToUpdate = [enrollment];
+					} else {
+						errors.push({
+							username,
+							fullname: student.fullname,
+							date: dateString,
+							error: `Course with ID ${courseId} not found for this student. Available courses: ${enrollments
+								.map((e) => `${e.course.name} (ID: ${e.course.id})`)
+								.join(", ")}`,
+						});
+						continue;
+					}
+				} else if (courseName) {
+					// Find enrollment by course name
+					const enrollment = enrollments.find(
+						(e) => e.course.name === courseName
+					);
+					if (enrollment) {
+						enrollmentsToUpdate = [enrollment];
+					} else {
+						errors.push({
+							username,
+							fullname: student.fullname,
+							date: dateString,
+							error: `Course "${courseName}" not found for this student. Available courses: ${enrollments
+								.map((e) => `${e.course.name} (ID: ${e.course.id})`)
+								.join(", ")}`,
+						});
+						continue;
+					}
+				} else {
+					// No course specified - update all enrollments if only one, otherwise show error
+					if (enrollments.length === 1) {
+						enrollmentsToUpdate = enrollments;
+					} else {
+						errors.push({
+							username,
+							fullname: student.fullname,
+							date: dateString,
+							error: `Student has ${
+								enrollments.length
+							} enrollments. Please specify courseId or courseName. Available courses: ${enrollments
+								.map((e) => `${e.course.name} (ID: ${e.course.id})`)
+								.join(", ")}`,
+						});
+						continue;
+					}
+				}
+
+				// Update selected enrollment(s)
+				for (const enrollment of enrollmentsToUpdate) {
 					const oldDate = new Date(enrollment.joinedAt);
 					const needsUpdate = oldDate.getTime() !== newDate.getTime();
 
@@ -84,6 +167,7 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 							username,
 							fullname: student.fullname,
 							enrollmentId: enrollment.id,
+							courseId: enrollment.course.id,
 							courseName: enrollment.course.name,
 							oldDate: oldDate.toISOString().split("T")[0],
 							newDate: dateString,
@@ -100,7 +184,7 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 			} catch (error) {
 				errors.push({
 					username,
-					date: dateString,
+					date: typeof config === "string" ? config : config.date,
 					error: error.message,
 				});
 			}
@@ -140,6 +224,7 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 				console.log(`\n  ${username} (${firstUpdate.fullname})`);
 				for (const update of userUpdates) {
 					console.log(`    Enrollment ID: ${update.enrollmentId}`);
+					console.log(`    Course ID: ${update.courseId}`);
 					console.log(`    Course: ${update.courseName}`);
 					console.log(`    Old joinedAt: ${update.oldDate}`);
 					console.log(`    New joinedAt: ${update.newDate}`);
