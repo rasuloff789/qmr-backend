@@ -6,39 +6,39 @@ const prisma = new PrismaClient({
 
 // Mapping of usernames to their joinedAt dates
 const joinedAtDecember = {
-	marvarid1: "2024-12-13",
-	shoxsanam1: "2024-12-08",
-	sarvinoz1: "2024-12-23",
-	qilicheva1: "2024-12-15",
-	egamova1: "2024-12-06",
-	sevinchxon1: "2024-12-21",
-	lola1: "2024-12-23",
-	ismanova1: "2024-12-23",
-	oygul1: "2024-12-05",
-	odilxon1: "2024-12-04",
-	roziyev1: "2024-12-08",
-	jalolova1: "2024-12-06",
-	malik1: "2024-12-07",
-	shaxboz1: "2024-12-24",
-	anvar1: "2024-12-20",
-	yunus1: "2024-12-23",
-	abror1: "2024-12-20",
-	jorabek1: "2024-12-25",
-	umarqulov1: "2024-12-25",
-	asadbek1: "2024-12-22",
-	qurbonov1: "2024-12-28",
-	yakubjanov1: "2024-12-29",
-	farmanova1: "2024-12-23",
-	nozanin1: "2024-12-28",
-	xolida1: "2024-12-23",
-	malikahon1: "2024-12-08",
-	qilich1: "2024-12-22",
-	yasmin1: "2024-12-29",
-	ramazon1: "2024-12-29",
-	solih1: "2024-12-29",
-	mahkam1: "2024-12-30",
-	ravsha1: "2024-12-04",
-	robiyaxon1: "2024-12-03",
+	marvarid1: "2025-12-13",
+	shoxsanam1: "2025-12-08",
+	sarvinoz1: "2025-12-23",
+	qilicheva1: "2025-12-15",
+	egamova1: "2025-12-06",
+	sevinchxon1: "2025-12-21",
+	lola1: "2025-12-23",
+	ismanova1: "2025-12-23",
+	oygul1: "2025-12-05",
+	odilxon1: "2025-12-04",
+	roziyev1: "2025-12-08",
+	jalolova1: "2025-12-06",
+	malik1: "2025-12-07",
+	shaxboz1: "2025-12-24",
+	anvar1: "2025-12-20",
+	yunus1: "2025-12-23",
+	abror1: "2025-12-20",
+	jorabek1: "2025-12-25",
+	umarqulov1: "2025-12-25",
+	asadbek1: "2025-12-22",
+	qurbonov1: "2025-12-28",
+	yakubjanov1: "2025-12-29",
+	farmanova1: "2025-12-23",
+	nozanin1: "2025-12-28",
+	xolida1: "2025-12-23",
+	malikahon1: "2025-12-08",
+	qilich1: "2025-12-22",
+	yasmin1: "2025-12-29",
+	ramazon1: "2025-12-29",
+	solih1: "2025-12-29",
+	mahkam1: "2025-12-30",
+	ravsha1: "2025-12-04",
+	robiyaxon1: "2025-12-03",
 };
 
 /**
@@ -47,7 +47,9 @@ const joinedAtDecember = {
 async function updateEnrollmentJoinedDates(dryRun = true) {
 	try {
 		console.log("🔍 Updating enrollment joinedAt dates...\n");
-		console.log(`📊 Total students to update: ${Object.keys(joinedAtDecember).length}\n`);
+		console.log(
+			`📊 Total students to update: ${Object.keys(joinedAtDecember).length}\n`
+		);
 
 		const updates = [];
 		const errors = [];
@@ -135,8 +137,14 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 		// Show results
 		console.log("=".repeat(100));
 		console.log("\n📊 Summary:");
-		console.log(`   Total students in mapping: ${Object.keys(joinedAtDecember).length}`);
-		console.log(`   Students found: ${Object.keys(joinedAtDecember).length - notFound.length - errors.length}`);
+		console.log(
+			`   Total students in mapping: ${Object.keys(joinedAtDecember).length}`
+		);
+		console.log(
+			`   Students found: ${
+				Object.keys(joinedAtDecember).length - notFound.length - errors.length
+			}`
+		);
 		console.log(`   Enrollments to update: ${updates.length}`);
 		console.log(`   Errors: ${errors.length}`);
 		console.log(`   Not found: ${notFound.length}`);
@@ -190,7 +198,9 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 
 		if (dryRun) {
 			console.log("\n\n⚠️  DRY RUN MODE - No changes were made");
-			console.log("   To apply changes, run with: node scripts/update-enrollment-joined-dates.js --apply\n");
+			console.log(
+				"   To apply changes, run with: node scripts/update-enrollment-joined-dates.js --apply\n"
+			);
 		} else {
 			console.log("\n\n✅ Update completed!");
 			console.log(`   Updated ${updates.length} enrollment(s)\n`);
@@ -203,13 +213,17 @@ async function updateEnrollmentJoinedDates(dryRun = true) {
 					select: { joinedAt: true },
 				});
 				const expectedDate = new Date(update.newDate + "T00:00:00.000Z");
-				if (enrollment && enrollment.joinedAt.getTime() === expectedDate.getTime()) {
+				if (
+					enrollment &&
+					enrollment.joinedAt.getTime() === expectedDate.getTime()
+				) {
 					verifiedCount++;
 				}
 			}
-			console.log(`   Verified: ${verifiedCount}/${updates.length} enrollment(s) updated correctly\n`);
+			console.log(
+				`   Verified: ${verifiedCount}/${updates.length} enrollment(s) updated correctly\n`
+			);
 		}
-
 	} catch (error) {
 		console.error("❌ Error updating enrollment dates:", error);
 		throw error;
@@ -231,4 +245,3 @@ async function main() {
 }
 
 main();
-
