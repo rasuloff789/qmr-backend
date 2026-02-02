@@ -774,6 +774,7 @@ export const permissions = shield(
 			markInvoicePaid: canAccessFinancialOperations,
 			addPartialPayment: canAccessFinancialOperations,
 			recalculateInvoice: canAccessFinancialOperations,
+			updateInvoice: canAccessFinancialOperations,
 			deleteInvoice: canAccessFinancialOperations,
 
 			// Financial admin management mutations - Only ROOT can manage
@@ -839,6 +840,7 @@ export const permissions = shield(
 		MarkInvoicePaidResponse: allow,
 		AddPartialPaymentResponse: allow,
 		RecalculateInvoiceResponse: allow,
+		UpdateInvoiceResponse: allow,
 		DeleteInvoiceResponse: allow,
 		AddToFinanceResponse: allow,
 		RemoveFromFinanceResponse: allow,

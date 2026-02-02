@@ -38,6 +38,7 @@ import { deleteInvoice } from "./deleteInvoice.js";
 import { addPartialPayment } from "./addPartialPayment.js";
 import { markInvoicePaid } from "./markInvoicePaid.js";
 import { recalculateInvoice } from "./recalculateInvoice.js";
+import { updateInvoice } from "./updateInvoice.js";
 import { addToFinance } from "./addToFinance.js";
 import { removeFromFinance } from "./removeFromFinance.js";
 
@@ -73,6 +74,7 @@ export {
 	markInvoicePaid,
 	addPartialPayment,
 	recalculateInvoice,
+	updateInvoice,
 	deleteInvoice,
 	addToFinance,
 	removeFromFinance,

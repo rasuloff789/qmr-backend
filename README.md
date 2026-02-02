@@ -218,12 +218,15 @@ npm run db:studio
 - **Development**: `http://localhost:4000/graphql`
 - **Health Check**: `http://localhost:4000/health`
 
-### Documentation Files
+### Documentation
+See [docs/README.md](./docs/README.md) for complete documentation index.
+
+**Essential Guides:**
 - [GraphQL API Reference](./docs/GRAPHQL_API.md) - Complete API documentation
+- [Frontend Integration Guide](./docs/FRONTEND_GUIDE.md) - Frontend developer guide
 - [Permissions Reference](./docs/PERMISSIONS_REFERENCE.md) - Access control details
-- [Examples](./docs/EXAMPLES.md) - Query and mutation examples
-- [Teacher Permissions](./docs/TEACHER_PERMISSIONS.md) - Teacher-specific permissions
-- [Frontend Guide](./docs/FRONTEND_GUIDE.md) - Integration guide for frontend developers
+- [File Upload Guide](./docs/AXIOS_FILE_UPLOAD_GUIDE.md) - File upload implementation
+- [Monthly Payment Guide](./docs/MONTHLY_PAYMENT_CHANGE_GUIDE.md) - Billing best practices
 
 ### Authentication
 Send JWT token in Authorization header:

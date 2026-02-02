@@ -112,6 +112,22 @@ type RecalculateInvoiceResponse {
     timestamp: String
 }
 
+"""Response payload returned when manually updating an invoice."""
+type UpdateInvoiceResponse {
+    """Operation success flag."""
+    success: Boolean!
+    """Machine-friendly error code (present when success=false)."""
+    code: String
+    """Human-readable summary of the outcome."""
+    message: String!
+    """Updated invoice record."""
+    invoice: Invoice
+    """Validation or domain errors, if any."""
+    errors: [String!]
+    """ISO timestamp when the operation finished."""
+    timestamp: String
+}
+
 """Response payload returned when deleting an invoice."""
 type DeleteInvoiceResponse {
     """Operation success flag."""
@@ -215,6 +231,14 @@ extend type Mutation {
         """Invoice ID."""
         invoiceId: ID!
     ): RecalculateInvoiceResponse!
+    
+    """Manually update invoice total amount (for corrections)."""
+    updateInvoice(
+        """Invoice ID."""
+        invoiceId: ID!
+        """New total amount."""
+        totalAmount: Int!
+    ): UpdateInvoiceResponse!
     
     """Delete an invoice."""
     deleteInvoice(
